@@ -1,0 +1,635 @@
+    <div class="lesson-tag">4.2</div>
+    <h1>에지 컴퓨팅 정책</h1>
+    <p class="subtitle">의미 있는 변화만 보고 — 무엇을 남기고 무엇을 버릴 것인가</p>
+
+    <p class="lead">
+      2.1에서 “센서가 똑똑해지면 보낼 데이터가 줄어든다”고 했다.
+      그런데 <strong>무엇을 줄일지</strong>는 저절로 정해지지 않는다.
+      너무 많이 줄이면 나중에 원인 분석을 할 데이터가 없고,
+      너무 적게 줄이면 네트워크가 막힌다.
+      이 균형을 정하는 것이 <strong>에지 컴퓨팅 정책</strong>이며, 4장에서 가장 실무적인 주제다.
+    </p>
+
+    <div class="goals">
+      <h4>이 장을 읽고 나면</h4>
+      <ol>
+        <li>에지 컴퓨팅이 무엇이고 왜 필요한지 세 가지 이유로 설명할 수 있다.</li>
+        <li>데드밴딩과 스마트 필터링이 데이터를 줄이는 방식을 이해한다.</li>
+        <li>긴급 상황을 에지에서 판단해야 하는 이유를 설명할 수 있다.</li>
+        <li>오프라인 버퍼링과 복구 후 동기화의 동작을 이해한다.</li>
+        <li>데이터를 줄일 때 잃는 것이 무엇인지 판단하고 현장 의견을 낼 수 있다.</li>
+      </ol>
+    </div>
+
+    <!-- ============ 본문 1 ============ -->
+    <section class="sec" id="s4-2-1">
+      <div class="sec-no">4.2.1</div>
+      <h2>왜 현장에서 처리하는가<span class="en">에지 컴퓨팅의 세 가지 이유</span></h2>
+
+      <p class="keyline">
+        데이터를 중앙으로 다 보내지 않고 <strong>생기는 자리에서 처리</strong>하는 이유는 셋이다.
+        <strong>빠른 처리를 위해, 대역폭 절감을 위해, 끊겨도 동작하기 위해.</strong>
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-2-1"><span class="no">그림 4.2-1</span> · 에지 컴퓨팅이 필요한 세 가지 이유</div>
+          <svg viewBox="0 0 700 306" role="img" aria-label="에지 컴퓨팅이 필요한 세 가지 이유">
+            <rect class="s-fill" x="250" y="10" width="200" height="42"/>
+            <text class="s-tw" x="350" y="37">에지에서 처리하는 이유</text>
+
+            <path class="s-line-n" d="M350 54 L350 72"/>
+            <path class="s-line-n" d="M130 72 L570 72"/>
+            <path class="s-line-n" d="M130 72 L130 94" marker-end="url(#aE1)"/>
+            <path class="s-line-n" d="M350 72 L350 94" marker-end="url(#aE1)"/>
+            <path class="s-line-n" d="M570 72 L570 94" marker-end="url(#aE1)"/>
+
+            <rect class="s-tint" x="24" y="98" width="212" height="92"/>
+            <text class="s-t" x="130" y="126">① 속도</text>
+            <text class="s-t2" x="130" y="150">중앙까지 갔다 오면</text>
+            <text class="s-t2" x="130" y="168">늦는다</text>
+            <text class="s-t2" x="130" y="186">비상 정지는 ms 단위</text>
+
+            <rect class="s-tint" x="244" y="98" width="212" height="92"/>
+            <text class="s-t" x="350" y="126">② 대역폭</text>
+            <text class="s-t2" x="350" y="150">모두 보내면</text>
+            <text class="s-t2" x="350" y="168">네트워크가 막힌다</text>
+            <text class="s-t2" x="350" y="186">대부분은 “변화 없음”</text>
+
+            <rect class="s-tint" x="464" y="98" width="212" height="92"/>
+            <text class="s-t" x="570" y="126">③ 자립성</text>
+            <text class="s-t2" x="570" y="150">회선이 끊겨도</text>
+            <text class="s-t2" x="570" y="168">설비는 돌아야 한다</text>
+            <text class="s-t2" x="570" y="186">복구 후 동기화</text>
+
+            <rect class="s-plain" x="24" y="200" width="212" height="56"/>
+            <text class="s-t2" x="130" y="222">비상 정지 · 충돌 회피</text>
+            <text class="s-t2" x="130" y="242">즉시 판단해야 하는 것</text>
+
+            <rect class="s-plain" x="244" y="200" width="212" height="56"/>
+            <text class="s-t2" x="350" y="222">데드밴딩 · 필터링</text>
+            <text class="s-t2" x="350" y="242">본문 2에서 다룸</text>
+
+            <rect class="s-plain" x="464" y="200" width="212" height="56"/>
+            <text class="s-t2" x="570" y="222">내장 버퍼 저장</text>
+            <text class="s-t2" x="570" y="242">본문 4에서 다룸</text>
+
+            <text class="s-t2" x="350" y="286">세 가지 모두 “중앙에 의존하지 않는다”는 하나의 원칙에서 나온다</text>
+
+            <defs>
+              <marker id="aE1" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>에지는 “변두리”가 아니라 “데이터가 태어나는 최전선”이라는 뜻이다.</figcaption>
+      </figure>
+
+      <h3>에지는 어디부터 어디까지인가</h3>
+      <p>
+        에지 컴퓨팅의 “에지”는 한 지점이 아니라 <strong>여러 계층</strong>에 걸쳐 있다.
+        스마트센서 안에서도 처리가 일어나고, 마스터·PLC에서도, 게이트웨이에서도 일어난다.
+        어느 계층에서 무엇을 처리할지가 <strong>정책</strong>이다.
+      </p>
+
+      <div class="tbl-label" id="b4-2-1"><span class="no">표 4.2-1</span> · 계층별로 하는 일</div>
+      <table>
+        <thead>
+          <tr><th>계층</th><th>처리 내용</th><th>판단 속도</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>스마트센서</td><td>노이즈 필터링, 단위 변환, 자가 진단 (2.2)</td><td>µs~ms</td></tr>
+          <tr><td>PLC · 드라이브</td><td>제어 판단, 인터록, 비상 정지 (3.1·3.2)</td><td>ms</td></tr>
+          <tr><td>게이트웨이 · 에지 장치</td><td>데이터 취합, 데드밴딩, 요약, 버퍼링</td><td>ms~초</td></tr>
+          <tr><td>상위 시스템 · 클라우드</td><td>장기 추세 분석, 여러 설비 비교, 학습</td><td>분~시간</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <span class="t">개념 · 위로 갈수록 느려도 되는 대신 넓게 본다</span>
+        <p>센서는 자기 하나만 본다. 대신 아주 빠르다.
+        클라우드는 공장 전체, 여러 사업장을 비교할 수 있다. 대신 느리다.
+        <strong>“빨라야 하는 판단은 아래에서, 넓게 봐야 하는 판단은 위에서”</strong>가 배치 원칙이다.
+        비상 정지를 클라우드에 물어보는 시스템은 설계 자체가 잘못된 것이다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 2 ============ -->
+    <section class="sec" id="s4-2-2">
+      <div class="sec-no">4.2.2</div>
+      <h2>데드밴딩과 스마트 필터링<span class="en">의미 있는 변화만 골라내는 법</span></h2>
+
+      <p class="keyline">
+        <span class="kw">데드밴딩</span>은 <strong>“이만큼 이하로 변한 건 보고하지 않는다”</strong>는 규칙이다.
+        1.4의 응차(히스테리시스)와 발상이 같다.
+      </p>
+
+      <p>
+        컨베이어 속도 센서가 12.34 → 12.35 → 12.34 → 12.36을 반복한다고 하자.
+        이 값들을 모두 올리는 것은 의미가 없다.
+        <strong>“0.5 이상 변했을 때만 보고”</strong>라는 규칙을 두면 전송량이 극적으로 준다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-2-2"><span class="no">그림 4.2-2</span> · 데드밴딩의 동작</div>
+          <svg viewBox="0 0 700 296" role="img" aria-label="데드밴딩 적용 전후의 전송 데이터 비교">
+            <text class="s-hdr" x="350" y="18">원래 측정값 — 계속 미세하게 변한다</text>
+            <line class="s-line" x1="50" y1="110" x2="650" y2="110"/>
+            <path d="M50 96 L80 100 L110 92 L140 102 L170 94 L200 98 L230 90 L260 100 L290 94
+                     L320 62 L350 58 L380 64 L410 60 L440 56 L470 62 L500 58 L530 60 L560 56 L590 62 L640 58"
+                  fill="none" stroke="#8C9298" stroke-width="2"/>
+            <g fill="#8C9298">
+              <circle cx="50" cy="96" r="3"/><circle cx="80" cy="100" r="3"/><circle cx="110" cy="92" r="3"/>
+              <circle cx="140" cy="102" r="3"/><circle cx="170" cy="94" r="3"/><circle cx="200" cy="98" r="3"/>
+              <circle cx="230" cy="90" r="3"/><circle cx="260" cy="100" r="3"/><circle cx="290" cy="94" r="3"/>
+              <circle cx="320" cy="62" r="3"/><circle cx="350" cy="58" r="3"/><circle cx="380" cy="64" r="3"/>
+              <circle cx="410" cy="60" r="3"/><circle cx="440" cy="56" r="3"/><circle cx="470" cy="62" r="3"/>
+              <circle cx="500" cy="58" r="3"/><circle cx="530" cy="60" r="3"/><circle cx="560" cy="56" r="3"/>
+              <circle cx="590" cy="62" r="3"/><circle cx="640" cy="58" r="3"/>
+            </g>
+            <text class="s-t2" x="350" y="132">측정 20회 — 모두 보내면 20건</text>
+
+            <line class="s-rule" x1="20" y1="150" x2="680" y2="150"/>
+
+            <text class="s-hdr" x="350" y="176">데드밴딩 적용 — 기준 이상 변했을 때만</text>
+            <line class="s-line" x1="50" y1="256" x2="650" y2="256"/>
+            <path d="M50 242 L310 242 L318 208 L650 208" fill="none" stroke="#0E2E4F" stroke-width="2.6"/>
+            <circle cx="50" cy="242" r="5" fill="#0E2E4F"/>
+            <circle cx="320" cy="208" r="5" fill="#0E2E4F"/>
+            <rect x="40" y="228" width="270" height="28" fill="none" stroke="#A67C1F" stroke-width="1.2" stroke-dasharray="4 3"/>
+            <text class="s-t2" x="175" y="278" style="fill:#8A5A0B">이 폭 안의 변화는 무시 (데드밴드)</text>
+            <text class="s-t2" x="500" y="196">기준을 넘은 순간만 보고</text>
+            <text class="s-t2" x="500" y="278" style="font-weight:700">20건 → 2건</text>
+          </svg>
+        </div>
+        <figcaption>데이터가 90% 줄었지만 <strong>중요한 변화는 그대로 남았다.</strong>
+        이것이 데드밴딩의 목표다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b4-2-2"><span class="no">표 4.2-2</span> · 데이터를 줄이는 네 가지 방법</div>
+      <table>
+        <thead>
+          <tr><th>방법</th><th>내용</th><th>적합한 데이터</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>데드밴딩</td><td>일정 폭 이상 변할 때만 보고</td><td>온도·속도·압력 등 연속값</td></tr>
+          <tr><td>주기 축소</td><td>초당 100회 → 초당 1회로 낮춤</td><td>천천히 변하는 값</td></tr>
+          <tr><td>요약 전송</td><td>1분간의 평균·최대·최소만 전송</td><td>추세만 보면 되는 값</td></tr>
+          <tr><td>이벤트 전송</td><td>상태가 바뀌었을 때만 전송</td><td>ON/OFF, 경고·고장 상태</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note warn">
+        <span class="t">주의 · 줄이면 잃는 것</span>
+        <p>데드밴딩 폭을 크게 잡으면 <strong>고장 직전의 미세한 흔들림이 사라진다.</strong>
+        3.4에서 진동이 가장 이른 신호라고 했는데,
+        그 진동이 데드밴드 안에 있으면 아예 기록되지 않는다.
+        나중에 “왜 갑자기 고장 났지?”를 분석하려 해도 데이터가 없다.
+        <strong>예지 보전용 데이터에는 데드밴딩을 신중하게 적용해야 한다.</strong></p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 3 ============ -->
+    <section class="sec" id="s4-2-3">
+      <div class="sec-no">4.2.3</div>
+      <h2>로컬 의사결정<span class="en">급한 판단은 물어보지 않는다</span></h2>
+
+      <p class="keyline">
+        AGV 앞에 사람이 나타났을 때 <strong>클라우드에 물어볼 시간은 없다.</strong>
+        긴급 판단은 반드시 현장에서 끝나야 한다.
+      </p>
+
+      <p>
+        네트워크를 거치면 반드시 지연이 생긴다. 사내 네트워크라도 수 ms,
+        인터넷을 거치면 수십~수백 ms다. 그 사이에 AGV는 이미 상당 거리를 간다.
+        그래서 <strong>안전과 직결된 판단은 예외 없이 로컬</strong>에서 처리된다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-2-3"><span class="no">그림 4.2-3</span> · 판단을 어디서 하느냐에 따른 시간 차이</div>
+          <svg viewBox="0 0 700 306" role="img" aria-label="로컬 판단과 중앙 판단의 응답 시간 비교">
+            <text class="s-hdr" x="350" y="18">① 로컬 판단 — 센서·제어기에서 즉시</text>
+            <rect class="s-fill" x="60" y="34" width="130" height="46"/>
+            <text class="s-tw" x="125" y="62" style="font-size:13px">센서 감지</text>
+            <path class="s-line-n" d="M196 57 L232 57" marker-end="url(#aE3)"/>
+            <rect class="s-fill" x="238" y="34" width="130" height="46"/>
+            <text class="s-tw" x="303" y="62" style="font-size:13px">제어기 판단</text>
+            <path class="s-line-n" d="M374 57 L410 57" marker-end="url(#aE3)"/>
+            <rect class="s-fill" x="416" y="34" width="130" height="46"/>
+            <text class="s-tw" x="481" y="62" style="font-size:13px">정지</text>
+            <text class="s-t3" x="620" y="62" style="font-weight:700">수 ms</text>
+
+            <line class="s-rule" x1="20" y1="98" x2="680" y2="98"/>
+
+            <text class="s-hdr" x="350" y="124">② 중앙 판단 — 클라우드까지 갔다 온다</text>
+            <rect class="s-tint" x="30" y="140" width="104" height="46"/>
+            <text class="s-t2" x="82" y="168">센서 감지</text>
+            <path class="s-line-n" d="M140 163 L166 163" marker-end="url(#aE3)"/>
+            <rect class="s-tint" x="172" y="140" width="104" height="46"/>
+            <text class="s-t2" x="224" y="168">게이트웨이</text>
+            <path class="s-line-n" d="M282 163 L308 163" marker-end="url(#aE3)"/>
+            <rect class="s-warn" x="314" y="140" width="104" height="46"/>
+            <text class="s-t2" x="366" y="160" style="fill:#8A5A0B">인터넷</text>
+            <text class="s-t2" x="366" y="178" style="fill:#8A5A0B">왕복</text>
+            <path class="s-line-n" d="M424 163 L450 163" marker-end="url(#aE3)"/>
+            <rect class="s-tint" x="456" y="140" width="104" height="46"/>
+            <text class="s-t2" x="508" y="168">서버 판단</text>
+            <path class="s-line-n" d="M566 163 L592 163" marker-end="url(#aE3)"/>
+            <rect class="s-tint" x="598" y="140" width="76" height="46"/>
+            <text class="s-t2" x="636" y="168">정지</text>
+            <text class="s-t3" x="350" y="208" style="fill:#8A5A0B;font-weight:700">수백 ms — 그 사이 AGV는 계속 움직인다</text>
+
+            <rect class="s-fill" x="20" y="228" width="660" height="66"/>
+            <text class="s-tw" x="350" y="254" style="font-size:13.5px">안전 · 긴급 판단은 예외 없이 로컬에서</text>
+            <text class="s-t2w" x="350" y="278">1.2에서 본 안전 규격품이 별도 회로를 갖는 것도 같은 이유다</text>
+
+            <defs>
+              <marker id="aE3" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>중앙 시스템은 <strong>느려도 되는 판단</strong>만 맡는다.
+        “어느 라인이 이번 주에 가장 자주 멈췄나” 같은 질문이 그것이다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b4-2-3"><span class="no">표 4.2-3</span> · 판단의 배치</div>
+      <table>
+        <thead>
+          <tr><th>판단</th><th>어디서</th><th>이유</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>사람 감지 → 즉시 정지</td><td class="t-warn">안전 회로 (독립)</td><td>가장 빠르고, 다른 계통과 무관하게 동작해야</td></tr>
+          <tr><td>장애물 감지 → 감속</td><td>AGV 내부 제어기</td><td>ms 단위 반응 필요</td></tr>
+          <tr><td>잼 감지 → 컨베이어 정지</td><td>PLC</td><td>ms 단위, 인터록 조건과 함께</td></tr>
+          <tr><td>센서 오염 → 청소 알림</td><td>게이트웨이 · 상위</td><td>분 단위여도 무방</td></tr>
+          <tr><td>설비별 가동률 비교</td><td>상위 시스템</td><td>여러 설비 데이터를 모아야 가능</td></tr>
+          <tr><td>고장 예측 모델 학습</td><td>클라우드</td><td>장기간·대량 데이터 필요</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note field">
+        <span class="t">현장 · “상위가 죽었는데 라인이 섰다”면</span>
+        <p>정상적인 설계라면 상위 시스템이 죽어도 라인은 계속 돌아야 한다.
+        만약 상위 장애로 라인이 선다면 <strong>제어 판단이 위쪽에 있는 것</strong>이며,
+        설계상 위험 요소다. 이런 구조를 발견하면 담당자에게 보고할 가치가 있다.
+        4.1 실무 보강 1에서 확인하라고 한 “우리 게이트웨이는 어느 쪽인가”와 같은 맥락이다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 4 ============ -->
+    <section class="sec" id="s4-2-4">
+      <div class="sec-no">4.2.4</div>
+      <h2>오프라인 작동과 동기화<span class="en">끊겨도 돌고, 복구되면 채운다</span></h2>
+
+      <p class="keyline">
+        회선이 끊겨도 설비는 돌아야 하고, <strong>그 동안의 데이터도 남아야 한다.</strong>
+        내장 버퍼가 이 둘을 동시에 해결한다.
+      </p>
+
+      <p>
+        4.1에서 게이트웨이가 버퍼를 갖는다고 했다. 여기서 조금 더 들어간다.
+        상위 연결이 끊기면 게이트웨이(또는 에지 장치)는 <strong>데이터를 내부 저장소에 쌓는다.</strong>
+        설비는 아무 영향 없이 계속 돌아간다.
+        연결이 복구되면 밀린 데이터를 <strong>시간 순서대로</strong> 올려 보낸다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-2-4"><span class="no">그림 4.2-4</span> · 오프라인 버퍼링과 복구 후 동기화</div>
+          <svg viewBox="0 0 700 306" role="img" aria-label="회선 두절 시 버퍼링과 복구 후 동기화 과정">
+            <text class="s-hdr" x="115" y="18">정상</text>
+            <rect class="s-tint" x="20" y="32" width="190" height="120"/>
+            <text class="s-t3" x="115" y="58">설비 · 게이트웨이</text>
+            <path class="s-line-n" d="M115 70 L115 96" marker-end="url(#aE4)"/>
+            <text class="s-t2" x="115" y="118">실시간 전송</text>
+            <text class="s-t2" x="115" y="140">버퍼 비어 있음</text>
+
+            <text class="s-hdr" x="325" y="18">회선 두절</text>
+            <rect class="s-warn" x="230" y="32" width="190" height="120"/>
+            <text class="s-t3" x="325" y="58" style="fill:#8A5A0B">설비 · 게이트웨이</text>
+            <path class="s-line-n" d="M325 70 L325 88" stroke="#A67C1F"/>
+            <line x1="310" y1="92" x2="340" y2="92" stroke="#A67C1F" stroke-width="3"/>
+            <line x1="315" y1="86" x2="335" y2="98" stroke="#A67C1F" stroke-width="2.4"/>
+            <line x1="335" y1="86" x2="315" y2="98" stroke="#A67C1F" stroke-width="2.4"/>
+            <text class="s-t2" x="325" y="120" style="fill:#8A5A0B;font-weight:700">설비는 계속 동작</text>
+            <text class="s-t2" x="325" y="140" style="fill:#8A5A0B">버퍼에 쌓임</text>
+
+            <text class="s-hdr" x="560" y="18">복구</text>
+            <rect class="s-fill" x="440" y="32" width="240" height="120"/>
+            <text class="s-tw" x="560" y="58" style="font-size:13px">설비 · 게이트웨이</text>
+            <path class="s-line-n" d="M560 70 L560 96" marker-end="url(#aE4)" stroke="#DCE7F3"/>
+            <text class="s-t2w" x="560" y="120">밀린 데이터를</text>
+            <text class="s-t2w" x="560" y="140">시간 순서대로 전송</text>
+
+            <rect class="s-plain" x="20" y="172" width="660" height="56"/>
+            <text class="s-t3" x="350" y="196" style="font-weight:700">설비는 한 번도 멈추지 않았고, 데이터도 빠짐없이 남았다</text>
+            <text class="s-t2" x="350" y="218">이것이 에지 컴퓨팅의 “자립성”이 주는 결과다</text>
+
+            <rect class="s-warn" x="20" y="240" width="660" height="56"/>
+            <text class="s-t3" x="350" y="264" style="fill:#8A5A0B;font-weight:700">단, 버퍼 용량을 넘기면 오래된 데이터부터 지워진다</text>
+            <text class="s-t2" x="350" y="286" style="fill:#8A5A0B">장시간 두절은 결국 데이터 손실로 이어진다 — 조기 복구가 중요한 이유</text>
+
+            <defs>
+              <marker id="aE4" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>버퍼는 무한하지 않다. “며칠이면 괜찮다”가 아니라 <strong>용량에 달려 있다.</strong></figcaption>
+      </figure>
+
+      <div class="note">
+        <span class="t">개념 · 데이터에도 우선순위가 있다</span>
+        <p>버퍼가 가득 차기 시작하면 무엇부터 버릴지 정해져 있어야 한다.
+        보통은 <strong>고빈도 원시 데이터부터 버리고, 경고·고장 이벤트는 끝까지 지킨다.</strong>
+        “속도값 1초 단위 기록”은 없어도 되지만
+        “새벽 3시에 3번 크레인에 과부하 알람이 났다”는 사실은 반드시 남아야 하기 때문이다.</p>
+      </div>
+
+      <div class="tbl-label" id="b4-2-4"><span class="no">표 4.2-4</span> · 데이터 종류별 보존 우선순위</div>
+      <table>
+        <thead>
+          <tr><th>우선순위</th><th>데이터</th><th>이유</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1 (최우선)</td><td>경고·고장 이벤트, 안전 관련 기록</td><td>사고 조사·원인 분석의 근거</td></tr>
+          <tr><td>2</td><td>생산 실적, 처리 물량</td><td>업무·정산에 직접 쓰임</td></tr>
+          <tr><td>3</td><td>진단 지표 (여유도·토크·온도) 요약값</td><td>예지 보전의 추세 판단</td></tr>
+          <tr><td>4</td><td>고빈도 원시 측정값</td><td>양이 가장 많고 대체 가능</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ 본문 5 ============ -->
+    <section class="sec" id="s4-2-5">
+      <div class="sec-no">4.2.5</div>
+      <h2>실무 보강<span class="en">정책이 현장 대응에 미치는 영향</span></h2>
+
+      <p class="keyline">
+        에지 정책은 담당자가 설계하지만, <strong>그 결과를 매일 겪는 것은 기술자</strong>다.
+        정책이 잘못되면 알람이 쏟아지거나, 필요한 데이터가 없다.
+      </p>
+
+      <p>
+        아래 다섯 항목은 목차에 명시되어 있지는 않지만
+        <strong>물류설비 운영에서 실제로 필요해 보강한 내용</strong>이다.
+      </p>
+
+      <!-- 1 -->
+      <div class="prac">
+        <h3>1. “데이터가 없어서 못 찾는다”를 줄이려면</h3>
+        <p class="prac-tip">사후에 후회하지 않으려면 사전에 요청해야 한다.</p>
+
+        <p>
+          고장이 난 뒤 원인을 찾으려는데 <strong>그 시점의 데이터가 남아 있지 않은</strong> 경우가 많다.
+          데드밴딩이나 주기 축소로 걸러졌기 때문이다.
+          기술자가 사전에 요청할 수 있는 것들이 있다.
+        </p>
+        <ul>
+          <li><strong>반복 고장이 나는 설비는 상세 기록을 켜 달라고 요청</strong> — 원인이 잡힐 때까지 한시적으로</li>
+          <li><strong>알람 발생 전후 데이터는 원본으로 남기게</strong> — 이벤트 트리거 기록이라 부른다</li>
+          <li><strong>계절·물량 피크 전에 기준 데이터 확보</strong> — 3.4의 베이스라인</li>
+          <li><strong>정비 직후 데이터 재수집</strong> — 새 평소값을 만들기 위해</li>
+        </ul>
+
+        <div class="note field">
+          <span class="t">현장 · 요청은 구체적으로</span>
+          <p>“데이터 좀 더 남겨 주세요”는 실행되지 않는다.
+          <strong>“3번 소터 다이버터 서보의 토크값을, 알람 전후 30초를, 100ms 간격으로”</strong>처럼
+          대상·구간·주기를 지정하면 담당자가 바로 설정할 수 있다.
+          무엇이 필요한지 아는 사람은 현장 기술자다.</p>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="prac">
+        <h3>2. 알람이 쏟아질 때 정책을 의심한다</h3>
+        <p class="prac-tip">2.4의 알람 홍수를 에지 정책 관점에서 다시 본다.</p>
+
+        <p>
+          경고가 하루에 수백 건씩 뜬다면 대개 <strong>임계값이나 이벤트 조건이 잘못 잡힌 것</strong>이다.
+          현장에서 확인해 보고할 수 있는 패턴이 있다.
+        </p>
+        <div class="tbl-label" id="b4-2-5"><span class="no">표 4.2-5</span> · 알람 패턴과 의심할 정책</div>
+        <table>
+          <thead>
+            <tr><th>패턴</th><th>의심되는 정책 문제</th><th>보고 내용</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>같은 설비에서 계속 반복</td><td>그 자리의 정상 범위가 기준과 다름</td><td>“이 자리는 원래 이 값이다”</td></tr>
+            <tr><td>기동·정지 때마다 발생</td><td>과도 상태를 이상으로 판정</td><td>“운전 중에는 정상, 기동 시만 뜬다”</td></tr>
+            <tr><td>특정 품목에서만</td><td>대상물 조건이 반영되지 않음</td><td>“○○ 품목 처리 시에만 뜬다”</td></tr>
+            <tr><td>야간에만 몰림</td><td>온도·조도 등 환경 변화 미반영</td><td>“새벽 시간대에 집중된다”</td></tr>
+            <tr><td>알람이 떴다 바로 사라짐</td><td>데드밴드·지연 시간 부족</td><td>“순간적으로만 뜨고 회복된다”</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 3 -->
+      <div class="prac">
+        <h3>3. 회선 두절 시 대응</h3>
+        <p class="prac-tip">설비가 도는지부터 확인하고, 시간을 기록한다.</p>
+
+        <ol>
+          <li><strong>설비 정상 동작 확인</strong> — 라인이 돌고 있으면 긴급도가 낮아진다</li>
+          <li><strong>두절 시각 기록</strong> — 버퍼 용량 대비 남은 시간을 담당자가 계산할 수 있다</li>
+          <li><strong>영향 범위 확인</strong> — 전체인지 일부 구간인지 (4.1 실무 보강 2)</li>
+          <li><strong>물리적 원인 확인</strong> — 케이블 이탈, 스위치 전원, 최근 공사 이력</li>
+          <li><strong>복구 후 동기화 확인</strong> — 밀린 데이터가 실제로 올라왔는지 화면에서 확인</li>
+        </ol>
+
+        <div class="note warn">
+          <span class="t">주의 · 복구되었다고 끝이 아니다</span>
+          <p>연결이 복구되어도 <strong>밀린 데이터 전송이 실패하는 경우</strong>가 있다.
+          버퍼가 이미 넘쳤거나, 시각 정보가 어긋났거나, 상위에서 거부한 경우다.
+          복구 후 <strong>두절 구간의 데이터가 화면에 채워졌는지</strong>를 반드시 확인한다.
+          비어 있다면 그 사실 자체를 기록해 두어야 나중에 혼란이 없다.</p>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="prac">
+        <h3>4. 시각 동기화 문제</h3>
+        <p class="prac-tip">눈에 잘 안 띄지만 원인 분석을 통째로 망친다.</p>
+
+        <p>
+          여러 설비의 데이터를 비교하려면 <strong>시각이 서로 맞아야 한다.</strong>
+          기기마다 내부 시계가 조금씩 어긋나면,
+          “A가 먼저 멈추고 B가 따라 멈췄다”인지 그 반대인지 알 수 없게 된다.
+        </p>
+        <ul>
+          <li>대부분의 설비는 <strong>시각 동기화 서버</strong>에서 시간을 받아 맞춘다</li>
+          <li>동기화가 끊기면 시계가 서서히 어긋난다 — 하루 몇 초씩</li>
+          <li>알람 시각이 실제와 다르게 보이면 이 문제를 의심한다</li>
+          <li>정전 후 특정 기기의 시각이 초기화되는 경우도 있다</li>
+        </ul>
+        <div class="note field">
+          <span class="t">현장 · 확인 방법</span>
+          <p>화면에 표시된 알람 시각과 <strong>실제로 라인이 멈춘 시각</strong>을 대조해 본다.
+          몇 분 이상 차이 나면 시각 동기화 문제다.
+          이 사실을 알려 주는 것만으로 분석 담당자의 시간을 크게 아낄 수 있다.</p>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="prac">
+        <h3>5. 현장 점검 체크리스트</h3>
+        <p class="prac-tip">에지·데이터 관점의 점검 항목.</p>
+
+        <h4>일상</h4>
+        <ul class="check">
+          <li>상위 화면의 데이터가 정상 주기로 갱신되고 있는가</li>
+          <li>알람 시각과 실제 사건 시각이 일치하는가</li>
+          <li>매일 반복되는 헛경고 패턴이 있는가 (표 4.2-5로 분류)</li>
+        </ul>
+
+        <h4>회선 두절 시</h4>
+        <ul class="check">
+          <li>설비가 정상 동작하는지 먼저 확인했는가</li>
+          <li>두절 시각을 기록했는가</li>
+          <li>영향 범위(전체 / 일부)를 확인했는가</li>
+          <li>복구 후 밀린 데이터가 실제로 채워졌는지 확인했는가</li>
+        </ul>
+
+        <h4>사전 준비</h4>
+        <ul class="check">
+          <li>반복 고장 설비에 대해 상세 기록을 요청해 두었는가</li>
+          <li>정비 직후 새 베이스라인 데이터를 확보했는가</li>
+          <li>물량 피크 시즌 전에 기준 데이터를 남겨 두었는가</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <span class="t">개념 · 이 장이 남기는 것</span>
+        <p>에지 컴퓨팅은 속도·대역폭·자립성 세 가지 이유로 필요하고(본문 1),
+        데드밴딩과 필터링으로 데이터를 줄이되 잃는 것도 있다(본문 2).
+        안전과 긴급 판단은 예외 없이 로컬에서 처리한다(본문 3).
+        회선이 끊겨도 버퍼로 버티고 복구 후 동기화하지만, 용량에는 한계가 있다(본문 4).<br>
+        다음 장 4.3에서는 그 회선이 <strong>애초에 끊기지 않도록</strong> 만드는
+        네트워크 구조를 다룬다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 참고자료 ============ -->
+    <section class="ref" id="r4-2">
+      <div class="sec-no">참고자료</div>
+      <h2>참고자료</h2>
+
+      <h3>1. 용어 정리</h3>
+      <dl class="terms">
+        <dt id="t4-2-1">에지 컴퓨팅 (Edge computing)</dt>
+        <dd>데이터가 생성되는 현장 가까이에서 처리·판단을 수행하는 방식. 지연·전송량을 줄이고 자립성을 높인다.</dd>
+        <dt id="t4-2-2">데드밴딩 (Deadbanding)</dt>
+        <dd>일정 폭 이하의 변화는 보고하지 않는 규칙. 1.4의 응차와 발상이 같으며, 전송량을 크게 줄인다.</dd>
+        <dt id="t4-2-3">데드밴드 (Deadband)</dt>
+        <dd>변화를 무시하는 폭. 크게 잡으면 데이터는 줄지만 미세한 이상 징후도 함께 사라진다.</dd>
+        <dt id="t4-2-4">이벤트 전송 (Event-driven)</dt>
+        <dd>상태가 바뀌는 순간에만 데이터를 보내는 방식. ON/OFF나 경고·고장 상태에 적합하다.</dd>
+        <dt id="t4-2-5">버퍼링 (Buffering)</dt>
+        <dd>상위 연결이 끊긴 동안 데이터를 내부 저장소에 임시 보관하는 것.</dd>
+        <dt id="t4-2-6">동기화 (Synchronization)</dt>
+        <dd>연결 복구 후 밀린 데이터를 시간 순서대로 전송해 상위 기록을 채우는 것.</dd>
+        <dt id="t4-2-7">지연 (Latency)</dt>
+        <dd>신호가 목적지에 도달하기까지 걸리는 시간. 네트워크를 거칠수록 커진다.</dd>
+        <dt id="t4-2-8">시각 동기화 (Time synchronization)</dt>
+        <dd>여러 기기의 내부 시계를 하나의 기준 시각에 맞추는 것. 데이터 비교 분석의 전제 조건이다.</dd>
+        <dt id="t4-2-9">이벤트 트리거 기록</dt>
+        <dd>알람 등 특정 사건이 발생하면 그 전후 구간의 원시 데이터를 상세히 저장하는 기능.</dd>
+      </dl>
+
+      <h3>2. 관련 이미지 — 실물과 도해로 확인하기</h3>
+      <p class="ref-intro">
+        본문에 나온 순서대로 정리했다. 센서·공압은 썬덴코리아 파트너사, 제어기는 미쓰비시전기, 로봇은 야스카와·뉴로메카 기준이다.
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=514&amp;cate_id=2&amp;out_order=3" target="_blank" rel="noopener">정보 연계 제품 — 에지 처리 · 데이터 수집 모듈</a>
+          <span class="where">본문 1 표 4.2-1 · 본문 4 — 에지 계층에서 데이터를 모으고 버퍼링하는 제품</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/mobile.do?act=product_list_mobile&amp;parent_id=528&amp;cate_id=2" target="_blank" rel="noopener">MELSEC iQ-R — 고속 데이터 로깅 기능</a>
+          <span class="where">실무 보강 1 — 이벤트 트리거 기록을 설정하는 실제 기능</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/products/detection-sensors/photoelectric-sensors/photoelectric-sensors/c/g172752" target="_blank" rel="noopener">광전 센서 — 센서 내부 필터 · 이벤트 설정</a>
+          <span class="where">본문 1 · 2 — 가장 앞단 에지인 센서에서 무엇을 설정할 수 있는지</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/products/safety/safety-light-beam-sensors/c/g569551" target="_blank" rel="noopener">안전 광전 센서 · 라이트커튼</a>
+          <span class="where">본문 3 표 4.2-3 — 안전 판단이 독립 회로로 분리되는 이유</span>
+        </li>
+        <li>
+          <span class="src">Xnergy</span>
+          <a href="https://www.xnergytech.com/en/" target="_blank" rel="noopener">Xnergy — 자율주행 물류로봇용 무선 충전 시스템</a>
+          <span class="where">본문 3 — 썬덴코리아 파트너사. AGV·AMR이 충전 스테이션과 로컬에서 주고받는 판단의 사례</span>
+        </li>
+        <li>
+          <span class="src">IO-Link</span>
+          <a href="https://io-link.com/fileadmin/user_upload/Downloads/Package_2024/IOL-Interface-Spec_10002_V114_Jun24.pdf" target="_blank" rel="noopener">IO-Link 사양서 v1.1.4 (무료 PDF) — 이벤트 전송 구조</a>
+          <span class="where">본문 2 표 4.2-2 — 이벤트 방식 전송이 규격에서 어떻게 정의되는지</span>
+        </li>
+      </ol>
+
+      <h3>3. 학술 · 표준 근거 자료 — 심화 학습용</h3>
+      <p class="ref-intro">
+        무료로 볼 수 있는 자료를 우선했다.<br>
+        <span class="src std">표준</span> 국제 규격 · <span class="src paper">논문</span> 공개 학술 자료
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://opcfoundation.org/wp-content/uploads/2026/01/OPC-UA-Interoperability-For-Industrie4-and-IoT-EN.pdf" target="_blank" rel="noopener">OPC UA 상호운용성 백서 (무료 PDF)</a>
+          <span class="where">본문 1 · 2 — 데드밴딩(Deadband)이 OPC UA 구독 설정에 표준 기능으로 들어 있다.
+          어떤 파라미터로 제어하는지 확인할 수 있다</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://opcfoundation.org/" target="_blank" rel="noopener">OPC Foundation — OPC UA (IEC 62541)</a>
+          <span class="where">본문 2 — 구독(Subscription)과 모니터링 항목의 데드밴드 설정 규격</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/68534" target="_blank" rel="noopener">IEC 61131-9 : SDCI (IO-Link) — 이벤트 처리</a>
+          <span class="where">본문 2 — 센서 단에서의 이벤트 전송 규격</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/63115" target="_blank" rel="noopener">IEC 61496-1 : 기계 안전 — ESPE</a>
+          <span class="where">본문 3 — 안전 기능의 응답 시간 요구사항.
+          왜 안전 판단을 네트워크에 맡길 수 없는지의 규격상 근거</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://arxiv.org/pdf/1903.11549" target="_blank" rel="noopener">A Survey of Protocols and Standards for Internet of Things (arXiv 공개)</a>
+          <span class="where">본문 1 · 3 — 계층별 지연 특성과 에지·클라우드 분담 구조의 개관</span>
+        </li>
+        <li>
+          <span class="src paper">참고</span>
+          <a href="https://industryx.ai/2025/12/11/mqtt-vs-opc-ua-2025-architecture-guide/" target="_blank" rel="noopener">MQTT vs OPC UA — 아키텍처 선택 가이드</a>
+          <span class="where">본문 1 · 2 — 어느 계층에 어떤 프로토콜과 정책을 두는지에 대한 실무적 판단 기준</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://www.mdpi.com/1424-8220/13/11/15465/htm" target="_blank" rel="noopener">Accurate Estimation of Airborne Ultrasonic Time-of-Flight for Overlapping Echoes (Sensors, MDPI)</a>
+          <span class="where">본문 2 — 원시 데이터를 줄이기 전에 어떤 신호 처리가 필요한지의 사례</span>
+        </li>
+      </ol>
+
+      <h3>4. 이어지는 장과의 연결</h3>
+      <ul style="font-size:13.5px">
+        <li><strong>4.3 생존형 네트워크 인프라</strong> — 본문 4의 “회선 두절”을 구조적으로 줄이는 방법</li>
+        <li><strong>2.4 지능형 기능</strong> — 알람 홍수 문제 (선행 학습)</li>
+        <li><strong>3.4 예지 보전</strong> — 데이터를 줄일 때 예지 보전용 데이터를 지켜야 하는 이유</li>
+        <li><strong>4.1 산업용 IoT 게이트웨이</strong> — 정책이 실제로 구현되는 장치</li>
+      </ul>
+    </section>

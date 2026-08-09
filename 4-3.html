@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4.3 생존형 네트워크 인프라 — 데이터를 읽는 감각</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+
+<!-- ================= 좌측 목차 (build.py 자동 생성) ================= -->
+<aside class="toc">
+  <div class="toc-head" data-part="start">
+    <a class="course-link" href="index.html">
+      <div class="course">제목 : 데이터를 읽는 감각</div>
+      <div class="course-desc">지은이 : 강승태</div>
+      <div class="course-desc">작성일 : 2026-08-10</div>
+    </a>
+  </div>
+
+  <a href="index.html">목차</a>
+  <a href="preface.html">머리말</a>
+  <a class="toc-group" href="index.html#part1">1부 · 센서의 기초 : 데이터의 생성</a>
+  <a href="1-1.html">1.1장 센서의 정의와 원리</a>
+  <a href="1-2.html">1.2장 다양한 센서 분류</a>
+  <a href="1-3.html">1.3장 현장 확인 성능 지표</a>
+  <a href="1-4.html">1.4장 오작동 방지와 기본 세팅</a>
+  <a class="toc-group" href="index.html#part2">2부 · 스마트센서의 구조 : 데이터의 지능화</a>
+  <a href="2-1.html">2.1장 스마트센서의 등장</a>
+  <a href="2-2.html">2.2장 핵심 내부 구조</a>
+  <a href="2-3.html">2.3장 플러그 앤 플레이</a>
+  <a href="2-4.html">2.4장 지능형 기능</a>
+  <a class="toc-group" href="index.html#part3">3부 · 자동화 장비와 스마트센서 : 데이터의 활용</a>
+  <a href="3-1.html">3.1장 장비 제어의 기본 원리</a>
+  <a href="3-2.html">3.2장 서보 모터와 센서의 융합</a>
+  <a href="3-3.html">3.3장 현장 통신 프로토콜</a>
+  <a href="3-4.html">3.4장 예지 보전</a>
+  <a class="toc-group on" href="index.html#part4">4부 · 자동화 공정의 운영 : 데이터의 통합</a>
+  <a href="4-1.html">4.1장 산업용 IoT 게이트웨이</a>
+  <a href="4-2.html">4.2장 에지 컴퓨팅 정책</a>
+  <a href="4-3.html" class="on">4.3장 생존형 네트워크 인프라</a>
+  <div class="toc-sub" data-for="4-3">
+    <a href="#s4-3-1">4.3.1 단일 장애점</a>
+    <a href="#s4-3-2">4.3.2 스타형과 링형</a>
+    <a href="#s4-3-3">4.3.3 링 이중화의 동작</a>
+    <a href="#s4-3-4">4.3.4 하이브리드 설계와 세그먼트 분리</a>
+    <a href="#s4-3-5">4.3.5 실무 보강</a>
+    <a href="#r4-3">참고자료</a>
+  </div>
+  <div class="toc-group">찾아보기</div>
+  <a href="index-terms.html">용어 색인</a>
+  <a href="index-figs.html">그림 색인</a>
+  <a href="index-tables.html">표 색인</a>
+  <a href="index-abbr.html">약어 목록</a>
+  <a href="index-refs.html">참고문헌</a>
+</aside>
+
+<!-- ================= 본문 ================= -->
+<div class="main">
+
+  <div class="topbar">
+    <div class="crumb">
+      <span class="c1">4부 · 자동화 공정의 운영 : 데이터의 통합</span>
+      <span>›</span>
+      <span class="c2">4.3 생존형 네트워크 인프라</span>
+    </div>
+    <div class="nav">
+      <a href="index.html" class="home">목차</a>
+      <a href="4-2.html">◀ 이전</a>
+      <span class="count">15 / 15</span>
+      <span class="disabled">다음 ▶</span>
+    </div>
+  </div>
+
+  <article class="article">
+
+    <div class="lesson-head">    <h1><span class="lesson-tag">4.3</span>생존형 네트워크 인프라</h1>
+    <p class="subtitle">선이 하나 끊어져도 살아남는 통신망 — 구조가 가용성을 만든다</p>
+    </div>
+
+    <p class="lead">
+      3.3에서 봤듯이 통신선 한 줄이 끊기면 <strong>그 뒤의 설비가 전부 선다.</strong>
+      물류 현장에서 이것은 몇 시간의 라인 정지와 그날의 생산 차질을 뜻한다.
+      해결책은 케이블을 더 튼튼하게 만드는 것이 아니라 <strong>길을 두 개로 만드는 것</strong>이다.
+      이 책의 마지막 장이자, 앞의 모든 데이터가 안전하게 흐르기 위한 토대다.
+    </p>
+
+    <div class="goals">
+      <h4>이 장을 읽고 나면</h4>
+      <ol>
+        <li>단일 장애점(SPOF)이 무엇이고 왜 위험한지 설명할 수 있다.</li>
+        <li>스타형과 링형 토폴로지의 차이, 각각의 장단점을 설명할 수 있다.</li>
+        <li>링 이중화가 절단 시 어떻게 우회 경로를 만드는지 이해한다.</li>
+        <li>하이브리드 구성이 비용과 안정성을 어떻게 절충하는지 설명할 수 있다.</li>
+        <li>VLAN 분리가 장애 확산과 보안에 주는 효과를 이해한다.</li>
+      </ol>
+    </div>
+
+    <!-- ============ 본문 1 ============ -->
+    <section class="sec" id="s4-3-1">
+      <h2><span class="sec-no">4.3.1</span>단일 장애점<span class="en">하나가 죽으면 전부 죽는 자리</span></h2>
+
+      <p class="keyline">
+        <span class="kw">SPOF(Single Point of Failure)</span>는
+        <strong>그것 하나만 고장 나도 전체가 멈추는 요소</strong>를 말한다.
+        네트워크 설계의 목표는 SPOF를 줄이는 것이다.
+      </p>
+
+      <p>
+        3.3 본문 4에서 “특정 지점 이후 전부 죽었다”는 증상을 봤다.
+        그 지점이 바로 SPOF다. 케이블 한 가닥, 스위치 한 대, 전원 공급 장치 하나가
+        <strong>수십 대 설비의 운명을 쥐고 있는</strong> 구조다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-3-1"><span class="no">그림 4.3-1</span> · 물류설비 네트워크의 대표적 SPOF</div>
+          <svg viewBox="0 0 700 300" role="img" aria-label="네트워크의 단일 장애점 위치">
+            <rect class="s-fill" x="290" y="16" width="120" height="46"/>
+            <text class="s-tw" x="350" y="44" style="font-size:13px">상위 시스템</text>
+
+            <path class="s-line-n" d="M350 66 L350 92"/>
+            <rect class="s-warn" x="270" y="92" width="160" height="46"/>
+            <text class="s-t3" x="350" y="112" style="fill:#8A5A0B;font-weight:700">중앙 스위치</text>
+            <text class="s-t2" x="350" y="130" style="fill:#8A5A0B">SPOF ①</text>
+
+            <path class="s-line-n" d="M350 142 L350 162"/>
+            <path class="s-line-n" d="M150 162 L550 162"/>
+            <path class="s-line-n" d="M150 162 L150 186" marker-end="url(#aF1)"/>
+            <path class="s-line-n" d="M350 162 L350 186" marker-end="url(#aF1)"/>
+            <path class="s-line-n" d="M550 162 L550 186" marker-end="url(#aF1)"/>
+
+            <rect class="s-tint" x="80" y="190" width="140" height="46"/>
+            <text class="s-t3" x="150" y="218">현장 스위치 A</text>
+            <rect class="s-warn" x="280" y="190" width="140" height="46"/>
+            <text class="s-t3" x="350" y="210" style="fill:#8A5A0B">현장 스위치 B</text>
+            <text class="s-t2" x="350" y="228" style="fill:#8A5A0B">SPOF ②</text>
+            <rect class="s-tint" x="480" y="190" width="140" height="46"/>
+            <text class="s-t3" x="550" y="218">현장 스위치 C</text>
+
+            <g stroke="#8C9298" stroke-width="1">
+              <line x1="100" y1="240" x2="100" y2="262"/><line x1="125" y1="240" x2="125" y2="262"/>
+              <line x1="150" y1="240" x2="150" y2="262"/><line x1="175" y1="240" x2="175" y2="262"/>
+              <line x1="200" y1="240" x2="200" y2="262"/>
+              <line x1="300" y1="240" x2="300" y2="262"/><line x1="325" y1="240" x2="325" y2="262"/>
+              <line x1="350" y1="240" x2="350" y2="262"/><line x1="375" y1="240" x2="375" y2="262"/>
+              <line x1="400" y1="240" x2="400" y2="262"/>
+              <line x1="500" y1="240" x2="500" y2="262"/><line x1="525" y1="240" x2="525" y2="262"/>
+              <line x1="550" y1="240" x2="550" y2="262"/><line x1="575" y1="240" x2="575" y2="262"/>
+              <line x1="600" y1="240" x2="600" y2="262"/>
+            </g>
+            <text class="s-t2" x="350" y="286">SPOF ① 고장 → 전 구간 정지　·　SPOF ② 고장 → 중간부 전체 정지</text>
+
+            <defs>
+              <marker id="aF1" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>스위치뿐 아니라 <strong>스위치로 가는 케이블 한 가닥, 그 스위치의 전원</strong>도 모두 SPOF다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b4-3-1"><span class="no">표 4.3-1</span> · 물류설비의 SPOF 후보</div>
+      <table>
+        <thead>
+          <tr><th>SPOF 후보</th><th>고장 시 영향</th><th>대응 방향</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>중앙 스위치</td><td>전 구간 통신 두절</td><td>이중화 · 예비기 확보</td></tr>
+          <tr><td>기간 통신 케이블</td><td>그 이후 구간 전부</td><td>링 구성 · 경로 이중화</td></tr>
+          <tr><td>현장 스위치</td><td>해당 구역 전체</td><td>구역 분할 · 링 구성</td></tr>
+          <tr><td>스위치 전원 (SMPS)</td><td>해당 스위치 하위 전부</td><td>전원 이중화 · UPS</td></tr>
+          <tr><td>게이트웨이</td><td>데이터 수집 중단 (4.1)</td><td>버퍼 · 예비기</td></tr>
+          <tr><td>케이블 베어 통과 구간</td><td class="t-warn">굴곡 피로로 서서히 열화</td><td class="t-warn">정기 점검 · 예비 배선</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <span class="t">개념 · 물류설비가 특히 취약한 이유</span>
+        <p>물류 라인은 <strong>길고 선형</strong>이다. 컨베이어가 수백 미터 이어지고,
+        자동창고의 스태커크레인은 통로마다 레일을 따라 움직인다.
+        통신선도 그 형태를 따라가므로 <strong>중간 한 곳이 끊기면 뒤쪽 전부가 잘린다.</strong>
+        게다가 케이블 베어·이동체 구간이 많아 굴곡 피로로 인한 단선이 잦다.
+        일반 사무실 네트워크보다 훨씬 이중화가 절실하다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 2 ============ -->
+    <section class="sec" id="s4-3-2">
+      <h2><span class="sec-no">4.3.2</span>스타형과 링형<span class="en">두 가지 배선 구조</span></h2>
+
+      <p class="keyline">
+        <strong>스타형</strong>은 중앙에서 뻗어 나간다. 단순하지만 중앙이 SPOF다.
+        <strong>링형</strong>은 고리를 이룬다. 한 곳이 끊겨도 반대 방향으로 돌아간다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-3-2"><span class="no">그림 4.3-2</span> · 스타형과 링형</div>
+          <svg viewBox="0 0 700 316" role="img" aria-label="스타형 토폴로지와 링형 토폴로지 비교">
+            <text class="s-hdr" x="175" y="18">스타형 (Star)</text>
+            <rect class="s-fill" x="135" y="34" width="80" height="36"/>
+            <text class="s-tw" x="175" y="58" style="font-size:12px">중앙</text>
+            <g stroke="#0E2E4F" stroke-width="1.8">
+              <line x1="175" y1="70" x2="70" y2="124"/><line x1="175" y1="70" x2="140" y2="124"/>
+              <line x1="175" y1="70" x2="210" y2="124"/><line x1="175" y1="70" x2="280" y2="124"/>
+            </g>
+            <rect class="s-tint" x="44" y="124" width="52" height="34"/>
+            <text class="s-t2" x="70" y="146" style="font-size:11px">A</text>
+            <rect class="s-tint" x="114" y="124" width="52" height="34"/>
+            <text class="s-t2" x="140" y="146" style="font-size:11px">B</text>
+            <rect class="s-tint" x="184" y="124" width="52" height="34"/>
+            <text class="s-t2" x="210" y="146" style="font-size:11px">C</text>
+            <rect class="s-tint" x="254" y="124" width="52" height="34"/>
+            <text class="s-t2" x="280" y="146" style="font-size:11px">D</text>
+            <line x1="150" y1="92" x2="172" y2="106" stroke="#A67C1F" stroke-width="3"/>
+            <line x1="172" y1="92" x2="150" y2="106" stroke="#A67C1F" stroke-width="3"/>
+            <text class="s-t2" x="175" y="180" style="fill:#8A5A0B;font-weight:700">한 가닥 끊기면 그 기기만 단절</text>
+            <text class="s-t2" x="175" y="200" style="fill:#8A5A0B">중앙이 죽으면 전부 단절</text>
+
+            <line class="s-rule" x1="350" y1="30" x2="350" y2="290"/>
+
+            <text class="s-hdr" x="525" y="18">링형 (Ring)</text>
+            <rect class="s-fill" x="485" y="34" width="80" height="36"/>
+            <text class="s-tw" x="525" y="58" style="font-size:12px">관리자</text>
+            <rect class="s-tint" x="404" y="104" width="52" height="34"/>
+            <text class="s-t2" x="430" y="126" style="font-size:11px">A</text>
+            <rect class="s-tint" x="594" y="104" width="52" height="34"/>
+            <text class="s-t2" x="620" y="126" style="font-size:11px">B</text>
+            <rect class="s-tint" x="404" y="168" width="52" height="34"/>
+            <text class="s-t2" x="430" y="190" style="font-size:11px">D</text>
+            <rect class="s-tint" x="594" y="168" width="52" height="34"/>
+            <text class="s-t2" x="620" y="190" style="font-size:11px">C</text>
+            <g stroke="#0E2E4F" stroke-width="1.8" fill="none">
+              <path d="M497 70 L430 70 L430 104"/>
+              <path d="M553 70 L620 70 L620 104"/>
+              <path d="M430 138 L430 168"/>
+              <path d="M620 138 L620 168"/>
+              <path d="M430 202 L430 226 L620 226 L620 202"/>
+            </g>
+            <line x1="510" y1="214" x2="532" y2="238" stroke="#A67C1F" stroke-width="3"/>
+            <line x1="532" y1="214" x2="510" y2="238" stroke="#A67C1F" stroke-width="3"/>
+            <text class="s-t2" x="525" y="262" style="font-weight:700">여기가 끊겨도 반대 방향으로 도달</text>
+            <text class="s-t2" x="525" y="282">모든 기기가 계속 살아 있다</text>
+
+            <text class="s-t2" x="175" y="282">배선이 단순하고 저렴</text>
+          </svg>
+        </div>
+        <figcaption>링형은 케이블이 한 바퀴 더 필요하지만, <strong>절단 한 곳을 견딘다.</strong></figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b4-3-2"><span class="no">표 4.3-2</span> · 두 구조의 비교</div>
+      <table>
+        <thead>
+          <tr><th>항목</th><th>스타형</th><th>링형</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>배선량</td><td>적다</td><td>한 구간 더 필요</td></tr>
+          <tr><td>비용</td><td>낮다</td><td>높다 (관리형 스위치 필요)</td></tr>
+          <tr><td>절단 1회 견딤</td><td class="t-warn">불가</td><td>가능</td></tr>
+          <tr><td>절단 2회 이상</td><td class="t-warn">불가</td><td class="t-warn">불가 — 링이 두 조각으로 갈림</td></tr>
+          <tr><td>중앙 고장</td><td class="t-warn">전체 정지</td><td>관리자 이중화 시 견딤</td></tr>
+          <tr><td>설정 난이도</td><td>단순</td><td>이중화 프로토콜 설정 필요</td></tr>
+          <tr><td>적합한 자리</td><td>단말 기기 · 짧은 구간</td><td>기간망 · 긴 라인 · 정지 손실이 큰 구간</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note field">
+        <span class="t">현장 · 우리 라인은 어느 구조인가</span>
+        <p>제어반의 스위치를 보면 알 수 있다. <strong>포트 두 개에 굵은 통신선이 각각 나가고</strong>
+        그것이 옆 반으로 이어져 결국 한 바퀴 돌아온다면 링 구성이다.
+        스위치에 <code>MRP</code>, <code>Ring</code>, <code>RSTP</code> 같은 표시나 설정 라벨이 붙어 있는 경우도 많다.
+        구조를 알면 장애 시 “어디까지 살아 있을지”를 예측할 수 있다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 3 ============ -->
+    <section class="sec" id="s4-3-3">
+      <h2><span class="sec-no">4.3.3</span>링 이중화의 동작<span class="en">끊긴 순간 반대 방향으로 돌아간다</span></h2>
+
+      <p class="keyline">
+        평상시 링은 <strong>한 곳을 일부러 막아 두고</strong> 스타처럼 쓴다.
+        절단이 생기면 <strong>막아 둔 곳을 열어</strong> 우회 경로를 만든다.
+      </p>
+
+      <p>
+        고리를 그대로 두면 데이터가 무한히 뱅뱅 돌아 네트워크가 마비된다(브로드캐스트 스톰).
+        그래서 <span class="kw">링 관리자</span> 역할의 스위치가 한 구간을 논리적으로 차단해 둔다.
+        어딘가 끊기면 즉시 그 차단을 풀어 반대 방향 경로를 살린다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-3-3"><span class="no">그림 4.3-3</span> · 절단 발생 시 경로 전환</div>
+          <svg viewBox="0 0 700 316" role="img" aria-label="링 이중화에서 절단 발생 시 경로가 전환되는 과정">
+            <text class="s-hdr" x="175" y="18">평상시 — 한 구간을 막아 둔다</text>
+            <rect class="s-fill" x="135" y="34" width="80" height="34"/>
+            <text class="s-tw" x="175" y="57" style="font-size:12px">관리자</text>
+            <rect class="s-tint" x="54" y="106" width="52" height="34"/>
+            <text class="s-t2" x="80" y="128" style="font-size:11px">A</text>
+            <rect class="s-tint" x="244" y="106" width="52" height="34"/>
+            <text class="s-t2" x="270" y="128" style="font-size:11px">B</text>
+            <rect class="s-tint" x="54" y="170" width="52" height="34"/>
+            <text class="s-t2" x="80" y="192" style="font-size:11px">D</text>
+            <rect class="s-tint" x="244" y="170" width="52" height="34"/>
+            <text class="s-t2" x="270" y="192" style="font-size:11px">C</text>
+            <g stroke="#0E2E4F" stroke-width="2" fill="none">
+              <path d="M147 68 L80 68 L80 106"/>
+              <path d="M203 68 L270 68 L270 106"/>
+              <path d="M80 140 L80 170"/>
+              <path d="M270 140 L270 170"/>
+            </g>
+            <path d="M80 204 L80 228 L270 228 L270 204" stroke="#C9CCD0" stroke-width="2" fill="none" stroke-dasharray="6 4"/>
+            <rect class="s-warn" x="140" y="216" width="70" height="24"/>
+            <text class="s-t2" x="175" y="246" style="fill:#8A5A0B;font-size:11px">차단</text>
+            <text class="s-t2" x="175" y="266">고리를 열어 두어 데이터가 돌지 않게</text>
+
+            <line class="s-rule" x1="350" y1="30" x2="350" y2="290"/>
+
+            <text class="s-hdr" x="525" y="18">절단 발생 — 막아 둔 곳을 연다</text>
+            <rect class="s-fill" x="485" y="34" width="80" height="34"/>
+            <text class="s-tw" x="525" y="57" style="font-size:12px">관리자</text>
+            <rect class="s-tint" x="404" y="106" width="52" height="34"/>
+            <text class="s-t2" x="430" y="128" style="font-size:11px">A</text>
+            <rect class="s-tint" x="594" y="106" width="52" height="34"/>
+            <text class="s-t2" x="620" y="128" style="font-size:11px">B</text>
+            <rect class="s-tint" x="404" y="170" width="52" height="34"/>
+            <text class="s-t2" x="430" y="192" style="font-size:11px">D</text>
+            <rect class="s-tint" x="594" y="170" width="52" height="34"/>
+            <text class="s-t2" x="620" y="192" style="font-size:11px">C</text>
+            <g stroke="#0E2E4F" stroke-width="2" fill="none">
+              <path d="M497 68 L430 68 L430 106"/>
+              <path d="M553 68 L620 68 L620 106"/>
+              <path d="M430 140 L430 170"/>
+              <path d="M430 204 L430 228 L620 228 L620 204"/>
+            </g>
+            <path d="M620 140 L620 170" stroke="#A67C1F" stroke-width="2" fill="none" stroke-dasharray="4 3"/>
+            <line x1="610" y1="145" x2="632" y2="165" stroke="#A67C1F" stroke-width="3"/>
+            <line x1="632" y1="145" x2="610" y2="165" stroke="#A67C1F" stroke-width="3"/>
+            <text class="s-t2" x="525" y="266" style="font-weight:700">B는 반대 방향(A–D–C)으로 도달</text>
+            <text class="s-t2" x="525" y="286">전환 시간 수십 ms — 설비는 못 느낀다</text>
+
+            <text class="s-t2" x="175" y="286">이 구조가 없으면 데이터가 무한히 순환한다</text>
+          </svg>
+        </div>
+        <figcaption>전환은 자동이고 매우 빠르다. <strong>기술자가 눈치채지 못하는 사이에</strong> 이미 우회하고 있을 수 있다.</figcaption>
+      </figure>
+
+      <div class="note warn">
+        <span class="t">주의 · 이미 우회 중일 수 있다</span>
+        <p>링이 잘 동작하면 <strong>한 곳이 끊겨도 라인은 정상적으로 돈다.</strong>
+        그래서 아무도 모른 채 몇 주가 지나갈 수 있다.
+        그 상태에서 <strong>다른 한 곳이 더 끊기면</strong> 그때 라인이 선다.
+        3.1의 “가려진 고장”과 정확히 같은 구조다.
+        <strong>스위치의 링 상태 표시등을 정기적으로 확인하는 것</strong>이 그래서 중요하다.</p>
+      </div>
+
+      <div class="tbl-label" id="b4-3-3"><span class="no">표 4.3-3</span> · 이중화 관련 용어</div>
+      <table class="sourced">
+        <thead>
+          <tr><th>용어</th><th>내용</th><th>전환 시간</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>MRP<span class="mk">①</span></td><td>산업용 링 이중화 표준 (IEC 62439-2). 링 관리자가 경로를 관리</td><td>10 ~ 500 ms<br><span style="font-size:11.5px;color:#767A7E">규격이 정한 4단계 프로파일</span></td></tr>
+          <tr><td>RSTP</td><td>일반 이더넷의 이중화. 산업용보다 전환이 느리다</td><td>수백 ms~수 초</td></tr>
+          <tr><td>PRP · HSR<span class="mk">②</span></td><td>두 경로로 동시에 보내 무중단을 실현</td><td>0 (끊김 없음)</td></tr>
+          <tr><td>링크 이중화</td><td>두 가닥을 묶어 하나가 끊겨도 유지</td><td>거의 0</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tbl-src">
+        <b>근거</b>
+        <span class="mk">①</span> <a href="https://standards.iteh.ai/catalog/standards/clc/df761ad4-f48e-4f43-b757-9cdb9ae677f8/en-iec-62439-2-2022" target="_blank" rel="noopener">IEC 62439-2</a>
+        는 최악 전환 시간을 <b>500 ms · 200 ms · 30 ms</b>(스위치 50대까지)와 <b>10 ms</b>(스위치 14대까지)
+        네 가지 프로파일로 규정한다. <span class="fld">링에 스위치를 추가하면 프로파일 한계를 넘길 수 있으므로 증설 시 확인이 필요하다.</span><br>
+        <span class="mk">②</span> PRP · HSR은 <b>IEC 62439-3</b>에 규정된 별도 방식이다. 두 경로로 동시에 전송해 전환 자체가 없다<br>
+        전환 시간은 규격이 보장하는 <b>최악값</b>이며, 실제 값은 기종·설정·링 규모에 따라 달라진다
+      </div>
+    </section>
+
+    <!-- ============ 본문 4 ============ -->
+    <section class="sec" id="s4-3-4">
+      <h2><span class="sec-no">4.3.4</span>하이브리드 설계와 세그먼트 분리<span class="en">비용과 안정성의 균형, 장애 확산 차단</span></h2>
+
+      <p class="keyline">
+        모든 구간을 링으로 만들 필요는 없다.
+        <strong>정지 손실이 큰 곳은 링, 나머지는 스타.</strong>
+        그리고 그 위에 <strong>논리적 칸막이</strong>를 세운다.
+      </p>
+
+      <h3>하이브리드 구성 — 어디에 돈을 쓸 것인가</h3>
+      <p>
+        링 구성은 케이블과 관리형 스위치가 더 필요하다.
+        전 구간을 링으로 만들면 비용이 크게 오르고 설정도 복잡해진다.
+        그래서 실제 설계는 <strong>기간망은 링, 말단은 스타</strong>로 섞는다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-3-4"><span class="no">그림 4.3-4</span> · 하이브리드 구성</div>
+          <svg viewBox="0 0 700 296" role="img" aria-label="기간망은 링 말단은 스타로 구성한 하이브리드 네트워크">
+            <rect class="s-fill" x="290" y="14" width="120" height="36"/>
+            <text class="s-tw" x="350" y="38" style="font-size:12px">중앙 · 관리자</text>
+
+            <rect class="s-tint" x="120" y="92" width="110" height="38"/>
+            <text class="s-t2" x="175" y="116">현장 스위치 A</text>
+            <rect class="s-tint" x="470" y="92" width="110" height="38"/>
+            <text class="s-t2" x="525" y="116">현장 스위치 B</text>
+            <rect class="s-tint" x="295" y="160" width="110" height="38"/>
+            <text class="s-t2" x="350" y="184">현장 스위치 C</text>
+
+            <g stroke="#0E2E4F" stroke-width="2.4" fill="none">
+              <path d="M296 42 L175 42 L175 92"/>
+              <path d="M404 42 L525 42 L525 92"/>
+              <path d="M175 130 L175 179 L295 179"/>
+              <path d="M525 130 L525 179 L405 179"/>
+            </g>
+            <text class="s-t2" x="350" y="126" style="font-weight:700">기간망 = 링 구성 (굵은 선)</text>
+            <text class="s-t2" x="350" y="146">절단 1회를 견딘다</text>
+
+            <g stroke="#8C9298" stroke-width="1.2">
+              <line x1="140" y1="130" x2="112" y2="164"/><line x1="160" y1="130" x2="150" y2="164"/>
+              <line x1="180" y1="130" x2="188" y2="164"/><line x1="200" y1="130" x2="226" y2="164"/>
+              <line x1="490" y1="130" x2="462" y2="164"/><line x1="510" y1="130" x2="500" y2="164"/>
+              <line x1="530" y1="130" x2="538" y2="164"/><line x1="550" y1="130" x2="576" y2="164"/>
+              <line x1="320" y1="198" x2="300" y2="228"/><line x1="340" y1="198" x2="332" y2="228"/>
+              <line x1="360" y1="198" x2="368" y2="228"/><line x1="380" y1="198" x2="400" y2="228"/>
+            </g>
+            <text class="s-t2" x="175" y="216">말단 = 스타 (가는 선)</text>
+            <text class="s-t2" x="525" y="216">기기 하나만 영향</text>
+
+            <rect class="s-plain" x="20" y="246" width="660" height="42"/>
+            <text class="s-t3" x="350" y="272" style="font-weight:700">정지 손실이 큰 기간망에만 이중화 비용을 집중한다</text>
+          </svg>
+        </div>
+        <figcaption>말단 기기까지 이중화하면 비용이 급증한다. <strong>영향 범위가 큰 곳부터</strong>가 원칙이다.</figcaption>
+      </figure>
+
+      <h3>VLAN — 논리적 칸막이</h3>
+      <p>
+        <span class="kw">VLAN</span>은 물리적으로 같은 케이블·스위치를 쓰면서
+        <strong>논리적으로 서로 다른 네트워크인 것처럼</strong> 나누는 기술이다.
+        칸막이를 세우는 것과 같다.
+      </p>
+
+      <div class="tbl-label" id="b4-3-4"><span class="no">표 4.3-4</span> · VLAN 분리가 주는 두 가지 효과</div>
+      <table>
+        <thead>
+          <tr><th>효과</th><th>내용</th><th>물류 현장의 예</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>장애 확산 차단</td>
+              <td>한 구역에서 발생한 통신 폭주가 다른 구역으로 번지지 않는다</td>
+              <td>입고 라인의 기기 오작동이 출고 라인에 영향을 주지 않음</td></tr>
+          <tr><td>보안 분리</td>
+              <td>구역 간 접근을 차단해 침해 범위를 제한한다</td>
+              <td>사무용 무선망에서 설비 제어망으로 접근 불가</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <span class="t">개념 · 브로드캐스트 스톰이란</span>
+        <p>기기 하나가 고장 나서 <strong>같은 신호를 초당 수만 번 뿌리기</strong> 시작하면
+        같은 네트워크의 모든 기기가 그것을 처리하느라 마비된다. 이것이 브로드캐스트 스톰이다.
+        VLAN으로 나눠 두면 그 폭풍이 <strong>한 칸 안에서만</strong> 일어난다.
+        전체 정지가 부분 정지로 줄어드는 것이며, 이것이 세그먼트 분리의 핵심 가치다.</p>
+      </div>
+
+      <div class="note warn">
+        <span class="t">주의 · 임의 연결이 칸막이를 무너뜨린다</span>
+        <p>4.1에서 다룬 것과 같은 이야기다. VLAN으로 잘 나눠 놓아도
+        누군가 <strong>두 구역의 포트에 케이블을 하나 꽂으면</strong> 칸막이가 사라진다.
+        “네트워크가 안 돼서 옆 반에서 선을 하나 끌어왔다”가 전형적인 사고 경위다.
+        <strong>네트워크 케이블의 임의 연결은 예외 없이 담당자 승인 사항</strong>이다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 5 ============ -->
+    <section class="sec" id="s4-3-5">
+      <h2><span class="sec-no">4.3.5</span>실무 보강<span class="en">네트워크 장애를 현장에서 다룬다</span></h2>
+
+      <p class="keyline">
+        네트워크는 담당자 영역이지만, <strong>현장에서만 확인할 수 있는 정보</strong>가 있다.
+        어디까지 살아 있는지, 무엇이 최근에 바뀌었는지.
+      </p>
+
+      <p>
+        아래 다섯 항목은 목차에 명시되어 있지는 않지만
+        <strong>물류설비 운영에서 실제로 필요해 보강한 내용</strong>이다.
+      </p>
+
+      <!-- 1 -->
+      <div class="prac">
+        <h3>1. 링 상태 정기 확인 — 가장 중요한 한 가지</h3>
+        <p class="prac-tip">이중화는 “쓰이고 있는지 모르게” 동작하기 때문에 확인이 필요하다.</p>
+
+        <p>
+          본문 3에서 봤듯이 링이 이미 한 곳 끊긴 채 우회 운전 중일 수 있다.
+          이 상태는 <strong>다음 한 번의 고장에 무방비</strong>다.
+        </p>
+        <ul>
+          <li><strong>관리형 스위치의 링 상태 LED</strong> — 정상(닫힘)과 우회(열림) 상태가 구분되어 표시된다</li>
+          <li><strong>상위 감시 화면의 네트워크 상태</strong> — 링 이상 이벤트가 기록되어 있는지</li>
+          <li><strong>포트별 링크 LED</strong> — 꺼져 있는 기간망 포트가 있는지</li>
+        </ul>
+        <div class="note field">
+          <span class="t">현장 · 주 1회면 충분하다</span>
+          <p>링 상태 확인은 <strong>주간 점검 항목</strong>으로 충분하다.
+          다만 <strong>정전·공사·설비 이설 직후</strong>에는 반드시 확인한다.
+          케이블을 건드린 뒤 링이 깨진 채로 운영되는 경우가 가장 많다.</p>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="prac">
+        <h3>2. 통신 장애 시 현장에서 확인할 것</h3>
+        <p class="prac-tip">3.3 실무 보강 1을 네트워크 계층으로 확장한다.</p>
+
+        <ol>
+          <li><strong>영향 범위</strong> — 어느 구역까지 죽었는가. 이것이 가장 강한 단서다</li>
+          <li><strong>마지막으로 살아 있는 스위치</strong> — 통신선을 따라가며 LED를 확인</li>
+          <li><strong>스위치 전원</strong> — 전원 LED가 꺼진 스위치가 있는가</li>
+          <li><strong>포트 링크 LED</strong> — 연결되어 있어야 할 포트가 꺼져 있는가</li>
+          <li><strong>물리적 손상</strong> — 케이블 눌림·절단·커넥터 이탈, 케이블 베어 구간 확인</li>
+          <li><strong>최근 변경</strong> — 공사, 설비 이설, 기기 추가, 청소 작업 이력</li>
+        </ol>
+
+        <div class="note warn">
+          <span class="t">주의 · 케이블을 임의로 다시 꽂지 않는다</span>
+          <p>“빠진 것 같아서 다시 꽂았다”가 <strong>루프를 만들어 전체를 마비시키는</strong> 경우가 있다.
+          링 구성에서 잘못된 포트에 연결하면 네트워크 전체가 멈춘다.
+          <strong>어느 포트에서 무엇이 빠졌는지 사진으로 기록하고 담당자에게 전달</strong>하는 것까지가 안전하다.</p>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="prac">
+        <h3>3. 케이블 관리가 곧 가용성 관리</h3>
+        <p class="prac-tip">네트워크 장애의 대부분은 물리적 원인이다.</p>
+
+        <div class="tbl-label" id="b4-3-5"><span class="no">표 4.3-5</span> · 물류 현장의 케이블 위험 지점</div>
+        <table>
+          <thead>
+            <tr><th>위치</th><th>위험</th><th>점검 방법</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>케이블 베어</td><td>굴곡 피로 단선</td><td>육안 점검, 통신 오류 카운트 추이</td></tr>
+            <tr><td>이동체 급전부</td><td>마모·접촉 불량</td><td>간헐적 오류 발생 여부</td></tr>
+            <tr><td>바닥 통과 구간</td><td>지게차 압착</td><td>보호관 손상 여부</td></tr>
+            <tr><td>제어반 인출부</td><td>날카로운 모서리에 피복 손상</td><td>부싱·보호재 상태</td></tr>
+            <tr><td>동력선 병행 구간</td><td>노이즈 유입 (1.4)</td><td>배선 경로 분리 여부</td></tr>
+            <tr><td>임시 배선</td><td class="t-warn">고정되지 않아 이탈·손상</td><td class="t-warn">발견 시 즉시 보고 — 영구화 방지</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note field">
+          <span class="t">현장 · 간헐적 오류가 예고편이다</span>
+          <p>2.2와 3.3에서 반복한 이야기다. <strong>통신 오류 누적 횟수가 늘고 있는 구간</strong>은
+          물리적 손상이 진행 중이라는 뜻이다.
+          완전히 끊기기 전에 점검하면 <strong>계획 정비</strong>가 되고,
+          끊긴 뒤에 하면 <strong>라인 정지 상태의 긴급 작업</strong>이 된다.
+          3.4의 예지 보전이 네트워크에도 그대로 적용된다.</p>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="prac">
+        <h3>4. 설비 증설 시 확인할 것</h3>
+        <p class="prac-tip">라인을 늘릴 때 네트워크가 함께 검토되지 않으면 나중에 문제가 된다.</p>
+
+        <ul>
+          <li><strong>스위치 포트 여유</strong> — 남은 포트가 없으면 임의로 소형 스위치를 다는 일이 생긴다</li>
+          <li><strong>구역 배치</strong> — 새 설비가 어느 VLAN·어느 구역에 속하는지</li>
+          <li><strong>링 구성 영향</strong> — 기간망에 손대야 하면 반드시 담당자 계획 하에</li>
+          <li><strong>케이블 경로</strong> — 동력선과 분리되어 있는지, 보호 조치가 되어 있는지</li>
+          <li><strong>게이트웨이 수집 설정</strong> — 4.1 실무 보강 3. 데이터가 올라오는지 확인</li>
+        </ul>
+        <div class="note warn">
+          <span class="t">주의 · “일단 여기에 물려 두자”의 대가</span>
+          <p>급하게 증설하면서 아무 스위치에나 연결하면
+          VLAN 구분이 깨지고, 링 구성이 무너지고, 나중에 아무도 배선을 모른다.
+          <strong>증설은 반드시 네트워크 담당자와 함께</strong>가 원칙이며,
+          현장 기술자는 임의 연결 요청을 받았을 때 이를 근거로 거절할 수 있어야 한다.</p>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="prac">
+        <h3>5. 현장 점검 체크리스트</h3>
+        <p class="prac-tip">네트워크 인프라 관점의 점검 항목.</p>
+
+        <h4>주간</h4>
+        <ul class="check">
+          <li>링 상태가 정상(닫힘)인가 — 우회 운전 중이 아닌가</li>
+          <li>모든 스위치의 전원 LED가 정상인가</li>
+          <li>연결되어야 할 포트의 링크 LED가 모두 켜져 있는가</li>
+          <li>통신 오류 누적이 증가하는 구간이 있는가</li>
+        </ul>
+
+        <h4>물리</h4>
+        <ul class="check">
+          <li>케이블 베어·이동체 구간의 피복 손상이 없는가</li>
+          <li>바닥 통과 구간의 보호관이 손상되지 않았는가</li>
+          <li>제어반 인출부에 날카로운 마찰 지점이 없는가</li>
+          <li>고정되지 않은 임시 배선이 방치되어 있지 않은가</li>
+          <li>통신선이 동력선과 나란히 묶여 있지 않은가</li>
+        </ul>
+
+        <h4>변경 · 장애 시</h4>
+        <ul class="check">
+          <li>정전·공사·이설 직후 링 상태를 확인했는가</li>
+          <li>장애 시 영향 범위와 마지막으로 살아 있는 스위치를 기록했는가</li>
+          <li>빠진 케이블을 임의로 다시 꽂지 않고 사진으로 기록했는가</li>
+          <li>설비 증설 시 네트워크 담당자와 사전 협의했는가</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <span class="t">개념 · 4장이 남기는 것 — 그리고 과정 전체</span>
+        <p>게이트웨이가 OT와 IT를 잇고(4.1),
+        에지 정책이 무엇을 보낼지 정하며(4.2),
+        네트워크 구조가 그 길을 끊기지 않게 지킨다(4.3).
+        이것이 <strong>데이터의 통합</strong>이다.<br><br>
+        과정 전체를 한 문장으로 줄이면 이렇다.
+        <strong>센서에서 태어난 데이터가(1장) 지능을 얻고(2장) 설비를 움직이며(3장) 공장 전체로 통합된다(4장).</strong>
+        그 흐름의 어느 지점에서든 이상이 생기면,
+        여러분은 이제 <strong>어느 계통의 문제인지 좁히고, 스스로 조치하거나 정확한 정보와 함께 담당자를 부를 수 있다.</strong>
+        그것이 이 책의 목표였다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 참고자료 ============ -->
+    <section class="ref" id="r4-3">
+      <h2>참고자료</h2>
+
+      <h3>1. 용어 정리</h3>
+      <dl class="terms">
+        <dt id="t4-3-1">토폴로지 (Topology)</dt>
+        <dd>네트워크 기기들이 연결된 형태. 스타·링·버스·트리 등이 있다.</dd>
+        <dt id="t4-3-2">SPOF (Single Point of Failure)</dt>
+        <dd>단일 장애점. 그 하나가 고장 나면 전체가 멈추는 요소.</dd>
+        <dt id="t4-3-3">이중화 (Redundancy)</dt>
+        <dd>같은 기능을 하는 경로나 장치를 둘 이상 두어 하나가 고장 나도 유지되게 하는 것.</dd>
+        <dt id="t4-3-4">MRP (Media Redundancy Protocol)</dt>
+        <dd>산업용 링 이중화 표준(IEC 62439-2). 링 관리자가 한 구간을 차단해 두었다가 장애 시 개방한다.</dd>
+        <dt id="t4-3-5">RSTP</dt>
+        <dd>일반 이더넷의 경로 이중화 프로토콜. 산업용 MRP보다 전환이 느리다.</dd>
+        <dt id="t4-3-6">PRP · HSR</dt>
+        <dd>두 경로로 동시에 전송해 한쪽이 끊겨도 끊김이 없는 무중단 이중화 방식.</dd>
+        <dt id="t4-3-7">브로드캐스트 스톰</dt>
+        <dd>기기 하나가 대량의 신호를 뿌려 같은 네트워크 전체를 마비시키는 현상.</dd>
+        <dt id="t4-3-8">VLAN (Virtual LAN)</dt>
+        <dd>물리적으로 같은 네트워크를 논리적으로 나누는 기술. 장애 확산 차단과 보안 분리에 쓰인다.</dd>
+        <dt id="t4-3-9">세그먼트 (Segment)</dt>
+        <dd>논리적으로 구분된 네트워크 구역. VLAN으로 나눈 각 칸이 하나의 세그먼트다.</dd>
+        <dt id="t4-3-10">관리형 스위치 (Managed switch)</dt>
+        <dd>VLAN·이중화·포트 감시 등을 설정할 수 있는 스위치. 단순 비관리형 스위치와 구분된다.</dd>
+      </dl>
+
+      <h3>2. 관련 이미지 — 실물과 도해로 확인하기</h3>
+      <p class="ref-intro">
+        본문에 나온 순서대로 정리했다. 센서·전력은 썬덴코리아 파트너사, 제어기·네트워크는 미쓰비시전기 기준이다.
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=514&amp;cate_id=2&amp;out_order=3" target="_blank" rel="noopener">정보 연계 제품 — CC-Link IE 네트워크 구성</a>
+          <span class="where">본문 2 · 3 — 산업용 이더넷의 링·스타 구성 예와 이중화 기능</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/mobile.do?act=product_list_mobile&amp;parent_id=528&amp;cate_id=2" target="_blank" rel="noopener">MELSEC iQ-R — 네트워크 모듈 · 이중화 CPU</a>
+          <span class="where">본문 1 · 4 — 제어기 자체를 이중화하는 구성</span>
+        </li>
+        <li>
+          <span class="src">Schneider</span>
+          <a href="https://www.se.com/kr/ko/" target="_blank" rel="noopener">슈나이더 일렉트릭 코리아 — 산업용 이더넷 스위치 · 전원</a>
+          <span class="where">본문 1 · 2 — 썬덴코리아 파트너사. 관리형 스위치와 이중화 전원(SMPS) 제품군</span>
+        </li>
+        <li>
+          <span class="src">Siemens</span>
+          <a href="https://www.siemens.com/en-us/products/scalance/" target="_blank" rel="noopener">SCALANCE — 산업용 이더넷 스위치</a>
+          <span class="where">본문 1 · 4 — 라인·링·스타 토폴로지 지원과 MRP 이중화로 네트워크 가용성을 확보하는 스위치 제품군</span>
+        </li>
+        <li>
+          <span class="src">Xnergy</span>
+          <a href="https://www.xnergytech.com/en/" target="_blank" rel="noopener">Xnergy — 무선 충전 인프라</a>
+          <span class="where">본문 1 — 이동체(AGV·AMR)는 유선 통신이 불가능해 무선망 이중화가 별도 과제가 된다</span>
+        </li>
+        <li>
+          <span class="src">IO-Link</span>
+          <a href="https://io-link.com/fileadmin/user_upload/Downloads/Package_2024/IOL-Interface-Spec_10002_V114_Jun24.pdf" target="_blank" rel="noopener">IO-Link 사양서 v1.1.4 (무료 PDF) — 배선 구조</a>
+          <span class="where">본문 1 — 센서 계층은 점대점이라 링 이중화 대상이 아니다. 상위 계층과의 차이</span>
+        </li>
+      </ol>
+
+      <h3>3. 학술 · 표준 근거 자료 — 심화 학습용</h3>
+      <p class="ref-intro">
+        무료로 볼 수 있는 자료를 우선했다.<br>
+        <span class="src std">표준</span> 국제 규격 · <span class="src paper">논문</span> 공개 학술 자료
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/62849" target="_blank" rel="noopener">IEC 62439-2 : 고가용성 자동화 네트워크 — MRP</a>
+          <span class="where">본문 3 — 링 이중화의 국제 표준.
+          링 관리자(MRM)가 경로를 차단·개방하는 절차가 규정되어 있다.
+          그림 4.3-3의 원본 근거</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://standards.iteh.ai/catalog/standards/clc/df761ad4-f48e-4f43-b757-9cdb9ae677f8/en-iec-62439-2-2022" target="_blank" rel="noopener">EN IEC 62439-2:2022 — MRP 최신판 개요</a>
+          <span class="where">본문 3 표 4.3-3 — 전환 시간 요구사항과 적용 범위</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://standards.globalspec.com/std/10001077/IEC%2062439-2" target="_blank" rel="noopener">IEC 62439-2 개요 (GlobalSpec)</a>
+          <span class="where">본문 3 — 표준 구매 전 범위와 목차를 무료로 확인</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://opcfoundation.org/wp-content/uploads/2026/01/OPC-UA-Interoperability-For-Industrie4-and-IoT-EN.pdf" target="_blank" rel="noopener">OPC UA 상호운용성 백서 (무료 PDF)</a>
+          <span class="where">본문 4 — 네트워크 세그먼트 분리와 상위 연계를 함께 설계하는 관점</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/68534" target="_blank" rel="noopener">IEC 61131-9 : SDCI (IO-Link)</a>
+          <span class="where">본문 1 — 센서 계층의 배선 구조가 상위 계층과 다른 이유</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://arxiv.org/pdf/1903.11549" target="_blank" rel="noopener">A Survey of Protocols and Standards for Internet of Things (arXiv 공개)</a>
+          <span class="where">본문 1 · 4 — 산업 네트워크의 신뢰성·보안 설계 전반의 조망</span>
+        </li>
+        <li>
+          <span class="src paper">참고</span>
+          <a href="https://scadaprotocols.com/opc-ua-protocol-explained/" target="_blank" rel="noopener">OPC UA 프로토콜 해설 — 보안 모델</a>
+          <span class="where">본문 4 — 세그먼트 분리와 통신 보안이 어떻게 결합되는지</span>
+        </li>
+      </ol>
+
+      <h3>4. 과정 전체 마무리</h3>
+      <ul style="font-size:13.5px">
+        <li><strong>1부 · 데이터의 생성</strong> — 센서가 값을 만드는 원리와 그 값의 품질</li>
+        <li><strong>2부 · 데이터의 지능화</strong> — 센서가 값과 함께 자기 상태를 보고하기까지</li>
+        <li><strong>3부 · 데이터의 활용</strong> — 그 값이 설비를 움직이고 고장을 미리 알리기까지</li>
+        <li><strong>4부 · 데이터의 통합</strong> — 공장 전체가 하나의 데이터 체계로 이어지기까지</li>
+      </ul>
+    </section>
+  </article>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>데이터를 읽는 감각 — 물류 자동화 현장의 센서</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/index.css">
+</head>
+<body class="cover">
+<div class="cover-wrap">
+
+  <!-- ================= 표지 ================= -->
+  <header class="cover-head">
+    <h1>데이터를 읽는 감각</h1>
+    <p class="sub">물류 자동화 현장의 센서</p>
+    <div class="cover-meta">
+      <span><b>읽는 사람</b>　물류 자동화 설비 관리 기술자 (비전공자 포함)</span>
+      <span><b>구성</b>　4부 15장</span>
+      <span><b>지은이</b>　강승태</span>
+      <span><b>작성일</b>　2026-08-10</span>
+    </div>
+  </header>
+
+  <div class="lesson-head">
+    <h1>목차</h1>
+    <p class="subtitle">이 책이 무엇을 다루는가, 그리고 어디에 무엇이 있는가</p>
+  </div>
+
+
+  <!-- ================= 개요 ================= -->
+  <p class="cover-lead">
+    제조 공장의 물류 자동화 현장에서 설비가 멈췄을 때, 현장 기술자에게는
+    센서를 고칠 능력보다 <strong>“지금 무슨 일이 일어났는지”를 30초 안에 판단하는 능력</strong>이 우선한다.
+    이 책은 자동화 공장을 움직이는 <strong>데이터</strong>가 어디서 생겨나(1부),
+    어떻게 지능을 얻고(2부), 설비를 움직이며(3부), 공장 전체로 통합되는지(4부)를
+    <strong>스마트센서</strong>를 중심으로 따라간다.
+    목표는 이론의 습득보다, 현상을 빨리 파악하고 스스로 조치하거나
+    정확한 정보와 함께 담당자에게 에스컬레이션하여
+    <strong>설비 중단 시간을 최소화하는 데</strong> 있다.
+  </p>
+
+
+  <!-- ===== 왜 이 순서로 나눴는가 (머리말 2절에서 이관) ===== -->
+  <p>
+  자동화 공장은 데이터로 움직인다. 센서가 물리량을 값으로 바꾸고, 그 값이 제어기로 올라가고,
+  제어기가 모터를 돌린다. 어느 한 곳이 끊기면 설비가 선다.
+  그래서 이 책은 설비별로 나누지 않고 <strong>데이터가 흘러가는 순서</strong>로 나눴다.
+  </p>
+  <div class="struct" style="margin:18px 0 6px">
+  <div><b>1부</b>데이터의 생성<br>값은 어디서 태어나는가</div>
+  <div><b>2부</b>데이터의 지능화<br>센서가 자기 상태를 보고한다</div>
+  <div><b>3부</b>데이터의 활용<br>값이 설비를 움직인다</div>
+  <div><b>4부</b>데이터의 통합<br>공장 전체가 하나로 이어진다</div>
+  </div>
+  <p>
+  이 순서를 따라가면, 알람이 떴을 때 이상이 생긴 지점이 감지 조건인지, 배선인지,
+  환경인지, 제어인지, 통신인지를 좁혀 나갈 수 있다.
+  고장의 원인을 끝까지 규명하여 조치하는 것보다는 <strong>원인 발생의 계통을 빨리 좁혀서
+  설비 중단 시간을 최소화하는 것</strong>이 목적이다.
+  </p>
+
+  <!-- ================= 목차 ================= -->
+  <p class="h2sub">장 제목을 누르면 해당 장으로 이동한다.</p>
+
+  <!-- 1부 -->
+  <div class="chap" id="part1">
+    <div class="chap-head">
+      <span class="chap-no">1부</span>
+      <h3>센서의 기초</h3>
+      <span class="theme">데이터의 생성 — 값은 어디서 태어나는가</span>
+    </div>
+    <div class="lessons">
+      <a class="lesson" href="1-1.html">
+        <div class="num">1.1장</div>
+        <div class="ttl">센서의 정의와 원리</div>
+        <div class="desc">감지 – 전달 – 반응 3단계 사이클과 광전·유도형·초음파 3대 감지 원리.
+        “무엇을 쏘고 무엇을 받는가”로 오작동 요인까지 함께 읽는다.</div>
+        <div class="tags"><span>3대 감지 원리</span><span>광전 3방식</span><span>30초 판단</span></div>
+      </a>
+      <a class="lesson" href="1-2.html">
+        <div class="num">1.2장</div>
+        <div class="ttl">다양한 센서 분류</div>
+        <div class="desc">접촉식 / 비접촉식, 능동형 / 수동형 두 축으로 나눈다.
+        분류를 알면 수명과 간섭 방식이 함께 따라온다.</div>
+        <div class="tags"><span>수명과 마모</span><span>선택 5단계</span><span>안전 센서</span></div>
+      </a>
+      <a class="lesson" href="1-3.html">
+        <div class="num">1.3장</div>
+        <div class="ttl">현장 확인 성능 지표</div>
+        <div class="desc">감도 · 선형성 · 반복 정밀도 · 해상도.
+        “센서가 고장인가, 원래 이만큼인가”를 가르는 기준.</div>
+        <div class="tags"><span>정확도 vs 정밀도</span><span>데이터시트</span><span>응답 시간</span></div>
+      </a>
+      <a class="lesson" href="1-4.html">
+        <div class="num">1.4장</div>
+        <div class="ttl">오작동 방지와 기본 세팅</div>
+        <div class="desc">분진·진동·조명의 물리적 노이즈와 인버터·접지의 전기적 노이즈.
+        응차와 영점 조절의 의미.</div>
+        <div class="tags"><span>노이즈 2계통</span><span>응차</span><span>영점 조절</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 2부 -->
+  <div class="chap" id="part2">
+    <div class="chap-head">
+      <span class="chap-no">2부</span>
+      <h3>스마트센서의 구조</h3>
+      <span class="theme">데이터의 지능화 — 센서가 자기 이야기를 한다</span>
+    </div>
+    <div class="lessons">
+      <a class="lesson" href="2-1.html">
+        <div class="num">2.1장</div>
+        <div class="ttl">스마트센서의 등장</div>
+        <div class="desc">값 하나에서 값 + 상태로. MCU가 만드는 세 가지 능력과
+        IIoT 계층 구조에서 센서의 자리.</div>
+        <div class="tags"><span>자가 진단</span><span>양방향 통신</span><span>IIoT 계층</span></div>
+      </a>
+      <a class="lesson" href="2-2.html">
+        <div class="num">2.2장</div>
+        <div class="ttl">핵심 내부 구조</div>
+        <div class="desc">감지 – 변환 – 연산 – 통신 네 블록.
+        MCU의 필터링·신호처리·단위변환·내부보정과 비휘발성 메모리.</div>
+        <div class="tags"><span>MCU</span><span>스마트 필터링</span><span>누적 데이터</span></div>
+      </a>
+      <a class="lesson" href="2-3.html">
+        <div class="num">2.3장</div>
+        <div class="ttl">플러그 앤 플레이</div>
+        <div class="desc">TEDS와 자동 파라미터 설정.
+        센서 교체가 “설정 복구 한 시간”에서 “5분 작업”이 되는 원리.</div>
+        <div class="tags"><span>TEDS</span><span>자동 설정</span><span>데이터 스토리지</span></div>
+      </a>
+      <a class="lesson" href="2-4.html">
+        <div class="num">2.4장</div>
+        <div class="ttl">지능형 기능</div>
+        <div class="desc">정상 / 경고 / 고장 세 단계. 신호 여유도를 읽고
+        온도 드리프트를 스스로 보정한다.</div>
+        <div class="tags"><span>신호 여유도</span><span>자가 교정</span><span>알람 홍수</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 3부 -->
+  <div class="chap" id="part3">
+    <div class="chap-head">
+      <span class="chap-no">3부</span>
+      <h3>자동화 장비와 스마트센서</h3>
+      <span class="theme">데이터의 활용 — 값이 설비를 움직인다</span>
+    </div>
+    <div class="lessons">
+      <a class="lesson" href="3-1.html">
+        <div class="num">3.1장</div>
+        <div class="ttl">장비 제어의 기본 원리</div>
+        <div class="desc">목표값과 실측값을 비교해 차이만큼 움직이는 폐루프.
+        외란을 이겨내는 대신 “가려진 고장”이 생긴다.</div>
+        <div class="tags"><span>폐루프</span><span>오차와 보정</span><span>외란 억제</span></div>
+      </a>
+      <a class="lesson" href="3-2.html">
+        <div class="num">3.2장</div>
+        <div class="ttl">서보 모터와 센서의 융합</div>
+        <div class="desc">엔코더가 정밀도의 상한을 정한다.
+        전류·속도·위치 3중 루프와 스마트 서보 드라이브의 진단 데이터.</div>
+        <div class="tags"><span>엔코더</span><span>3중 루프</span><span>토크로 읽기</span></div>
+      </a>
+      <a class="lesson" href="3-3.html">
+        <div class="num">3.3장</div>
+        <div class="ttl">현장 통신 프로토콜</div>
+        <div class="desc">IO-Link 점대점 통신과 분산 I/O.
+        제어용 데이터와 진단용 데이터를 분리해 급한 것이 밀리지 않게 한다.</div>
+        <div class="tags"><span>IO-Link</span><span>분산 I/O</span><span>영향 범위</span></div>
+      </a>
+      <a class="lesson" href="3-4.html">
+        <div class="num">3.4장</div>
+        <div class="ttl">예지 보전</div>
+        <div class="desc">사후 → 예방 → 예지. 진동과 온도가 알려 주는 것,
+        그리고 “평소값 대비 변화”로 판단하는 법.</div>
+        <div class="tags"><span>상태 감시</span><span>베이스라인</span><span>계획 정비</span></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 4부 -->
+  <div class="chap" id="part4">
+    <div class="chap-head">
+      <span class="chap-no">4부</span>
+      <h3>자동화 공정의 운영</h3>
+      <span class="theme">데이터의 통합 — 공장 전체가 하나로 이어진다</span>
+    </div>
+    <div class="lessons">
+      <a class="lesson" href="4-1.html">
+        <div class="num">4.1장</div>
+        <div class="ttl">산업용 IoT 게이트웨이</div>
+        <div class="desc">OT와 IT는 우선하는 가치가 다르다.
+        변환 · 취합 · 보안 · 전처리 네 가지를 맡는 통역사.</div>
+        <div class="tags"><span>OT / IT</span><span>OPC UA · MQTT</span><span>보안 관문</span></div>
+      </a>
+      <a class="lesson" href="4-2.html">
+        <div class="num">4.2장</div>
+        <div class="ttl">에지 컴퓨팅 정책</div>
+        <div class="desc">데드밴딩으로 데이터를 줄이되 잃는 것도 있다.
+        안전 판단은 예외 없이 현장에서.</div>
+        <div class="tags"><span>데드밴딩</span><span>로컬 판단</span><span>버퍼링</span></div>
+      </a>
+      <a class="lesson" href="4-3.html">
+        <div class="num">4.3장</div>
+        <div class="ttl">생존형 네트워크 인프라</div>
+        <div class="desc">단일 장애점을 줄이는 링 이중화와 VLAN 분리.
+        선이 하나 끊겨도 라인이 서지 않게 한다.</div>
+        <div class="tags"><span>SPOF</span><span>링 이중화</span><span>VLAN</span></div>
+      </a>
+      <div class="lesson empty">
+        <div class="num">맺음</div>
+        <div class="ttl">데이터의 흐름 전체를 읽는다</div>
+        <div class="desc">센서에서 태어난 데이터가 지능을 얻고, 설비를 움직이며, 공장 전체로 통합되기까지.
+        어느 지점의 이상이든 <strong>발생 계통(배선 · 감지 조건 · 환경 · 제어 · 통신)을 추정</strong>할 수 있다.</div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="facts">
+    <div class="fact"><div class="n">1</div><div class="l">책</div></div>
+    <div class="fact"><div class="n">4</div><div class="l">부</div></div>
+    <div class="fact"><div class="n">15</div><div class="l">장</div></div>
+    <div class="fact"><div class="n">75</div><div class="l">절</div></div>
+    <div class="fact"><div class="n">66</div><div class="l">도해 · 그래프</div></div>
+    <div class="fact"><div class="n">62</div><div class="l">현장 판단표</div></div>
+  </div>
+
+
+
+</div>
+</body>
+</html>

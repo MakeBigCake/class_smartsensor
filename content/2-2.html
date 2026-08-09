@@ -1,0 +1,593 @@
+    <div class="lesson-tag">2.2</div>
+    <h1>핵심 내부 구조</h1>
+    <p class="subtitle">왜 똑똑한가? — 스마트센서 안에서 실제로 벌어지는 일</p>
+
+    <p class="lead">
+      스마트센서를 열어 보면 특별한 것이 있는 것처럼 보이지 않는다.
+      감지 소자는 일반 센서와 같고, 크기도 비슷하다.
+      차이는 <strong>손톱만 한 칩 하나</strong>와 <strong>전원이 꺼져도 지워지지 않는 작은 메모리</strong>에 있다.
+      이 둘이 무슨 일을 하는지 알면, 스마트센서의 모든 기능이 설명된다.
+    </p>
+
+    <div class="goals">
+      <h4>이 장을 읽고 나면</h4>
+      <ol>
+        <li>스마트센서의 내부 블록 구성을 감지–변환–연산–통신 순서로 설명할 수 있다.</li>
+        <li>MCU가 수행하는 네 가지 일(필터링·신호 처리·단위 변환·내부 보정)을 구분할 수 있다.</li>
+        <li>스마트 필터링이 1.4의 노이즈 문제를 어떻게 줄이는지 설명할 수 있다.</li>
+        <li>비휘발성 메모리가 정전 시 설정을 지키는 원리와, 그것이 현장에 주는 의미를 안다.</li>
+        <li>내부 구조를 알고 알람 코드가 어느 블록에서 나온 것인지 짐작할 수 있다.</li>
+      </ol>
+    </div>
+
+    <!-- ============ 본문 1 ============ -->
+    <section class="sec" id="s2-2-1">
+      <div class="sec-no">2.2.1</div>
+      <h2>스마트센서의 내부 블록<span class="en">감지 → 변환 → 연산 → 통신</span></h2>
+
+      <p class="keyline">
+        스마트센서는 네 개의 블록으로 이루어진다.
+        앞의 둘은 일반 센서와 같고, <strong>뒤의 둘이 스마트센서를 만든다.</strong>
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-2-1"><span class="no">그림 2.2-1</span> · 스마트센서 내부 블록도</div>
+          <svg viewBox="0 0 700 330" role="img" aria-label="스마트센서의 내부 블록 구성">
+            <text class="s-hdr" x="185" y="20">일반 센서에도 있는 부분</text>
+            <text class="s-hdr" x="510" y="20">스마트센서에만 있는 부분</text>
+            <line class="s-rule" x1="20" y1="28" x2="680" y2="28"/>
+
+            <rect class="s-plain" x="24" y="42" width="150" height="76"/>
+            <text class="s-t3" x="99" y="70" style="font-weight:700">① 감지 소자</text>
+            <text class="s-t2" x="99" y="92">Sensing element</text>
+            <text class="s-t2" x="99" y="110">물리량 → 미약한 전기</text>
+
+            <path class="s-line-n" d="M180 80 L206 80" marker-end="url(#a61)"/>
+
+            <rect class="s-plain" x="212" y="42" width="150" height="76"/>
+            <text class="s-t3" x="287" y="70" style="font-weight:700">② 변환 회로</text>
+            <text class="s-t2" x="287" y="92">증폭 + A/D 변환</text>
+            <text class="s-t2" x="287" y="110">아날로그 → 숫자</text>
+
+            <path class="s-line-n" d="M368 80 L394 80" marker-end="url(#a61)"/>
+
+            <rect class="s-fill" x="400" y="42" width="150" height="76"/>
+            <text class="s-tw" x="475" y="70">③ MCU</text>
+            <text class="s-t2w" x="475" y="92">연산 · 판단</text>
+            <text class="s-t2w" x="475" y="110">스마트센서의 두뇌</text>
+
+            <path class="s-line-n" d="M556 80 L582 80" marker-end="url(#a61)"/>
+
+            <rect class="s-tint" x="588" y="42" width="88" height="76"/>
+            <text class="s-t3" x="632" y="70" style="font-weight:700">④ 통신</text>
+            <text class="s-t2" x="632" y="92">인터페이스</text>
+            <text class="s-t2" x="632" y="110">양방향</text>
+
+            <rect class="s-tint" x="400" y="140" width="150" height="60"/>
+            <text class="s-t3" x="475" y="164" style="font-weight:700">비휘발성 메모리</text>
+            <text class="s-t2" x="475" y="184">설정 · 보정값 보관</text>
+            <path class="s-line-n" d="M475 124 L475 136"/>
+            <path class="s-line-n" d="M462 136 L462 124" marker-end="url(#a61)"/>
+
+            <line class="s-rule" x1="20" y1="220" x2="680" y2="220"/>
+
+            <rect class="s-plain" x="24" y="238" width="326" height="76"/>
+            <text class="s-t3" x="187" y="264" style="font-weight:700">여기까지 고장 = 감지 계통</text>
+            <text class="s-t2" x="187" y="286">값이 안 나오거나 이상값</text>
+            <text class="s-t2" x="187" y="304">1장의 판단 절차 그대로 적용</text>
+
+            <rect class="s-tint" x="360" y="238" width="316" height="76"/>
+            <text class="s-t3" x="518" y="264" style="font-weight:700">여기부터 고장 = 통신 · 설정 계통</text>
+            <text class="s-t2" x="518" y="286">값은 정상인데 안 올라오거나</text>
+            <text class="s-t2" x="518" y="304">설정이 초기화됨</text>
+
+            <defs>
+              <marker id="a61" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>①②는 1장에서 다룬 그대로다. ③④가 더해지면서 새로운 종류의 고장(통신·설정)도 함께 생긴다.</figcaption>
+      </figure>
+
+      <p>
+        블록 구성을 알면 <strong>알람이 어느 블록에서 나왔는지</strong> 짐작할 수 있다.
+        “측정값 이상”은 ①②, “통신 두절”은 ④, “설정 손실”은 메모리, “내부 오류”는 ③이다.
+        이 구분만으로 현장 확인 지점이 절반으로 줄어든다.
+      </p>
+
+      <div class="note">
+        <span class="t">개념 · A/D 변환이 해상도를 결정한다</span>
+        <p>②의 A/D 변환은 아날로그 신호를 숫자로 바꾸는 과정이다.
+        이때 <strong>몇 단계로 잘게 나누는가</strong>가 1.3에서 본 해상도가 된다.
+        12비트 변환이면 4,096단계, 16비트면 65,536단계로 나눈다.
+        측정 범위 1,000mm를 12비트로 나누면 계단 하나가 약 0.24mm다.
+        <strong>센서 사양의 해상도 숫자는 대개 여기서 나온다.</strong></p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 2 ============ -->
+    <section class="sec" id="s2-2-2">
+      <div class="sec-no">2.2.2</div>
+      <h2>MCU가 하는 네 가지 일<span class="en">두뇌 안에서 벌어지는 처리</span></h2>
+
+      <p class="keyline">
+        MCU는 <strong>거르고, 다듬고, 번역하고, 바로잡는다.</strong>
+        이 네 가지가 1장에서 사람이 고민하던 문제들을 상당 부분 대신한다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-2-2"><span class="no">그림 2.2-2</span> · MCU의 네 가지 처리</div>
+          <svg viewBox="0 0 700 300" role="img" aria-label="MCU가 수행하는 네 가지 처리 단계">
+            <rect class="s-plain" x="20" y="118" width="106" height="64"/>
+            <text class="s-t2" x="73" y="146">원시 신호</text>
+            <text class="s-t2" x="73" y="166">노이즈 포함</text>
+            <path class="s-line-n" d="M132 150 L144 150" marker-end="url(#a62)"/>
+
+            <rect class="s-fill" x="150" y="60" width="150" height="180"/>
+            <text class="s-tw" x="225" y="90" style="font-size:13.5px">① 스마트 필터링</text>
+            <text class="s-t2w" x="225" y="112">튀는 값 · 잡음 제거</text>
+            <line x1="170" y1="126" x2="280" y2="126" stroke="#4E7099" stroke-width="1"/>
+            <text class="s-tw" x="225" y="148" style="font-size:13.5px">② 디지털 신호 처리</text>
+            <text class="s-t2w" x="225" y="170">평균 · 피크 · 추세 계산</text>
+            <line x1="170" y1="184" x2="280" y2="184" stroke="#4E7099" stroke-width="1"/>
+            <text class="s-tw" x="225" y="206" style="font-size:13.5px">③ 단위 변환</text>
+            <text class="s-t2w" x="225" y="228">전압 → mm · kg · ℃</text>
+
+            <path class="s-line-n" d="M306 150 L318 150" marker-end="url(#a62)"/>
+
+            <rect class="s-tint" x="324" y="98" width="160" height="104"/>
+            <text class="s-t3" x="404" y="126" style="font-weight:700">④ 내부 보정</text>
+            <text class="s-t2" x="404" y="148">온도 보정</text>
+            <text class="s-t2" x="404" y="168">선형성 보정</text>
+            <text class="s-t2" x="404" y="188">개체별 편차 보정</text>
+
+            <rect class="s-tint" x="324" y="212" width="160" height="48"/>
+            <text class="s-t2" x="404" y="234">보정 계수는</text>
+            <text class="s-t2" x="404" y="252">비휘발성 메모리에서</text>
+            <path class="s-line-n" d="M404 208 L404 200" marker-end="url(#a62)"/>
+
+            <path class="s-line-n" d="M490 150 L516 150" marker-end="url(#a62)"/>
+
+            <rect class="s-plain" x="522" y="98" width="154" height="104"/>
+            <text class="s-t3" x="599" y="128" style="font-weight:700">출력</text>
+            <text class="s-t2" x="599" y="152">깨끗하고</text>
+            <text class="s-t2" x="599" y="172">단위가 붙고</text>
+            <text class="s-t2" x="599" y="192">보정된 값</text>
+
+            <text class="s-t2" x="350" y="286">1.3의 선형성 오차와 1.4의 노이즈를 센서가 스스로 상당 부분 처리한다</text>
+
+            <defs>
+              <marker id="a62" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>왼쪽에서 들어온 지저분한 원시 신호가 네 단계를 거쳐 오른쪽에서 쓸 수 있는 값이 된다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b2-2-1"><span class="no">표 2.2-1</span> · 네 가지 처리와 1장에서의 대응 문제</div>
+      <table>
+        <thead>
+          <tr><th>MCU의 처리</th><th>하는 일</th><th>1장에서 사람이 고민하던 문제</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>① 스마트 필터링</td><td>순간적으로 튀는 값과 잡음을 걸러낸다</td>
+              <td>1.4 노이즈로 값이 튀는 문제</td></tr>
+          <tr><td>② 디지털 신호 처리</td><td>평균·최댓값·변화 추세를 계산한다</td>
+              <td>1.3 반복 정밀도 — 여러 번 재서 판단하던 일</td></tr>
+          <tr><td>③ 단위 변환</td><td>전압·전류를 mm·kg·℃로 바꾼다</td>
+              <td>제어기에서 스케일링 프로그램을 짜던 일</td></tr>
+          <tr><td>④ 내부 보정</td><td>온도·선형성·개체 편차를 계산으로 바로잡는다</td>
+              <td>1.3 선형성 오차, 1.4 드리프트</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note field">
+        <span class="t">현장 · 개체별 편차 보정이란</span>
+        <p>같은 모델의 센서 100개를 만들어도 미세하게 특성이 다르다.
+        제조사는 출하 전에 개체마다 실제 특성을 측정해 <strong>보정 계수를 메모리에 넣어 둔다.</strong>
+        그래서 스마트센서는 같은 모델이면 어느 개체를 써도 같은 값이 나온다.
+        일반 아날로그 센서를 교체하면 값이 조금 달라지는 이유가 바로 이 보정이 없기 때문이다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 3 ============ -->
+    <section class="sec" id="s2-2-3">
+      <div class="sec-no">2.2.3</div>
+      <h2>스마트 필터링<span class="en">잡음은 지우고 신호는 남긴다</span></h2>
+
+      <p class="keyline">
+        필터링의 핵심은 <strong>“지울 것과 남길 것을 어떻게 구분하는가”</strong>다.
+        너무 세게 걸면 진짜 신호까지 사라진다.
+      </p>
+
+      <p>
+        1.4에서 노이즈가 값을 흔든다고 했다. 아날로그 센서는 이 흔들림을 그대로 내보내고,
+        제어기가 알아서 판단해야 했다. 스마트센서는 <strong>내보내기 전에 걸러낸다.</strong>
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-2-3"><span class="no">그림 2.2-3</span> · 필터링 전과 후</div>
+          <svg viewBox="0 0 700 306" role="img" aria-label="필터링 전후의 신호 파형 비교">
+            <text class="s-hdr" x="350" y="20">필터링 전 — 원시 신호</text>
+            <line class="s-line" x1="60" y1="106" x2="650" y2="106" stroke-dasharray="4 3"/>
+            <path d="M60 96 L80 74 L96 112 L112 84 L130 118 L146 88 L164 76 L182 114 L200 90 L218 106
+                     L240 100 L258 68 L276 116 L294 82 L312 110 L330 92 L350 78 L370 118 L388 86
+                     L406 108 L424 94 L446 72 L466 114 L486 88 L506 104 L526 80 L548 116 L568 90
+                     L590 100 L612 84 L634 108 L650 96"
+                  fill="none" stroke="#8C9298" stroke-width="1.6"/>
+            <text class="s-t2" x="350" y="140">진짜 변화와 잡음이 섞여 있다</text>
+
+            <line class="s-rule" x1="20" y1="158" x2="680" y2="158"/>
+
+            <text class="s-hdr" x="350" y="184">필터링 후 — MCU가 처리한 신호</text>
+            <line class="s-line" x1="60" y1="252" x2="650" y2="252" stroke-dasharray="4 3"/>
+            <path d="M60 250 L140 248 L220 250 L260 249 L300 251 L340 249 L380 250 L420 249
+                     L460 250 L500 249 L540 251 L580 249 L620 250 L650 250"
+                  fill="none" stroke="#0E2E4F" stroke-width="2.4"/>
+            <path d="M300 251 L316 214 L332 212 L348 250" fill="none" stroke="#0E2E4F" stroke-width="2.4"/>
+            <text class="s-t2" x="326" y="200" style="fill:#8A5A0B">진짜 변화는 남는다</text>
+            <text class="s-t2" x="350" y="288">잡음은 평탄해지고, 의미 있는 변화만 살아남는다</text>
+          </svg>
+        </div>
+        <figcaption>필터가 강할수록 선은 매끄러워지지만 반응이 느려진다. 이 균형이 필터 설정이다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b2-2-2"><span class="no">표 2.2-2</span> · 필터 강도와 현장에서의 결과</div>
+      <table>
+        <thead>
+          <tr><th>필터 설정</th><th>장점</th><th class="t-warn">대가</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>약하게</td><td>변화에 빠르게 반응. 고속 라인에 적합</td>
+              <td class="t-warn">노이즈가 그대로 남아 값이 튄다</td></tr>
+          <tr><td>강하게</td><td>값이 안정적. 값을 그대로 쓰는 자리에 적합</td>
+              <td class="t-warn">응답이 느려져 빠른 대상을 놓친다</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note warn">
+        <span class="t">주의 · 필터로 가려진 문제</span>
+        <p>필터를 강하게 걸면 <strong>증상이 사라진 것처럼 보인다.</strong>
+        그러나 브래킷 유격이나 전기 노이즈 같은 원인은 그대로 남아 있고,
+        조금씩 나빠지다가 필터로도 못 가릴 때 다시 나타난다.
+        “필터를 올렸더니 괜찮아졌다”는 <strong>해결이 아니라 유예</strong>다.
+        1.3의 증상 분류(A 치우침 / B 튐 / C 구간별)를 반드시 함께 확인해야 한다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 4 ============ -->
+    <section class="sec" id="s2-2-4">
+      <div class="sec-no">2.2.4</div>
+      <h2>비휘발성 메모리<span class="en">전원이 꺼져도 기억한다</span></h2>
+
+      <p class="keyline">
+        스마트센서의 설정은 <strong>전원이 나가도 지워지지 않는 메모리</strong>에 저장된다.
+        정전 후 복구가 “설정을 다시 넣는 일”이 아니게 되는 이유다.
+      </p>
+
+      <p>
+        메모리에는 두 종류가 있다. <span class="kw">휘발성</span>은 전원이 끊기면 내용이 사라지고,
+        <span class="kw">비휘발성</span>은 남는다. 스마트센서는 계산 중인 값은 휘발성에,
+        <strong>설정값과 보정 계수는 비휘발성에</strong> 둔다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-2-4"><span class="no">그림 2.2-4</span> · 정전이 났을 때 남는 것과 사라지는 것</div>
+          <svg viewBox="0 0 700 296" role="img" aria-label="휘발성과 비휘발성 메모리에 저장되는 내용 비교">
+            <rect class="s-plain" x="24" y="14" width="316" height="40"/>
+            <text class="s-t3" x="182" y="40" style="font-weight:700">휘발성 메모리 (RAM)</text>
+            <rect class="s-fill" x="360" y="14" width="316" height="40"/>
+            <text class="s-tw" x="518" y="40" style="font-size:13.5px">비휘발성 메모리 (EEPROM · Flash)</text>
+
+            <rect class="s-plain" x="24" y="58" width="316" height="112"/>
+            <text class="s-t2" x="182" y="84">지금 계산 중인 측정값</text>
+            <text class="s-t2" x="182" y="106">필터 처리 중인 임시 데이터</text>
+            <text class="s-t2" x="182" y="128">최근 몇 초의 이력 버퍼</text>
+            <text class="s-t2" x="182" y="152">통신 중인 패킷</text>
+
+            <rect class="s-tint" x="360" y="58" width="316" height="112"/>
+            <text class="s-t3" x="518" y="84">감도 · 응차 · 출력 논리 설정</text>
+            <text class="s-t3" x="518" y="106">영점 · 온도 · 선형성 보정 계수</text>
+            <text class="s-t3" x="518" y="128">제품 식별 정보 (형번 · 시리얼)</text>
+            <text class="s-t3" x="518" y="152">누적 동작 횟수 · 가동 시간</text>
+
+            <rect class="s-warn" x="24" y="188" width="652" height="40"/>
+            <text class="s-t3" x="350" y="214" style="fill:#8A5A0B;font-weight:700">⚡ 정전 발생</text>
+
+            <rect class="s-plain" x="24" y="238" width="316" height="46"/>
+            <text class="s-t2" x="182" y="262">사라진다</text>
+            <text class="s-t2" x="182" y="278">→ 복구 후 처음부터 다시 계산</text>
+
+            <rect class="s-tint" x="360" y="238" width="316" height="46"/>
+            <text class="s-t3" x="518" y="262" style="font-weight:700">그대로 남는다</text>
+            <text class="s-t2" x="518" y="278">→ 복구되면 즉시 원래대로 동작</text>
+          </svg>
+        </div>
+        <figcaption>정전 후 복구가 빠른 이유. 설정을 다시 넣을 필요가 없다.</figcaption>
+      </figure>
+
+      <p>
+        비휘발성 메모리는 <strong>누적 데이터</strong>도 담는다.
+        지금까지 몇 번 동작했는지, 총 몇 시간 켜져 있었는지, 내부 온도가 최고 몇 도까지 올라갔는지.
+        1.2에서 접촉식 센서의 수명을 “동작 횟수”로 센다고 했는데,
+        <strong>스마트센서는 그 횟수를 스스로 세고 있다.</strong> 3.4의 예지 보전이 여기서 출발한다.
+      </p>
+
+      <div class="note">
+        <span class="t">개념 · 메모리에도 수명이 있다</span>
+        <p>비휘발성 메모리는 쓰기 횟수에 한계가 있다(보통 수십만~수백만 회).
+        그래서 스마트센서는 <strong>자주 바뀌는 값을 매번 저장하지 않는다.</strong>
+        누적 카운트도 일정 간격으로 모아서 기록한다.
+        정전 직전 몇 초의 데이터가 정확히 남지 않을 수 있는 이유이며, 정상 동작이다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 5 ============ -->
+    <section class="sec" id="s2-2-5">
+      <div class="sec-no">2.2.5</div>
+      <h2>실무 보강<span class="en">내부 구조를 알면 알람이 읽힌다</span></h2>
+
+      <p class="keyline">
+        블록도를 머릿속에 두면 알람 코드가 <strong>어느 블록에서 나온 것인지</strong> 보인다.
+        확인할 자리가 바로 좁혀진다.
+      </p>
+
+      <p>
+        아래 다섯 항목은 목차에 명시되어 있지는 않지만
+        <strong>물류설비 운영에서 실제로 필요해 보강한 내용</strong>이다.
+      </p>
+
+      <!-- 1 -->
+      <div class="prac">
+        <h3>1. 알람 코드를 블록으로 매핑하기</h3>
+        <p class="prac-tip">그림 2.2-1의 네 블록에 알람을 배치한다.</p>
+
+        <div class="tbl-label" id="b2-2-3"><span class="no">표 2.2-3</span> · 알람 유형별 발생 블록과 확인 지점</div>
+        <table>
+          <thead>
+            <tr><th>알람 유형</th><th>발생 블록</th><th>1차 확인 지점</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>신호 여유 부족 · 수광량 저하</td><td>① 감지 소자</td>
+                <td>렌즈·반사판 오염, 정렬, 대상 재질 (1장 절차)</td></tr>
+            <tr><td>측정 범위 이탈</td><td>① 감지 소자</td>
+                <td>대상물 위치, 설치 거리, 배경 변화</td></tr>
+            <tr><td>내부 온도 초과</td><td>② 변환 회로 · ③ MCU</td>
+                <td>주변 발열원, 직사광선, 제어반 환기</td></tr>
+            <tr><td>내부 오류 · 자가 진단 실패</td><td>③ MCU</td>
+                <td class="t-warn">기술자 조치 불가 — 교체 대상, 담당자 호출</td></tr>
+            <tr><td>통신 두절 · 프레임 오류</td><td>④ 통신</td>
+                <td>커넥터 체결, 케이블 손상, 마스터 포트 LED</td></tr>
+            <tr><td>파라미터 오류 · 설정 불일치</td><td>비휘발성 메모리</td>
+                <td class="t-warn">담당자 영역 — 설정 재적용 필요 (2.3 참조)</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note field">
+          <span class="t">현장 · 온도 알람이 늘어난다면</span>
+          <p>스마트센서는 내부 온도를 스스로 잰다. 여름철이나 제어반 내부 발열이 심할 때
+          <strong>여러 센서에서 동시에</strong> 온도 관련 경고가 뜨는 경우가 있다.
+          이때는 센서 개별 문제가 아니라 <strong>구역 환경 문제</strong>다.
+          한두 개면 그 센서 주변, 여러 개면 환기·냉방 계통을 본다.</p>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="prac">
+        <h3>2. “값이 너무 매끄럽다”도 신호다</h3>
+        <p class="prac-tip">필터가 과하게 걸린 상태를 알아보는 법.</p>
+
+        <p>
+          현장에서는 값이 튀는 것만 문제로 본다. 그러나 <strong>지나치게 안정적인 값</strong>도 이상 신호다.
+          아래 두 가지 중 하나일 가능성이 있다.
+        </p>
+        <ul>
+          <li><strong>필터가 과하게 설정됨</strong> — 진짜 변화까지 뭉개고 있다.
+              라인 속도를 올렸는데 값의 반응이 그대로라면 의심한다.</li>
+          <li><strong>센서가 값 갱신을 멈춤</strong> — 내부 오류로 마지막 값을 계속 내보내는 상태.
+              대상물을 치웠는데 값이 안 변하면 확실하다.</li>
+        </ul>
+        <div class="note field">
+          <span class="t">현장 · 30초 확인법</span>
+          <p>대상물을 손으로 치우거나 가려 본다(안전 조치 후).
+          <strong>값이 즉시 반응하면 정상, 몇 초 늦거나 안 변하면 이상</strong>이다.
+          이 한 동작이 “필터 과다”와 “센서 정지”를 가려낸다.</p>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="prac">
+        <h3>3. 정전 · 복전 시 확인 순서</h3>
+        <p class="prac-tip">비휘발성 메모리 덕분에 대부분 자동 복구되지만, 확인은 필요하다.</p>
+
+        <ol>
+          <li><strong>IO-Link 마스터 포트 LED</strong> — 모든 포트가 정상 통신 상태로 돌아왔는가</li>
+          <li><strong>통신 두절 이력</strong> — 복전 후에도 연결되지 않는 포트가 있는가</li>
+          <li><strong>설정 불일치 경고</strong> — 저장된 설정과 상위가 가진 설정이 다르다는 경고가 없는가</li>
+          <li><strong>값의 반응</strong> — 대상물 유무에 따라 값이 정상적으로 변하는가</li>
+          <li><strong>누적 카운트</strong> — 갑자기 0으로 초기화된 센서가 없는가 (메모리 이상 신호)</li>
+        </ol>
+
+        <div class="note warn">
+          <span class="t">주의 · 순간 정전이 더 위험하다</span>
+          <p>완전한 정전보다 <strong>순간적으로 전압이 떨어졌다 회복되는 상황</strong>이 메모리에 더 나쁘다.
+          쓰기 도중에 전원이 흔들리면 저장이 중간에 끊길 수 있다.
+          복전 후 특정 센서만 설정이 이상하다면 이 가능성을 담당자에게 전달한다.</p>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="prac">
+        <h3>4. 누적 데이터를 활용하는 법</h3>
+        <p class="prac-tip">센서가 세고 있는 숫자가 정비 계획이 된다.</p>
+
+        <p>
+          스마트센서가 저장하는 누적 데이터는 대개 다음과 같다.
+        </p>
+        <ul>
+          <li><strong>총 가동 시간</strong> — 부품 열화 정도의 기준</li>
+          <li><strong>누적 동작 횟수</strong> — 1.2에서 본 접촉식 수명 계산의 실측값</li>
+          <li><strong>최고·최저 내부 온도</strong> — 설치 환경이 사양 범위 안에 있었는지</li>
+          <li><strong>통신 오류 누적 횟수</strong> — 배선 열화의 조기 신호</li>
+        </ul>
+        <p>
+          이 값들은 <strong>고장이 나기 전에</strong> 확인할 수 있다.
+          통신 오류 누적이 최근 급증한 포트는, 아직 두절되지 않았어도 케이블 점검 대상이다.
+        </p>
+      </div>
+
+      <!-- 5 -->
+      <div class="prac">
+        <h3>5. 현장 점검 체크리스트</h3>
+        <p class="prac-tip">내부 구조 관점의 점검 항목.</p>
+
+        <ul class="check">
+          <li>알람 코드가 어느 블록(감지 / 변환 / MCU / 통신 / 메모리)에서 나왔는지 분류했는가</li>
+          <li>대상물을 가렸을 때 값이 즉시 반응하는가 (필터 과다·센서 정지 확인)</li>
+          <li>내부 온도 경고가 여러 센서에서 동시에 나고 있지 않은가</li>
+          <li>정전·복전 후 모든 포트가 정상 통신 상태로 돌아왔는가</li>
+          <li>누적 카운트가 갑자기 초기화된 센서가 없는가</li>
+          <li>통신 오류 누적 횟수가 최근 급증한 포트가 없는가</li>
+          <li>“내부 오류”는 기술자 조치 대상이 아님을 알고 바로 에스컬레이션했는가</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <span class="t">개념 · 이 장이 남기는 것</span>
+        <p>스마트센서는 감지–변환–연산–통신 네 블록으로 이루어지고(본문 1),
+        MCU는 필터링·신호 처리·단위 변환·내부 보정 네 가지를 한다(본문 2).
+        필터링은 노이즈를 줄이지만 과하면 진짜 변화도 지운다(본문 3).
+        설정과 누적 데이터는 비휘발성 메모리에 남아 정전을 견딘다(본문 4).<br>
+        다음 장 2.3에서는 그 메모리에 담긴 <strong>식별 정보</strong>가
+        센서 교체를 어떻게 바꾸는지 살펴본다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 참고자료 ============ -->
+    <section class="ref" id="r2-2">
+      <div class="sec-no">참고자료</div>
+      <h2>참고자료</h2>
+
+      <h3>1. 용어 정리</h3>
+      <dl class="terms">
+        <dt id="t2-2-1">A/D 변환 (Analog to Digital Conversion)</dt>
+        <dd>연속적인 아날로그 신호를 단계별 숫자로 바꾸는 과정. 몇 비트로 변환하는가가 해상도를 결정한다.</dd>
+        <dt id="t2-2-2">비트 (bit) · 분해능</dt>
+        <dd>12비트 변환은 4,096단계, 16비트는 65,536단계로 나눈다. 단계가 많을수록 계단이 잘아진다.</dd>
+        <dt id="t2-2-3">디지털 신호 처리 (DSP)</dt>
+        <dd>숫자로 바뀐 신호를 계산으로 가공하는 것. 평균·필터·주파수 분석 등이 포함된다.</dd>
+        <dt id="t2-2-4">스마트 필터링</dt>
+        <dd>단순 평균이 아니라 신호의 성격을 판단해 선택적으로 잡음만 제거하는 처리 방식.</dd>
+        <dt id="t2-2-5">휘발성 메모리 (RAM)</dt>
+        <dd>전원이 끊기면 내용이 사라지는 메모리. 계산 중인 임시 데이터를 담는다.</dd>
+        <dt id="t2-2-6">비휘발성 메모리 (EEPROM · Flash)</dt>
+        <dd>전원이 없어도 내용이 유지되는 메모리. 설정값·보정 계수·누적 데이터를 담는다.</dd>
+        <dt id="t2-2-7">개체별 보정 계수</dt>
+        <dd>같은 모델이라도 개체마다 다른 특성을 출하 시 측정해 저장한 값. 이 덕분에 교체해도 값이 같다.</dd>
+        <dt id="t2-2-8">누적 데이터 (Lifetime counter)</dt>
+        <dd>총 가동 시간, 동작 횟수, 최고 온도 등 센서가 스스로 세어 저장하는 이력 데이터.</dd>
+      </dl>
+
+      <h3>2. 관련 이미지 — 실물과 도해로 확인하기</h3>
+      <p class="ref-intro">
+        본문에 나온 순서대로 정리했다. 센서·공압은 썬덴코리아 파트너사, 제어기는 미쓰비시전기, 로봇은 야스카와·뉴로메카 기준이다.
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src">IO-Link</span>
+          <a href="https://io-link.com/fileadmin/user_upload/Downloads/Package_2024/IOL-Interface-Spec_10002_V114_Jun24.pdf" target="_blank" rel="noopener">IO-Link 인터페이스 사양서 v1.1.4 (무료 PDF) — 기기 내부 구조 도해</a>
+          <span class="where">본문 1 — 스마트센서의 통신 블록이 내부적으로 어떻게 구성되는지 공식 도해</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/media/pdf/9/99/399/dataSheet_WTB27-3S3711_1027764_ko.pdf" target="_blank" rel="noopener">광전 센서 데이터시트 (한국어 PDF) — 해상도·응답시간 사양</a>
+          <span class="where">본문 1 개념 박스 — A/D 변환 비트 수가 해상도로 표기되는 방식</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/products/distance-sensors/ultrasonic-distance-sensors/ultrasonic-distance-sensors/c/g584816" target="_blank" rel="noopener">초음파 거리 센서 — 필터·평균화 설정 항목</a>
+          <span class="where">본문 3 — 제품에서 필터 강도를 어떤 파라미터로 설정하는지</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/products/detection-sensors/inductive-proximity-sensors/inductive-proximity-sensors/c/g253054" target="_blank" rel="noopener">유도감응형 근접 센서 — 내부 온도·누적 카운트 진단</a>
+          <span class="where">본문 4 · 실무 보강 4 — 제품이 실제로 저장·보고하는 누적 데이터 항목</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=10&amp;cate_id=2" target="_blank" rel="noopener">PLC (MELSEC) — 아날로그 입력 모듈의 분해능 사양</a>
+          <span class="where">본문 1 — 센서 쪽 A/D와 별개로 제어기 쪽 변환 단계도 해상도를 제한한다</span>
+        </li>
+        <li>
+          <span class="src">FESTO</span>
+          <a href="https://www.festo.com/cat/ko_kr/products_041000" target="_blank" rel="noopener">압력 · 진공 센서 — 단위 변환 설정</a>
+          <span class="where">본문 2③ — 센서 내부에서 출력 단위(bar·kPa·psi)를 바꾸는 기능</span>
+        </li>
+      </ol>
+
+      <h3>3. 학술 · 표준 근거 자료 — 심화 학습용</h3>
+      <p class="ref-intro">
+        무료로 볼 수 있는 자료를 우선했다.<br>
+        <span class="src std">표준</span> 국제 규격 · <span class="src paper">논문</span> 공개 학술 자료
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://standards.ieee.org/wp-content/uploads/import/documents/tutorials/1451d4.pdf" target="_blank" rel="noopener">IEEE 1451.4 스마트 트랜스듀서 튜토리얼 (무료 PDF)</a>
+          <span class="where">본문 1 · 4 — 스마트 트랜스듀서의 내부 블록과 메모리 구조를 그림으로 설명.
+          비전공자용 심화 자료로 가장 적합하다</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://standards.ieee.org/ieee/1451.0/11001/" target="_blank" rel="noopener">IEEE 1451.0 : 공통 기능 · 트랜스듀서 서비스</a>
+          <span class="where">본문 2 — 스마트센서가 제공해야 할 연산·보정 서비스의 표준 정의</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/68534" target="_blank" rel="noopener">IEC 61131-9 : SDCI (IO-Link)</a>
+          <span class="where">본문 1④ · 실무 보강 1 — 통신 블록의 프레임 구조와 오류 코드 체계</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://www.bipm.org/documents/20126/2071204/JCGM_200_2012.pdf" target="_blank" rel="noopener">JCGM 200:2012 국제 계량 용어집 VIM (무료 PDF)</a>
+          <span class="where">본문 2④ — 보정(correction)과 교정(calibration)의 표준 정의 차이.
+          내부 보정이 계량학적으로 무엇을 하는 것인지</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10972287/" target="_blank" rel="noopener">Single-Ended Eddy Current Micro-Displacement Sensor Based on Temperature Compensation (PMC 공개)</a>
+          <span class="where">본문 2④ — 센서 내부에서 온도 보정 계수를 적용하는 실제 구현과 성능 개선</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10934737/" target="_blank" rel="noopener">Eddy Current Position Measurement in Harsh Environments (PMC 공개)</a>
+          <span class="where">본문 2④ · 3 — 가혹 환경에서 보정과 필터링을 조합하는 접근</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://www.mdpi.com/1424-8220/13/11/15465/htm" target="_blank" rel="noopener">Accurate Estimation of Airborne Ultrasonic Time-of-Flight for Overlapping Echoes (Sensors, MDPI)</a>
+          <span class="where">본문 3 — 신호 처리로 겹친 반사음을 분리하는 방법. DSP가 무엇을 할 수 있는지의 예</span>
+        </li>
+        <li>
+          <span class="src">OMRON</span>
+          <a href="https://kr.misumi-ec.com/pr/vona/mech_20200829/OMRON_sensor04.pdf" target="_blank" rel="noopener">기술편 · 압력 센서 (한국어 PDF · 15p)</a>
+          <span class="where">본문 2.2.1 — 다이어프램과 반도체 변형 게이지 구조, 피에조 저항 효과. 감지 소자가 신호로 바뀌는 단계의 실제 예</span>
+        </li>
+      </ol>
+
+      <h3>4. 이어지는 장과의 연결</h3>
+      <ul style="font-size:13.5px">
+        <li><strong>2.3 플러그 앤 플레이</strong> — 비휘발성 메모리에 담긴 식별 정보(TEDS)의 활용</li>
+        <li><strong>2.4 지능형 기능</strong> — 내부 보정이 실시간 자가 교정으로 확장</li>
+        <li><strong>3.4 예지 보전</strong> — 누적 데이터가 정비 계획의 근거가 된다</li>
+        <li><strong>4.2 에지 컴퓨팅 정책</strong> — 필터링 판단을 어디까지 센서에 맡길 것인가</li>
+      </ul>
+    </section>

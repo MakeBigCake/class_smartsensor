@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4.1 산업용 IoT 게이트웨이 — 데이터를 읽는 감각</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+
+<!-- ================= 좌측 목차 (build.py 자동 생성) ================= -->
+<aside class="toc">
+  <div class="toc-head" data-part="start">
+    <a class="course-link" href="index.html">
+      <div class="course">제목 : 데이터를 읽는 감각</div>
+      <div class="course-desc">지은이 : 강승태</div>
+      <div class="course-desc">작성일 : 2026-08-10</div>
+    </a>
+  </div>
+
+  <a href="index.html">목차</a>
+  <a href="preface.html">머리말</a>
+  <a class="toc-group" href="index.html#part1">1부 · 센서의 기초 : 데이터의 생성</a>
+  <a href="1-1.html">1.1장 센서의 정의와 원리</a>
+  <a href="1-2.html">1.2장 다양한 센서 분류</a>
+  <a href="1-3.html">1.3장 현장 확인 성능 지표</a>
+  <a href="1-4.html">1.4장 오작동 방지와 기본 세팅</a>
+  <a class="toc-group" href="index.html#part2">2부 · 스마트센서의 구조 : 데이터의 지능화</a>
+  <a href="2-1.html">2.1장 스마트센서의 등장</a>
+  <a href="2-2.html">2.2장 핵심 내부 구조</a>
+  <a href="2-3.html">2.3장 플러그 앤 플레이</a>
+  <a href="2-4.html">2.4장 지능형 기능</a>
+  <a class="toc-group" href="index.html#part3">3부 · 자동화 장비와 스마트센서 : 데이터의 활용</a>
+  <a href="3-1.html">3.1장 장비 제어의 기본 원리</a>
+  <a href="3-2.html">3.2장 서보 모터와 센서의 융합</a>
+  <a href="3-3.html">3.3장 현장 통신 프로토콜</a>
+  <a href="3-4.html">3.4장 예지 보전</a>
+  <a class="toc-group on" href="index.html#part4">4부 · 자동화 공정의 운영 : 데이터의 통합</a>
+  <a href="4-1.html" class="on">4.1장 산업용 IoT 게이트웨이</a>
+  <div class="toc-sub" data-for="4-1">
+    <a href="#s4-1-1">4.1.1 OT와 IT는 다른 세계다</a>
+    <a href="#s4-1-2">4.1.2 게이트웨이의 네 가지 역할</a>
+    <a href="#s4-1-3">4.1.3 두 세계의 통신 규격</a>
+    <a href="#s4-1-4">4.1.4 보안 관문 역할</a>
+    <a href="#s4-1-5">4.1.5 실무 보강</a>
+    <a href="#r4-1">참고자료</a>
+  </div>
+  <a href="4-2.html">4.2장 에지 컴퓨팅 정책</a>
+  <a href="4-3.html">4.3장 생존형 네트워크 인프라</a>
+  <div class="toc-group">찾아보기</div>
+  <a href="index-terms.html">용어 색인</a>
+  <a href="index-figs.html">그림 색인</a>
+  <a href="index-tables.html">표 색인</a>
+  <a href="index-abbr.html">약어 목록</a>
+  <a href="index-refs.html">참고문헌</a>
+</aside>
+
+<!-- ================= 본문 ================= -->
+<div class="main">
+
+  <div class="topbar">
+    <div class="crumb">
+      <span class="c1">4부 · 자동화 공정의 운영 : 데이터의 통합</span>
+      <span>›</span>
+      <span class="c2">4.1 산업용 IoT 게이트웨이</span>
+    </div>
+    <div class="nav">
+      <a href="index.html" class="home">목차</a>
+      <a href="3-4.html">◀ 이전</a>
+      <span class="count">13 / 15</span>
+      <a href="4-2.html">다음 ▶</a>
+    </div>
+  </div>
+
+  <article class="article">
+
+    <div class="lesson-head">    <h1><span class="lesson-tag">4.1</span>산업용 IoT 게이트웨이</h1>
+    <p class="subtitle">OT와 IT 간 데이터 통역사 — 현장의 말을 사무실의 말로</p>
+    </div>
+
+    <p class="lead">
+      현장 설비는 CC-Link나 Modbus로 말한다. 사무실 시스템은 인터넷의 언어로 말한다.
+      두 세계는 <strong>말이 통하지 않는다.</strong>
+      그 사이에 서서 통역하고, 모으고, 정리하고, 지켜 주는 장치가 <strong>IoT 게이트웨이</strong>다.
+      2.1의 계층 그림에서 정확히 가운데 자리다.
+    </p>
+
+    <div class="goals">
+      <h4>이 장을 읽고 나면</h4>
+      <ol>
+        <li>OT와 IT의 차이와, 왜 둘 사이에 번역이 필요한지 설명할 수 있다.</li>
+        <li>게이트웨이의 네 가지 역할(변환·취합·보안·전처리)을 구분할 수 있다.</li>
+        <li>Modbus·CC-Link와 MQTT·OPC UA의 성격 차이를 이해한다.</li>
+        <li>게이트웨이가 보안 관문 역할을 하는 이유와 기술자의 준수 사항을 안다.</li>
+        <li>게이트웨이 이상 시 설비에 어떤 영향이 있는지 판단할 수 있다.</li>
+      </ol>
+    </div>
+
+    <!-- ============ 본문 1 ============ -->
+    <section class="sec" id="s4-1-1">
+      <h2><span class="sec-no">4.1.1</span>OT와 IT는 다른 세계다<span class="en">우선하는 가치가 정반대다</span></h2>
+
+      <p class="keyline">
+        OT는 <strong>멈추지 않는 것</strong>이 최우선이고, IT는 <strong>정보가 새지 않는 것</strong>이 최우선이다.
+        이 차이가 두 세계의 모든 설계를 갈라놓았다.
+      </p>
+
+      <p>
+        <span class="kw">OT(Operational Technology)</span>는 현장 설비를 움직이는 기술이다.
+        PLC, 서보 드라이브, 센서가 여기 속한다.
+        <span class="kw">IT(Information Technology)</span>는 정보를 다루는 기술이다.
+        서버, 데이터베이스, 클라우드가 여기 속한다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-1-1"><span class="no">그림 4.1-1</span> · OT와 IT의 차이</div>
+          <svg viewBox="0 0 700 306" role="img" aria-label="OT와 IT의 우선순위와 특성 비교">
+            <rect class="s-fill" x="20" y="14" width="326" height="42"/>
+            <text class="s-tw" x="183" y="41" style="font-size:13.5px">OT — 현장 설비 영역</text>
+            <rect class="s-tint" x="354" y="14" width="326" height="42"/>
+            <text class="s-t" x="517" y="41" style="font-size:15px">IT — 정보 시스템 영역</text>
+
+            <rect class="s-plain" x="20" y="60" width="326" height="48"/>
+            <text class="s-t2" x="183" y="80" style="font-weight:700">최우선 가치</text>
+            <text class="s-t3" x="183" y="100">가용성 — 멈추면 안 된다</text>
+            <rect class="s-plain" x="354" y="60" width="326" height="48"/>
+            <text class="s-t2" x="517" y="80" style="font-weight:700">최우선 가치</text>
+            <text class="s-t3" x="517" y="100">기밀성 — 새면 안 된다</text>
+
+            <rect class="s-plain" x="20" y="112" width="326" height="48"/>
+            <text class="s-t2" x="183" y="132" style="font-weight:700">시간 감각</text>
+            <text class="s-t3" x="183" y="152">ms 단위 · 지연 불가</text>
+            <rect class="s-plain" x="354" y="112" width="326" height="48"/>
+            <text class="s-t2" x="517" y="132" style="font-weight:700">시간 감각</text>
+            <text class="s-t3" x="517" y="152">초 단위 · 재전송 가능</text>
+
+            <rect class="s-plain" x="20" y="164" width="326" height="48"/>
+            <text class="s-t2" x="183" y="184" style="font-weight:700">수명 주기</text>
+            <text class="s-t3" x="183" y="204">10~20년 · 업데이트 어려움</text>
+            <rect class="s-plain" x="354" y="164" width="326" height="48"/>
+            <text class="s-t2" x="517" y="184" style="font-weight:700">수명 주기</text>
+            <text class="s-t3" x="517" y="204">3~5년 · 수시 업데이트</text>
+
+            <rect class="s-plain" x="20" y="216" width="326" height="48"/>
+            <text class="s-t2" x="183" y="236" style="font-weight:700">통신 규격</text>
+            <text class="s-t3" x="183" y="256">Modbus · CC-Link · PROFINET</text>
+            <rect class="s-plain" x="354" y="216" width="326" height="48"/>
+            <text class="s-t2" x="517" y="236" style="font-weight:700">통신 규격</text>
+            <text class="s-t3" x="517" y="256">MQTT · OPC UA · HTTPS</text>
+
+            <rect class="s-warn" x="20" y="270" width="660" height="34"/>
+            <text class="s-t3" x="350" y="292" style="fill:#8A5A0B;font-weight:700">그대로는 연결할 수 없다 — 그래서 게이트웨이가 필요하다</text>
+          </svg>
+        </div>
+        <figcaption>두 세계를 무리하게 직접 연결하면 OT의 가용성과 IT의 보안이 동시에 위협받는다.</figcaption>
+      </figure>
+
+      <div class="note">
+        <span class="t">개념 · 왜 OT는 업데이트를 잘 안 하나</span>
+        <p>사무실 PC는 매달 보안 패치를 받는다. 그러나 컨베이어를 돌리는 PLC를 패치하려면
+        <strong>라인을 세워야 하고, 패치 후 동작이 달라질 위험</strong>이 있다.
+        그래서 OT 기기는 “잘 돌아가면 건드리지 않는다”가 원칙이다.
+        이 원칙이 안정성을 주지만 <strong>보안 취약점을 오래 남긴다.</strong>
+        게이트웨이가 보안 관문 역할을 맡는 이유가 여기 있다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 2 ============ -->
+    <section class="sec" id="s4-1-2">
+      <h2><span class="sec-no">4.1.2</span>게이트웨이의 네 가지 역할<span class="en">변환 · 취합 · 보안 · 전처리</span></h2>
+
+      <p class="keyline">
+        게이트웨이는 <strong>통역사이자, 짐꾼이자, 문지기이자, 검수원</strong>이다.
+        네 가지를 한 장치가 동시에 한다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-1-2"><span class="no">그림 4.1-2</span> · 게이트웨이의 네 가지 역할</div>
+          <svg viewBox="0 0 700 316" role="img" aria-label="IoT 게이트웨이의 네 가지 기능">
+            <rect class="s-plain" x="20" y="120" width="100" height="70"/>
+            <text class="s-t2" x="70" y="148">현장 설비</text>
+            <text class="s-t2" x="70" y="168">PLC · 센서</text>
+            <path class="s-line-n" d="M126 155 L156 155" marker-end="url(#aD1)"/>
+
+            <rect class="s-fill" x="162" y="60" width="376" height="196"/>
+            <text class="s-tw" x="350" y="90" style="font-size:15px">IoT 게이트웨이</text>
+
+            <rect class="s-tint" x="180" y="104" width="170" height="66"/>
+            <text class="s-t3" x="265" y="128" style="font-weight:700">① 프로토콜 변환</text>
+            <text class="s-t2" x="265" y="148">Modbus · CC-Link →</text>
+            <text class="s-t2" x="265" y="164">MQTT · OPC UA</text>
+
+            <rect class="s-tint" x="358" y="104" width="162" height="66"/>
+            <text class="s-t3" x="439" y="128" style="font-weight:700">② 데이터 취합</text>
+            <text class="s-t2" x="439" y="148">여러 설비 데이터를</text>
+            <text class="s-t2" x="439" y="164">묶어서 한 번에</text>
+
+            <rect class="s-tint" x="180" y="178" width="170" height="66"/>
+            <text class="s-t3" x="265" y="202" style="font-weight:700">③ 보안 관문</text>
+            <text class="s-t2" x="265" y="222">방화벽 · 암호화</text>
+            <text class="s-t2" x="265" y="238">기기 인증</text>
+
+            <rect class="s-tint" x="358" y="178" width="162" height="66"/>
+            <text class="s-t3" x="439" y="202" style="font-weight:700">④ 전처리</text>
+            <text class="s-t2" x="439" y="222">노이즈 정제</text>
+            <text class="s-t2" x="439" y="238">단위 통일</text>
+
+            <path class="s-line-n" d="M544 155 L574 155" marker-end="url(#aD1)"/>
+            <rect class="s-plain" x="580" y="120" width="100" height="70"/>
+            <text class="s-t2" x="630" y="148">상위 시스템</text>
+            <text class="s-t2" x="630" y="168">MES · 클라우드</text>
+
+            <text class="s-t2" x="350" y="290">네 가지 중 하나만 빠져도 상위 시스템이 쓸 수 있는 데이터가 되지 않는다</text>
+
+            <defs>
+              <marker id="aD1" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>물리적으로는 제어반 안의 작은 상자 하나지만, 하는 일은 네 가지다.</figcaption>
+      </figure>
+
+      <h3>① 프로토콜 변환 — 말을 바꾼다</h3>
+      <p>
+        현장 규격(Modbus, CC-Link, PROFINET)으로 온 데이터를
+        IT 규격(MQTT, OPC UA)으로 바꿔 내보낸다. 단순히 형식만 바꾸는 것이 아니라,
+        <strong>“레지스터 40001의 값 1234”를 “3번 컨베이어의 속도 12.34 m/min”으로</strong>
+        의미를 붙여 주는 일까지 포함한다.
+      </p>
+
+      <h3>② 데이터 취합 — 묶어서 보낸다</h3>
+      <p>
+        설비 수십 대의 데이터가 제각각 올라가면 상위 시스템이 감당하지 못한다.
+        게이트웨이는 일정 시간 동안 모아서 <strong>패키지로 묶어</strong> 한 번에 보낸다.
+        네트워크 부담이 크게 줄고, 상위에서 처리하기도 쉬워진다.
+      </p>
+
+      <h3>③ 보안 관문 — 문지기 역할</h3>
+      <p>
+        현장 네트워크와 사무실 네트워크 사이의 <strong>유일한 통로</strong>가 되어,
+        허가되지 않은 접근을 막고 데이터를 암호화한다.
+        본문 4에서 자세히 다룬다.
+      </p>
+
+      <h3>④ 전처리 — 보내기 전에 정리한다</h3>
+      <p>
+        1.4에서 본 노이즈 섞인 값, 단위가 제각각인 값(mm와 m가 섞인)을 정리한다.
+        2.2에서 스마트센서가 내부에서 하던 일을, <strong>일반 센서가 붙은 설비에 대해</strong>
+        게이트웨이가 대신 해 주는 셈이다.
+      </p>
+
+      <div class="note field">
+        <span class="t">현장 · 게이트웨이는 어디에 있나</span>
+        <p>대개 <strong>제어반 안이나 현장 배전반 안</strong>에 DIN 레일에 붙은 작은 상자다.
+        PLC와 비슷하게 생겼고, 통신 포트가 여러 개 달려 있다.
+        LAN 포트 하나는 현장 쪽, 다른 하나는 사무실 쪽으로 연결되어 있는 것이 특징이다.
+        <strong>이 두 포트를 서로 바꿔 꽂으면 보안 구조가 무너진다.</strong></p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 3 ============ -->
+    <section class="sec" id="s4-1-3">
+      <h2><span class="sec-no">4.1.3</span>두 세계의 통신 규격<span class="en">무엇이 어떻게 다른가</span></h2>
+
+      <p class="keyline">
+        현장 규격은 <strong>정해진 것을 정해진 때에</strong> 주고받는다.
+        IT 규격은 <strong>필요한 사람이 필요한 것을</strong> 받아 간다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-1-3"><span class="no">그림 4.1-3</span> · 두 방식의 데이터 흐름</div>
+          <svg viewBox="0 0 700 300" role="img" aria-label="폴링 방식과 발행 구독 방식의 비교">
+            <text class="s-hdr" x="180" y="18">현장 규격 — 묻고 답한다 (폴링)</text>
+            <rect class="s-fill" x="30" y="36" width="110" height="52"/>
+            <text class="s-tw" x="85" y="66" style="font-size:13px">제어기</text>
+            <path class="s-line-n" d="M146 52 L216 52" marker-end="url(#aD2)"/>
+            <text class="s-t2" x="181" y="42">“지금 값?”</text>
+            <path class="s-line-n" d="M216 74 L146 74" marker-end="url(#aD2)"/>
+            <text class="s-t2" x="181" y="90">“12.34”</text>
+            <rect class="s-tint" x="222" y="36" width="100" height="52"/>
+            <text class="s-t3" x="272" y="66">설비</text>
+            <text class="s-t2" x="180" y="118">주기가 정해져 있고 순서가 보장된다</text>
+            <text class="s-t2" x="180" y="138">Modbus · CC-Link · PROFINET</text>
+
+            <line class="s-rule" x1="350" y1="30" x2="350" y2="270"/>
+
+            <text class="s-hdr" x="520" y="18">IT 규격 — 알려 주고 구독한다</text>
+            <rect class="s-fill" x="382" y="36" width="100" height="52"/>
+            <text class="s-tw" x="432" y="66" style="font-size:13px">설비</text>
+            <path class="s-line-n" d="M488 62 L536 62" marker-end="url(#aD2)"/>
+            <text class="s-t2" x="512" y="50">발행</text>
+            <rect class="s-tint" x="542" y="36" width="76" height="52"/>
+            <text class="s-t2" x="580" y="60">중개</text>
+            <text class="s-t2" x="580" y="78">서버</text>
+            <path class="s-line-n" d="M624 62 L660 62" marker-end="url(#aD2)"/>
+            <rect class="s-plain" x="618" y="106" width="62" height="40"/>
+            <text class="s-t2" x="649" y="130">구독자</text>
+            <text class="s-t2" x="520" y="118">변화가 있을 때만 알린다</text>
+            <text class="s-t2" x="520" y="138">MQTT · OPC UA</text>
+
+            <rect class="s-tint" x="30" y="164" width="300" height="94"/>
+            <text class="s-t3" x="180" y="188" style="font-weight:700">장점</text>
+            <text class="s-t2" x="180" y="210">응답 시간이 예측 가능하다</text>
+            <text class="s-t2" x="180" y="230">제어에 쓸 수 있다</text>
+            <text class="s-t2" x="180" y="250">순서와 타이밍이 보장된다</text>
+
+            <rect class="s-tint" x="370" y="164" width="310" height="94"/>
+            <text class="s-t3" x="525" y="188" style="font-weight:700">장점</text>
+            <text class="s-t2" x="525" y="210">여러 시스템이 동시에 받아 쓴다</text>
+            <text class="s-t2" x="525" y="230">불필요한 전송이 없다</text>
+            <text class="s-t2" x="525" y="250">인터넷을 지나 멀리 갈 수 있다</text>
+
+            <text class="s-t2" x="350" y="286">둘 다 필요하다 — 제어는 왼쪽, 정보 활용은 오른쪽</text>
+
+            <defs>
+              <marker id="aD2" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>왼쪽은 3.3에서 다룬 프로세스 데이터의 세계, 오른쪽은 진단·실적 데이터의 세계다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b4-1-1"><span class="no">표 4.1-1</span> · 주요 통신 규격</div>
+      <table class="sourced">
+        <thead>
+          <tr><th>규격</th><th>영역</th><th>특징</th><th>물류 현장에서</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Modbus</td><td>OT</td><td>가장 오래되고 단순. 거의 모든 기기가 지원</td>
+              <td>구형 설비, 계측기 연결</td></tr>
+          <tr><td>CC-Link IE<br><span style="font-size:11.5px;color:#767A7E">IEC 61784-2</span></td><td>OT</td><td>미쓰비시 계열 산업용 이더넷. 고속·결정론적</td>
+              <td>PLC–드라이브–분산 I/O</td></tr>
+          <tr><td>IO-Link<br><span style="font-size:11.5px;color:#767A7E">IEC 61131-9</span></td><td>OT</td><td>센서–마스터 점대점. 3.3에서 다룸</td>
+              <td>스마트센서 연결</td></tr>
+          <tr><td>MQTT<br><span style="font-size:11.5px;color:#767A7E">ISO/IEC 20922</span></td><td>IT</td><td>가볍고 느슨한 발행/구독. 인터넷에 강함</td>
+              <td>클라우드 전송, 원격 모니터링</td></tr>
+          <tr><td>OPC UA<br><span style="font-size:11.5px;color:#767A7E">IEC 62541</span></td><td>경계</td><td>데이터에 <strong>의미</strong>를 붙여 전달. 보안 내장</td>
+              <td>MES·상위 시스템 연계</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tbl-src">
+        <b>근거</b> 각 규격의 국제 표준 번호를 함께 적었다. Modbus는 국제 표준이 아니라
+        <b>Modbus Organization</b>이 공개·관리하는 개방 규격이다.
+        「영역」 구분(OT · IT · 경계)은 규격이 정한 것이 아니라 <span class="fld">이 책이 설명을 위해 나눈 것</span>이다
+      </div>
+
+      <div class="note">
+        <span class="t">개념 · OPC UA가 특별한 이유</span>
+        <p>다른 규격은 “값 1234”를 전달한다. OPC UA는
+        <strong>“3번 컨베이어의 속도, 단위는 m/min, 정상 범위는 0~30, 측정 시각은 언제”</strong>를
+        함께 전달한다. 받는 쪽이 값의 뜻을 몰라도 되므로,
+        새 시스템을 붙일 때 매번 해석 규칙을 만들 필요가 없다.
+        이 성질 때문에 OT와 IT의 경계에서 표준처럼 쓰인다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 4 ============ -->
+    <section class="sec" id="s4-1-4">
+      <h2><span class="sec-no">4.1.4</span>보안 관문 역할<span class="en">현장 네트워크를 지키는 유일한 문</span></h2>
+
+      <p class="keyline">
+        현장 설비는 <strong>보안을 염두에 두고 만들어지지 않았다.</strong>
+        그래서 설비를 고치는 대신 <strong>문을 하나만 두고 그 문을 지킨다.</strong>
+      </p>
+
+      <p>
+        PLC와 센서는 “네트워크에 나쁜 사람이 있을 수 있다”는 전제로 설계되지 않았다.
+        비밀번호가 없거나 기본값 그대로인 경우도 흔하다.
+        그런 기기들이 인터넷에 직접 연결되면 <strong>공장이 통째로 위험</strong>해진다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f4-1-4"><span class="no">그림 4.1-4</span> · 게이트웨이가 만드는 경계</div>
+          <svg viewBox="0 0 700 306" role="img" aria-label="게이트웨이를 경계로 나뉜 현장망과 사무망">
+            <rect class="s-tint" x="20" y="40" width="270" height="180"/>
+            <text class="s-t3" x="155" y="66" style="font-weight:700">현장 네트워크 (OT)</text>
+            <rect class="s-plain" x="44" y="82" width="100" height="42"/>
+            <text class="s-t2" x="94" y="108">PLC</text>
+            <rect class="s-plain" x="166" y="82" width="100" height="42"/>
+            <text class="s-t2" x="216" y="108">서보</text>
+            <rect class="s-plain" x="44" y="134" width="100" height="42"/>
+            <text class="s-t2" x="94" y="160">분산 I/O</text>
+            <rect class="s-plain" x="166" y="134" width="100" height="42"/>
+            <text class="s-t2" x="216" y="160">센서</text>
+            <text class="s-t2" x="155" y="200">인터넷과 직접 닿지 않는다</text>
+
+            <rect class="s-fill" x="306" y="40" width="88" height="180"/>
+            <text class="s-tw" x="350" y="112" style="font-size:13px">게이트</text>
+            <text class="s-tw" x="350" y="132" style="font-size:13px">웨이</text>
+            <text class="s-t2w" x="350" y="160">유일한 통로</text>
+
+            <rect class="s-plain" x="410" y="40" width="270" height="180"/>
+            <text class="s-t3" x="545" y="66" style="font-weight:700">사무 네트워크 (IT)</text>
+            <rect class="s-plain" x="434" y="82" width="100" height="42"/>
+            <text class="s-t2" x="484" y="108">MES</text>
+            <rect class="s-plain" x="556" y="82" width="100" height="42"/>
+            <text class="s-t2" x="606" y="108">WMS</text>
+            <rect class="s-plain" x="434" y="134" width="222" height="42"/>
+            <text class="s-t2" x="545" y="160">클라우드 · 인터넷</text>
+            <text class="s-t2" x="545" y="200">외부와 연결되어 있다</text>
+
+            <rect class="s-warn" x="20" y="238" width="660" height="60"/>
+            <text class="s-t3" x="350" y="262" style="fill:#8A5A0B;font-weight:700">이 경계를 우회하는 연결이 생기면 보안 구조 전체가 무의미해진다</text>
+            <text class="s-t2" x="350" y="284" style="fill:#8A5A0B">현장 PC에 개인 USB·테더링·임시 공유기를 연결하는 것이 대표적</text>
+          </svg>
+        </div>
+        <figcaption>게이트웨이의 가치는 “유일한 통로”라는 데 있다. 통로가 둘이 되는 순간 가치가 사라진다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b4-1-2"><span class="no">표 4.1-2</span> · 게이트웨이가 수행하는 보안 기능</div>
+      <table>
+        <thead>
+          <tr><th>기능</th><th>하는 일</th><th>없으면</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>방화벽</td><td>허가된 통신만 통과시킨다</td><td>외부에서 PLC에 직접 접근 가능</td></tr>
+          <tr><td>단방향 제어</td><td>데이터는 위로만, 명령은 막는다</td><td>외부에서 설비 조작 시도 가능</td></tr>
+          <tr><td>암호화</td><td>전송 중 데이터를 읽을 수 없게 한다</td><td>생산 정보·설비 구성이 노출</td></tr>
+          <tr><td>기기 인증</td><td>등록된 기기만 데이터를 보낼 수 있다</td><td>위조 데이터 주입 가능</td></tr>
+          <tr><td>접근 기록</td><td>누가 언제 무엇을 했는지 남긴다</td><td>사고 발생 시 원인 추적 불가</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note warn">
+        <span class="t">주의 · 기술자가 반드시 지킬 것</span>
+        <ul style="margin-bottom:0">
+          <li><strong>현장 네트워크에 개인 기기를 연결하지 않는다</strong> — 노트북, 휴대폰 테더링, USB 저장장치</li>
+          <li><strong>임시 공유기·스위치를 임의로 설치하지 않는다</strong> — “잠깐만”이 영구가 된다</li>
+          <li><strong>게이트웨이의 LAN 포트를 바꿔 꽂지 않는다</strong> — 현장 쪽과 사무 쪽이 뒤바뀐다</li>
+          <li><strong>기기 비밀번호를 공유하거나 메모로 붙여 두지 않는다</strong></li>
+          <li><strong>원격 접속 요청은 반드시 담당자를 통한다</strong> — 벤더 지원도 예외가 아니다</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 본문 5 ============ -->
+    <section class="sec" id="s4-1-5">
+      <h2><span class="sec-no">4.1.5</span>실무 보강<span class="en">게이트웨이 이상을 판단하고 대응한다</span></h2>
+
+      <p class="keyline">
+        게이트웨이가 죽으면 <strong>데이터는 멈추지만 설비는 대개 돈다.</strong>
+        이 구분을 아는 것이 야간 호출 여부를 가른다.
+      </p>
+
+      <p>
+        아래 다섯 항목은 목차에 명시되어 있지는 않지만
+        <strong>물류설비 운영에서 실제로 필요해 보강한 내용</strong>이다.
+      </p>
+
+      <!-- 1 -->
+      <div class="prac">
+        <h3>1. 게이트웨이 이상의 영향 판단</h3>
+        <p class="prac-tip">3.3 실무 보강 4의 “설비 정지 vs 데이터 정지”를 여기에 적용한다.</p>
+
+        <div class="tbl-label" id="b4-1-3"><span class="no">표 4.1-3</span> · 이상 위치별 영향</div>
+        <table>
+          <thead>
+            <tr><th>이상 위치</th><th>설비</th><th>데이터</th><th>긴급도</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>게이트웨이 자체 정지</td><td>정상 동작</td><td class="t-warn">상위 전송 중단</td><td>보통</td></tr>
+            <tr><td>게이트웨이–상위 회선 두절</td><td>정상 동작</td><td class="t-warn">상위 전송 중단</td><td>보통</td></tr>
+            <tr><td>게이트웨이–현장 회선 두절</td><td>정상 동작</td><td class="t-warn">수집 중단</td><td>보통</td></tr>
+            <tr><td class="t-warn">게이트웨이가 제어에도 관여</td><td class="t-warn">해당 구간 정지</td><td class="t-warn">중단</td><td class="t-warn">긴급</td></tr>
+            <tr><td>제어반 전원 이상</td><td class="t-warn">전 구간 정지</td><td class="t-warn">중단</td><td class="t-warn">긴급</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note field">
+          <span class="t">현장 · 우리 설비는 어느 쪽인가를 미리 확인해 둔다</span>
+          <p>대부분의 게이트웨이는 <strong>데이터 수집 전용</strong>이라 죽어도 설비는 돈다.
+          그러나 일부 구성에서는 게이트웨이가 <strong>상위 지시(주문 정보 등)를 받아 전달</strong>하기도 한다.
+          이 경우 게이트웨이가 죽으면 라인이 선다.
+          <strong>“우리 라인의 게이트웨이는 어느 쪽인가”</strong>를 미리 확인하면
+          장애 시 판단이 즉시 선다.</p>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="prac">
+        <h3>2. 데이터가 안 올라올 때의 확인 순서</h3>
+        <p class="prac-tip">현장 → 게이트웨이 → 상위 순으로 좁힌다.</p>
+
+        <ol>
+          <li><strong>설비는 정상인가</strong> — 라인이 돌고 있으면 제어 계통은 문제없다</li>
+          <li><strong>게이트웨이 전원·상태 LED</strong> — 꺼져 있으면 전원 계통</li>
+          <li><strong>현장 쪽 통신 LED</strong> — 이상이면 PLC와의 연결 문제</li>
+          <li><strong>상위 쪽 통신 LED</strong> — 이상이면 사무 네트워크·회선 문제</li>
+          <li><strong>일부만 안 올라오는가, 전부인가</strong> — 일부면 그 설비의 수집 설정, 전부면 게이트웨이</li>
+          <li><strong>언제부터인가</strong> — 최근 네트워크 공사·설비 추가 이력 확인</li>
+        </ol>
+
+        <div class="note">
+          <span class="t">개념 · 데이터는 나중에 채울 수 있다</span>
+          <p>게이트웨이는 대개 <strong>버퍼</strong>를 갖고 있어, 상위 연결이 끊긴 동안의 데이터를
+          내부에 저장했다가 복구되면 한꺼번에 올린다.
+          그래서 몇 시간 끊겼다고 데이터가 영영 사라지는 것은 아니다.
+          다만 <strong>버퍼 용량을 넘기면 오래된 것부터 지워진다.</strong>
+          장시간 두절은 그래서 문제가 된다.</p>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="prac">
+        <h3>3. 설비를 추가·교체했는데 데이터가 안 올라온다면</h3>
+        <p class="prac-tip">가장 흔한 게이트웨이 관련 문의.</p>
+
+        <p>
+          게이트웨이는 <strong>어떤 설비의 어떤 값을 읽을지</strong>가 설정으로 정해져 있다.
+          설비를 새로 달거나 형번이 다른 것으로 교체하면 그 설정을 갱신해야 한다.
+          2.3의 자동 파라미터 설정은 <strong>센서–마스터 사이</strong>의 이야기이고,
+          게이트웨이의 수집 설정은 별개다.
+        </p>
+        <ul>
+          <li>새 설비 추가 → 게이트웨이에 수집 대상 등록 필요 (담당자)</li>
+          <li>같은 형번 교체 → 대개 그대로 동작</li>
+          <li>다른 형번 교체 → 데이터 주소·형식이 달라 재설정 필요</li>
+          <li>설비 위치 이동 → 통신 주소가 바뀌면 재설정 필요</li>
+        </ul>
+        <div class="note field">
+          <span class="t">현장 · 전달할 정보</span>
+          <p>“무엇을, 언제, 무엇으로 바꿨는지”를 정확히 전달하면 담당자가 설정만 고치면 된다.
+          특히 <strong>기존 형번과 새 형번</strong>을 둘 다 알려 주는 것이 핵심이다.</p>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="prac">
+        <h3>4. 보안 사고를 부르는 현장 관행</h3>
+        <p class="prac-tip">악의가 없어도 사고는 난다.</p>
+
+        <div class="tbl-label" id="b4-1-4"><span class="no">표 4.1-4</span> · 흔한 위험 행동과 대안</div>
+        <table>
+          <thead>
+            <tr><th>흔한 행동</th><th>위험</th><th>대안</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>현장 PC에 개인 USB 연결</td><td>악성코드가 현장망으로</td><td>지정된 매체만 사용, 담당자 경유</td></tr>
+            <tr><td>휴대폰 테더링으로 임시 인터넷</td><td>경계 우회 — 게이트웨이 무력화</td><td>절대 금지. 필요 시 담당자에게 요청</td></tr>
+            <tr><td>벤더에게 원격 접속 허용</td><td>통제되지 않은 외부 접근</td><td>담당자 입회·기록 하에만</td></tr>
+            <tr><td>기본 비밀번호 유지</td><td>누구나 설정 변경 가능</td><td>담당자에게 변경 요청</td></tr>
+            <tr><td>남는 포트에 임의 기기 연결</td><td>인증되지 않은 기기 유입</td><td>미사용 포트는 비활성 상태 유지</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note warn">
+          <span class="t">주의 · 물류 현장이 표적이 되는 이유</span>
+          <p>물류 현장은 <strong>멈추면 즉시 생산이 밀린다.</strong>
+          설비가 인터넷과 연결된 경우가 많으며, 24시간 운영되어 감시가 느슨한 시간대가 있다.
+          공격자에게는 매력적인 조건이다.
+          “우리 구역은 규모가 작으니 괜찮다”는 판단은 근거가 없다.</p>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="prac">
+        <h3>5. 현장 점검 체크리스트</h3>
+        <p class="prac-tip">게이트웨이 관련 점검 항목.</p>
+
+        <h4>상태</h4>
+        <ul class="check">
+          <li>게이트웨이 전원·상태 LED가 정상인가</li>
+          <li>현장 쪽·상위 쪽 통신 LED가 모두 정상인가</li>
+          <li>제어반 내부 온도가 과도하지 않은가 (게이트웨이는 발열에 약하다)</li>
+          <li>데이터가 상위 화면에 정상적으로 갱신되고 있는가</li>
+        </ul>
+
+        <h4>보안</h4>
+        <ul class="check">
+          <li>현장 네트워크에 허가되지 않은 기기가 연결되어 있지 않은가</li>
+          <li>임시 공유기·스위치·연장 케이블이 방치되어 있지 않은가</li>
+          <li>제어반이 잠겨 있고 접근이 통제되는가</li>
+          <li>비밀번호가 적힌 메모가 붙어 있지 않은가</li>
+        </ul>
+
+        <h4>변경 시</h4>
+        <ul class="check">
+          <li>설비를 추가·교체한 뒤 데이터가 정상 수집되는지 확인했는가</li>
+          <li>형번이 바뀐 경우 담당자에게 기존·신규 형번을 전달했는가</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <span class="t">개념 · 이 장이 남기는 것</span>
+        <p>OT와 IT는 우선하는 가치가 달라 직접 연결할 수 없고(본문 1),
+        게이트웨이가 변환·취합·보안·전처리 네 가지를 맡는다(본문 2).
+        현장 규격은 묻고 답하는 방식, IT 규격은 발행·구독 방식이다(본문 3).
+        게이트웨이는 현장망을 지키는 유일한 문이며, 그 경계를 우회하면 의미가 사라진다(본문 4).<br>
+        다음 장 4.2에서는 그 문을 지나가는 데이터를
+        <strong>어떻게 줄이고 무엇을 남길지</strong>의 정책을 다룬다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 참고자료 ============ -->
+    <section class="ref" id="r4-1">
+      <h2>참고자료</h2>
+
+      <h3>1. 용어 정리</h3>
+      <dl class="terms">
+        <dt id="t4-1-1">OT (Operational Technology)</dt>
+        <dd>현장 설비를 감시·제어하는 기술 영역. PLC·드라이브·센서가 속하며 가용성을 최우선으로 한다.</dd>
+        <dt id="t4-1-2">IT (Information Technology)</dt>
+        <dd>정보를 저장·처리·전달하는 기술 영역. 서버·데이터베이스·클라우드가 속하며 기밀성을 최우선으로 한다.</dd>
+        <dt id="t4-1-3">IoT 게이트웨이</dt>
+        <dd>OT와 IT 사이에서 프로토콜 변환·데이터 취합·보안·전처리를 수행하는 장치.</dd>
+        <dt id="t4-1-4">Modbus</dt>
+        <dd>가장 널리 쓰이는 산업용 통신 규격. 단순하고 개방적이어서 구형 설비에도 폭넓게 적용된다.</dd>
+        <dt id="t4-1-5">CC-Link IE</dt>
+        <dd>미쓰비시전기 계열의 산업용 이더넷 규격. 고속·결정론적 통신을 제공한다.</dd>
+        <dt id="t4-1-6">MQTT</dt>
+        <dd>가볍고 느슨한 발행/구독 방식의 메시지 프로토콜. 대역폭이 좁거나 지연이 큰 회선에 강하다. ISO/IEC 20922로 표준화되어 있다.</dd>
+        <dt id="t4-1-7">OPC UA</dt>
+        <dd>값에 의미(단위·범위·시각)를 붙여 전달하는 산업용 통신 표준. 보안 기능이 내장되어 있으며 IEC 62541로 규정된다.</dd>
+        <dt id="t4-1-8">폴링 (Polling)</dt>
+        <dd>제어기가 주기적으로 각 기기에 값을 묻고 답을 받는 방식. 순서와 타이밍이 보장된다.</dd>
+        <dt id="t4-1-9">발행/구독 (Publish/Subscribe)</dt>
+        <dd>보내는 쪽이 변화를 알리면 필요한 쪽이 받아 가는 방식. 여러 시스템이 같은 데이터를 동시에 쓸 수 있다.</dd>
+        <dt id="t4-1-10">버퍼 (Buffer)</dt>
+        <dd>상위 연결이 끊긴 동안 데이터를 임시 저장하는 공간. 복구되면 밀린 데이터를 전송한다.</dd>
+      </dl>
+
+      <h3>2. 관련 이미지 — 실물과 도해로 확인하기</h3>
+      <p class="ref-intro">
+        본문에 나온 순서대로 정리했다. 센서·전력은 썬덴코리아 파트너사, 제어기·네트워크는 미쓰비시전기 기준이다.
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=514&amp;cate_id=2&amp;out_order=3" target="_blank" rel="noopener">정보 연계 제품 — OPC UA 서버 모듈 · 게이트웨이</a>
+          <span class="where">본문 2 · 3 — 게이트웨이 역할을 하는 실제 모듈의 형상과 사양</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/mobile.do?act=product_list_mobile&amp;parent_id=528&amp;cate_id=2" target="_blank" rel="noopener">MELSEC iQ-R 시리즈 — CC-Link IE · 이더넷 모듈</a>
+          <span class="where">본문 3 표 4.1-1 — 현장 규격 통신 모듈의 실물</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=10&amp;cate_id=2" target="_blank" rel="noopener">PLC (MELSEC) — 제어반 구성</a>
+          <span class="where">본문 2 · 4 — 게이트웨이가 제어반 안 어디에 위치하는지</span>
+        </li>
+        <li>
+          <span class="src">Schneider</span>
+          <a href="https://www.se.com/kr/ko/" target="_blank" rel="noopener">슈나이더 일렉트릭 코리아 — 산업용 네트워크 · 전력 감시</a>
+          <span class="where">본문 4 — 썬덴코리아 파트너사. 전력·에너지 데이터를 상위로 올리는 게이트웨이 계열 제품</span>
+        </li>
+        <li>
+          <span class="src">Siemens</span>
+          <a href="https://www.siemens.com/en-us/products/opc-ua/" target="_blank" rel="noopener">OPC UA — 산업 데이터 표준 인터페이스</a>
+          <span class="where">본문 1 · 2 — 현장 데이터를 상위 시스템으로 올리는 표준 인터페이스로서 OPC UA가 놓이는 위치</span>
+        </li>
+        <li>
+          <span class="src">IO-Link</span>
+          <a href="https://io-link.com/fileadmin/user_upload/Downloads/Package_2024/IOL-Interface-Spec_10002_V114_Jun24.pdf" target="_blank" rel="noopener">IO-Link 사양서 v1.1.4 (무료 PDF) — 상위 연계 구조</a>
+          <span class="where">본문 3 — 센서 데이터가 마스터를 거쳐 상위로 전달되는 경로</span>
+        </li>
+      </ol>
+
+      <h3>3. 학술 · 표준 근거 자료 — 심화 학습용</h3>
+      <p class="ref-intro">
+        무료로 볼 수 있는 자료를 우선했다.<br>
+        <span class="src std">표준</span> 국제 규격 · <span class="src paper">논문</span> 공개 학술 자료
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://opcfoundation.org/" target="_blank" rel="noopener">OPC Foundation — OPC UA (IEC 62541) 공식 사이트</a>
+          <span class="where">본문 3 — OPC UA 사양은 등록 후 무료로 열람할 수 있다.
+          데이터에 의미를 붙이는 정보 모델의 원본</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://opcfoundation.org/wp-content/uploads/2026/01/OPC-UA-Interoperability-For-Industrie4-and-IoT-EN.pdf" target="_blank" rel="noopener">OPC UA 상호운용성 백서 (무료 PDF)</a>
+          <span class="where">본문 1 · 3 — OT와 IT를 잇는 데 OPC UA가 어떤 역할을 하는지의 공식 설명.
+          그림이 많아 비전공자에게 적합하다</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://opcfoundation.org/news/opc-foundation-news/update-iec-62541-opc-ua-published/" target="_blank" rel="noopener">IEC 62541 (OPC UA) 개정 안내</a>
+          <span class="where">본문 3 — 표준의 구성(파트별 역할)과 최신 개정 내용</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/68534" target="_blank" rel="noopener">IEC 61131-9 : SDCI (IO-Link)</a>
+          <span class="where">본문 3 표 4.1-1 — 현장 계층 통신 규격의 위치</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://arxiv.org/pdf/1903.11549" target="_blank" rel="noopener">A Survey of Protocols and Standards for Internet of Things (arXiv 공개)</a>
+          <span class="where">본문 3 — MQTT·OPC UA를 포함한 IoT 프로토콜 전반의 비교.
+          각 규격이 어떤 조건에서 유리한지 정리되어 있다</span>
+        </li>
+        <li>
+          <span class="src paper">참고</span>
+          <a href="https://scadaprotocols.com/opc-ua-protocol-explained/" target="_blank" rel="noopener">OPC UA 프로토콜 해설 (아키텍처 · 보안 · 주소 공간)</a>
+          <span class="where">본문 3 · 4 — 표준 문서보다 읽기 쉬운 구조 설명. 보안 모델을 함께 다룬다</span>
+        </li>
+        <li>
+          <span class="src paper">참고</span>
+          <a href="https://industryx.ai/2025/12/11/mqtt-vs-opc-ua-2025-architecture-guide/" target="_blank" rel="noopener">MQTT vs OPC UA — 아키텍처 선택 가이드</a>
+          <span class="where">본문 3 — 두 규격을 언제 어떻게 함께 쓰는지에 대한 실무적 정리</span>
+        </li>
+      </ol>
+
+      <h3>4. 이어지는 장과의 연결</h3>
+      <ul style="font-size:13.5px">
+        <li><strong>4.2 에지 컴퓨팅 정책</strong> — 게이트웨이를 지나가는 데이터를 어떻게 줄일 것인가</li>
+        <li><strong>4.3 생존형 네트워크 인프라</strong> — 게이트웨이로 가는 길이 끊겼을 때</li>
+        <li><strong>3.3 현장 통신 프로토콜</strong> — 게이트웨이 아래쪽 계층의 통신 (선행 학습)</li>
+        <li><strong>2.1 스마트센서의 등장</strong> — 그림 2.1-4의 계층 구조 (전체 지도)</li>
+      </ul>
+    </section>
+  </article>
+</div>
+</div>
+</body>
+</html>

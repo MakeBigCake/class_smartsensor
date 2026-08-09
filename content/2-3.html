@@ -1,0 +1,618 @@
+    <div class="lesson-tag">2.3</div>
+    <h1>플러그 앤 플레이</h1>
+    <p class="subtitle">연결하면 누군지 안다 — 센서 교체가 5분 작업이 되는 원리</p>
+
+    <p class="lead">
+      새벽 2시에 소터 유도부 센서가 죽었다. 예비품은 있다. 그런데 <strong>설정값을 모른다.</strong>
+      감도가 얼마였는지, 응차가 얼마였는지, 출력 논리가 Light-ON이었는지 Dark-ON이었는지.
+      1.2의 “교체 시 맞춰야 할 6가지”가 바로 이 문제였다.
+      스마트센서는 이 문제를 <strong>센서 자신이 신분증을 들고 다니게 해서</strong> 푼다.
+    </p>
+
+    <div class="goals">
+      <h4>이 장을 읽고 나면</h4>
+      <ol>
+        <li>기존 센서 교체가 왜 어려웠는지를 “설정의 이전” 문제로 설명할 수 있다.</li>
+        <li>TEDS(전자 데이터 시트)가 무엇을 담고 있는지 설명할 수 있다.</li>
+        <li>자동 파라미터 설정(Auto-Parameterization)의 동작 순서를 설명할 수 있다.</li>
+        <li>IO-Link 데이터 스토리지가 설정을 어디에 보관하고 어떻게 복원하는지 이해한다.</li>
+        <li>교체 작업 시 플러그 앤 플레이가 되는 경우와 안 되는 경우를 구분할 수 있다.</li>
+      </ol>
+    </div>
+
+    <!-- ============ 본문 1 ============ -->
+    <section class="sec" id="s2-3-1">
+      <div class="sec-no">2.3.1</div>
+      <h2>교체가 왜 어려웠나<span class="en">설정은 센서 안에 있고, 기록은 어디에도 없다</span></h2>
+
+      <p class="keyline">
+        문제는 부품이 아니라 <strong>설정</strong>이다.
+        같은 형번의 새 센서를 꽂아도, 설정이 다르면 다른 센서다.
+      </p>
+
+      <p>
+        일반 센서의 설정은 본체의 볼륨 위치나 티치 버튼으로 저장된 내부 값에 들어 있다.
+        <strong>겉에서 읽을 수 없고, 기록으로 남지도 않는다.</strong>
+        센서가 죽으면 그 설정도 함께 사라진다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-3-1"><span class="no">그림 2.3-1</span> · 일반 센서 교체 시 잃어버리는 것</div>
+          <svg viewBox="0 0 700 300" role="img" aria-label="일반 센서 교체 시 설정이 사라지는 과정">
+            <rect class="s-plain" x="30" y="20" width="180" height="92"/>
+            <text class="s-t3" x="120" y="46" style="font-weight:700">고장 난 센서</text>
+            <text class="s-t2" x="120" y="70">감도 · 응차 · 논리 설정</text>
+            <text class="s-t2" x="120" y="90">모두 이 안에</text>
+            <text class="s-t2" x="120" y="106">(읽을 수 없음)</text>
+
+            <path class="s-line-n" d="M216 66 L252 66" marker-end="url(#a71)"/>
+            <text class="s-t2" x="234" y="52">탈거</text>
+
+            <rect class="s-warn" x="258" y="20" width="180" height="92"/>
+            <text class="s-t3" x="348" y="52" style="fill:#8A5A0B;font-weight:700">설정 소실</text>
+            <text class="s-t2" x="348" y="76" style="fill:#8A5A0B">문서에 남아 있지 않으면</text>
+            <text class="s-t2" x="348" y="94" style="fill:#8A5A0B">복원할 방법이 없다</text>
+
+            <path class="s-line-n" d="M444 66 L480 66" marker-end="url(#a71)"/>
+
+            <rect class="s-plain" x="486" y="20" width="184" height="92"/>
+            <text class="s-t3" x="578" y="52" style="font-weight:700">새 센서</text>
+            <text class="s-t2" x="578" y="76">공장 출하 기본값</text>
+            <text class="s-t2" x="578" y="94">현장 조건과 다르다</text>
+
+            <line class="s-rule" x1="20" y1="134" x2="680" y2="134"/>
+
+            <text class="s-hdr" x="350" y="160">그래서 실제로 벌어지는 일</text>
+
+            <rect class="s-plain" x="30" y="176" width="200" height="62"/>
+            <text class="s-t3" x="130" y="200">담당자 호출 대기</text>
+            <text class="s-t2" x="130" y="222">설정을 아는 사람이 와야</text>
+
+            <rect class="s-plain" x="250" y="176" width="200" height="62"/>
+            <text class="s-t3" x="350" y="200">시행착오 조정</text>
+            <text class="s-t2" x="350" y="222">라인 세워 두고 맞춰 감</text>
+
+            <rect class="s-plain" x="470" y="176" width="200" height="62"/>
+            <text class="s-t3" x="570" y="200">문서 뒤지기</text>
+            <text class="s-t2" x="570" y="222">최신인지 확신 못 함</text>
+
+            <rect class="s-warn" x="30" y="252" width="640" height="34"/>
+            <text class="s-t3" x="350" y="274" style="fill:#8A5A0B;font-weight:700">부품 교체는 5분, 설정 복구는 한 시간 — 다운타임의 대부분이 여기</text>
+
+            <defs>
+              <marker id="a71" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>1.2 실무 보강 3에서 “떼기 전에 사진 세 장”을 권한 이유가 이것이다.
+        플러그 앤 플레이는 이 사진 촬영조차 필요 없게 만든다.</figcaption>
+      </figure>
+
+      <div class="note">
+        <span class="t">개념 · 문제의 본질은 “기록의 위치”</span>
+        <p>설정이 <strong>센서 안에만</strong> 있으면 센서와 함께 사라진다.
+        해결의 방향은 둘 중 하나다. ⑴ 설정을 센서 밖(상위)에도 복사해 두거나,
+        ⑵ 센서가 자기 정보를 <strong>읽을 수 있는 형태로</strong> 들고 다니게 하거나.
+        스마트센서는 두 가지를 모두 한다. 전자가 데이터 스토리지, 후자가 TEDS다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 2 ============ -->
+    <section class="sec" id="s2-3-2">
+      <div class="sec-no">2.3.2</div>
+      <h2>TEDS — 센서의 디지털 명찰<span class="en">Transducer Electronic Data Sheet</span></h2>
+
+      <p class="keyline">
+        <span class="kw">TEDS</span>는 센서가 내부 메모리에 지니고 다니는 <strong>전자 사양서</strong>다.
+        연결되는 순간 상위 제어기가 읽어서 “누가 왔는지”를 안다.
+      </p>
+
+      <p>
+        종이 데이터시트는 사람이 읽는다. TEDS는 <strong>기계가 읽는 데이터시트</strong>다.
+        제조사가 출하할 때 센서의 비휘발성 메모리(2.2 본문 4)에 써 넣으며,
+        국제 표준 <strong>IEEE 1451</strong> 계열이 그 형식을 규정한다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-3-2"><span class="no">그림 2.3-2</span> · TEDS에 담기는 정보</div>
+          <svg viewBox="0 0 700 316" role="img" aria-label="TEDS에 저장되는 정보의 종류">
+            <rect class="s-fill" x="230" y="10" width="240" height="46"/>
+            <text class="s-tw" x="350" y="34">TEDS · 전자 데이터 시트</text>
+            <text class="s-t2w" x="350" y="50">센서 내부 메모리에 저장</text>
+
+            <path class="s-line-n" d="M350 58 L350 78"/>
+            <path class="s-line-n" d="M128 78 L572 78"/>
+            <path class="s-line-n" d="M128 78 L128 100" marker-end="url(#a72)"/>
+            <path class="s-line-n" d="M350 78 L350 100" marker-end="url(#a72)"/>
+            <path class="s-line-n" d="M572 78 L572 100" marker-end="url(#a72)"/>
+
+            <rect class="s-tint" x="24" y="104" width="208" height="94"/>
+            <text class="s-t" x="128" y="130">① 신원</text>
+            <text class="s-t2" x="128" y="152">제조사 · 모델명</text>
+            <text class="s-t2" x="128" y="172">시리얼 번호</text>
+            <text class="s-t2" x="128" y="190">제조일 · 버전</text>
+
+            <rect class="s-tint" x="246" y="104" width="208" height="94"/>
+            <text class="s-t" x="350" y="130">② 능력</text>
+            <text class="s-t2" x="350" y="152">측정 범위 · 단위</text>
+            <text class="s-t2" x="350" y="172">해상도 · 정밀도</text>
+            <text class="s-t2" x="350" y="190">응답 시간</text>
+
+            <rect class="s-tint" x="468" y="104" width="208" height="94"/>
+            <text class="s-t" x="572" y="130">③ 보정</text>
+            <text class="s-t2" x="572" y="152">개체별 보정 계수</text>
+            <text class="s-t2" x="572" y="172">온도 특성</text>
+            <text class="s-t2" x="572" y="190">최종 교정 일자</text>
+
+            <rect class="s-plain" x="24" y="212" width="652" height="50"/>
+            <text class="s-t3" x="350" y="234" style="font-weight:700">연결되는 순간 상위 제어기가 이 세 가지를 읽는다</text>
+            <text class="s-t2" x="350" y="254">사람이 형번을 입력하거나 사양을 찾아볼 필요가 없다</text>
+
+            <rect class="s-warn" x="24" y="272" width="652" height="34"/>
+            <text class="s-t2" x="350" y="294" style="fill:#8A5A0B;font-weight:700">단, TEDS는 “센서가 무엇인가”만 담는다 — “어떻게 설정했는가”는 별개 (본문 4)</text>
+
+            <defs>
+              <marker id="a72" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>TEDS는 제품 고유의 정보다. 현장에서 조정한 설정값은 다른 곳에 보관된다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b2-3-1"><span class="no">표 2.3-1</span> · 종이 데이터시트와 TEDS의 차이</div>
+      <table class="sourced">
+        <thead>
+          <tr><th>구분</th><th>종이 데이터시트</th><th>TEDS</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>읽는 주체</td><td>사람</td><td>제어기 · 소프트웨어</td></tr>
+          <tr><td>보관 위치</td><td>서류함 · 제조사 웹사이트</td><td>센서 내부 메모리</td></tr>
+          <tr><td>내용의 범위</td><td>모델 공통 사양</td><td><strong>이 개체</strong>의 실측 보정값까지 포함</td></tr>
+          <tr><td>분실 위험</td><td>있음 (문서 관리에 의존)</td><td>없음 (센서와 함께 다닌다)</td></tr>
+          <tr><td>활용</td><td>선정·검토 시 참고</td><td>연결 즉시 자동 인식·자동 설정</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tbl-src"><b>근거</b> TEDS(Transducer Electronic Data Sheet)는 <a href="https://standards.ieee.org/ieee/1451.0/11001/" target="_blank" rel="noopener">IEEE 1451</a> 계열 표준이 규정한다. 센서가 자신의 식별·교정 정보를 스스로 갖고 다니는 구조의 원전이다</div>
+
+      <div class="note field">
+        <span class="t">현장 · 재고 관리가 쉬워진다</span>
+        <p>예비품 서랍에 센서가 섞여 있어도, 연결하면 <strong>제어기가 형번과 시리얼을 읽어 준다.</strong>
+        “이거 어느 라인 거지?”가 사라지고, 설치 이력도 자동으로 남는다.
+        예비품 라벨이 떨어져도 문제가 되지 않는다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 3 ============ -->
+    <section class="sec" id="s2-3-3">
+      <div class="sec-no">2.3.3</div>
+      <h2>자동 파라미터 설정<span class="en">Auto-Parameterization — 상위가 설정을 내려보낸다</span></h2>
+
+      <p class="keyline">
+        TEDS로 “누구인지” 확인되면, 상위 제어기가 <strong>보관하고 있던 설정을 내려보낸다.</strong>
+        사람이 볼륨을 돌릴 일이 없어진다.
+      </p>
+
+      <p>
+        2.1에서 스마트센서의 두 번째 능력이 <strong>양방향 통신</strong>이라고 했다.
+        그 능력이 여기서 쓰인다. 설정은 위에서 아래로 흐르고, 확인은 아래에서 위로 올라간다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-3-3"><span class="no">그림 2.3-3</span> · 교체 절차 비교</div>
+          <svg viewBox="0 0 700 348" role="img" aria-label="일반 센서와 스마트센서의 교체 절차 비교">
+            <text class="s-hdr" x="350" y="18">일반 센서 — 사람이 다 한다</text>
+            <rect class="s-plain" x="20" y="30" width="126" height="52"/>
+            <text class="s-t2" x="83" y="52">① 탈거</text>
+            <text class="s-t2" x="83" y="70">사진 촬영</text>
+            <path class="s-line-n" d="M152 56 L168 56" marker-end="url(#a73)"/>
+            <rect class="s-plain" x="174" y="30" width="126" height="52"/>
+            <text class="s-t2" x="237" y="52">② 사양 대조</text>
+            <text class="s-t2" x="237" y="70">6가지 확인</text>
+            <path class="s-line-n" d="M306 56 L322 56" marker-end="url(#a73)"/>
+            <rect class="s-plain" x="328" y="30" width="126" height="52"/>
+            <text class="s-t2" x="391" y="52">③ 장착</text>
+            <text class="s-t2" x="391" y="70">위치 · 각도 맞춤</text>
+            <path class="s-line-n" d="M460 56 L476 56" marker-end="url(#a73)"/>
+            <rect class="s-warn" x="482" y="30" width="194" height="52"/>
+            <text class="s-t2" x="579" y="52" style="fill:#8A5A0B;font-weight:700">④ 설정 수동 입력</text>
+            <text class="s-t2" x="579" y="70" style="fill:#8A5A0B">담당자 · 시행착오</text>
+
+            <line class="s-rule" x1="20" y1="102" x2="680" y2="102"/>
+
+            <text class="s-hdr" x="350" y="128">스마트센서 — 연결하면 나머지는 자동</text>
+            <rect class="s-plain" x="20" y="140" width="126" height="52"/>
+            <text class="s-t2" x="83" y="162">① 탈거</text>
+            <text class="s-t2" x="83" y="180">촬영 불필요</text>
+            <path class="s-line-n" d="M152 166 L168 166" marker-end="url(#a73)"/>
+            <rect class="s-plain" x="174" y="140" width="126" height="52"/>
+            <text class="s-t2" x="237" y="162">② 장착</text>
+            <text class="s-t2" x="237" y="180">위치 · 각도만</text>
+            <path class="s-line-n" d="M306 166 L322 166" marker-end="url(#a73)"/>
+            <rect class="s-fill" x="328" y="140" width="348" height="52"/>
+            <text class="s-tw" x="502" y="164" style="font-size:13.5px">③ 커넥터 연결 — 이후 자동</text>
+            <text class="s-t2w" x="502" y="182">사람이 할 일은 여기서 끝난다</text>
+
+            <path class="s-line-n" d="M350 196 L350 212" marker-end="url(#a73)"/>
+
+            <rect class="s-tint" x="150" y="216" width="400" height="40"/>
+            <text class="s-t3" x="350" y="241">ⓐ 마스터가 TEDS를 읽어 “누구인지” 확인</text>
+            <path class="s-line-n" d="M350 258 L350 272" marker-end="url(#a73)"/>
+            <rect class="s-tint" x="150" y="276" width="400" height="40"/>
+            <text class="s-t3" x="350" y="301">ⓑ 보관 중이던 설정을 센서로 내려보냄</text>
+
+            <rect class="s-plain" x="150" y="322" width="400" height="26"/>
+            <text class="s-t2" x="350" y="340">ⓒ 센서가 설정 적용 후 “정상” 응답 — 운전 재개</text>
+
+            <defs>
+              <marker id="a73" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>기술자의 작업은 “물리적으로 제자리에 다는 것”까지다.
+        설정은 사람의 손을 거치지 않으므로 실수도 없다.</figcaption>
+      </figure>
+
+      <div class="note">
+        <span class="t">개념 · 왜 이것이 중요한가</span>
+        <p>1.2에서 교체 시 맞춰야 할 6가지 중 <strong>뒤의 세 가지</strong>
+        (전원 전압, 출력 방식, 출력 논리)가 가장 자주 틀리는 항목이었다.
+        자동 설정은 이 중 출력 논리를 포함한 <strong>소프트웨어 설정 전부</strong>를 자동화한다.
+        남는 것은 물리적 사양(형번·감지 거리·보호 등급)뿐이며, 이는 예비품을 맞게 준비하면 끝난다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 4 ============ -->
+    <section class="sec" id="s2-3-4">
+      <div class="sec-no">2.3.4</div>
+      <h2>데이터 스토리지<span class="en">설정은 어디에 보관되고, 어떻게 되돌아오는가</span></h2>
+
+      <p class="keyline">
+        설정은 <strong>센서와 마스터 양쪽에</strong> 있다.
+        어느 쪽을 기준으로 삼을지가 자동 복원의 핵심이다.
+      </p>
+
+      <p>
+        IO-Link에는 <span class="kw">데이터 스토리지(Data Storage)</span>라는 기능이 있다.
+        센서의 설정이 바뀌면 마스터가 그 사본을 <strong>포트별로</strong> 보관한다.
+        나중에 새 센서가 그 포트에 꽂히면, 마스터가 보관본을 내려보낸다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-3-4"><span class="no">그림 2.3-4</span> · 데이터 스토리지의 동작</div>
+          <svg viewBox="0 0 700 330" role="img" aria-label="IO-Link 데이터 스토리지의 백업과 복원 동작">
+            <text class="s-hdr" x="350" y="18">평상시 — 설정이 바뀌면 마스터가 사본을 보관</text>
+            <rect class="s-tint" x="60" y="32" width="200" height="62"/>
+            <text class="s-t3" x="160" y="58" style="font-weight:700">스마트센서</text>
+            <text class="s-t2" x="160" y="80">설정 원본</text>
+            <path class="s-line-n" d="M266 55 L400 55" marker-end="url(#a74)"/>
+            <text class="s-t2" x="333" y="44">설정 변경 시 자동 업로드</text>
+            <rect class="s-fill" x="406" y="32" width="234" height="62"/>
+            <text class="s-tw" x="523" y="58" style="font-size:13.5px">IO-Link 마스터</text>
+            <text class="s-t2w" x="523" y="80">포트 1 · 2 · 3 … 별로 사본 보관</text>
+
+            <line class="s-rule" x1="20" y1="112" x2="680" y2="112"/>
+
+            <text class="s-hdr" x="350" y="138">교체 시 — 마스터가 보관본을 새 센서에 내려보냄</text>
+            <rect class="s-plain" x="60" y="152" width="200" height="62"/>
+            <text class="s-t3" x="160" y="178" style="font-weight:700">새 센서</text>
+            <text class="s-t2" x="160" y="200">공장 출하 기본값</text>
+            <path class="s-line-n" d="M400 183 L266 183" marker-end="url(#a74)"/>
+            <text class="s-t2" x="333" y="172">보관본 다운로드</text>
+            <rect class="s-fill" x="406" y="152" width="234" height="62"/>
+            <text class="s-tw" x="523" y="178" style="font-size:13.5px">IO-Link 마스터</text>
+            <text class="s-t2w" x="523" y="200">같은 포트 = 같은 설정</text>
+
+            <rect class="s-tint" x="60" y="228" width="580" height="40"/>
+            <text class="s-t3" x="350" y="253" style="font-weight:700">결과 — 새 센서가 이전 센서와 동일한 조건으로 즉시 동작</text>
+
+            <rect class="s-warn" x="60" y="278" width="580" height="46"/>
+            <text class="s-t2" x="350" y="300" style="fill:#8A5A0B;font-weight:700">전제 조건 — 같은 제조사 · 같은 형번이어야 사본이 적용된다</text>
+            <text class="s-t2" x="350" y="318" style="fill:#8A5A0B">다른 형번이면 마스터가 거부하고 경고를 낸다</text>
+
+            <defs>
+              <marker id="a74" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>설정은 “포트”에 묶여 있다. 센서는 바뀌어도 그 자리의 설정은 유지된다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b2-3-2"><span class="no">표 2.3-2</span> · TEDS와 데이터 스토리지의 역할 구분</div>
+      <table class="sourced">
+        <thead>
+          <tr><th>구분</th><th>TEDS</th><th>데이터 스토리지</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>담는 것</td><td>센서가 <strong>무엇인가</strong> (제품 고유 정보)</td>
+              <td>센서를 <strong>어떻게 설정했는가</strong> (현장 조정값)</td></tr>
+          <tr><td>쓰는 주체</td><td>제조사 (출하 시)</td><td>현장 (설정 변경 시 자동)</td></tr>
+          <tr><td>보관 위치</td><td>센서 내부</td><td>센서 내부 + <strong>마스터 포트별 사본</strong></td></tr>
+          <tr><td>교체 시</td><td>새 센서가 자기 것을 가져옴</td><td>마스터가 이전 사본을 내려보냄</td></tr>
+          <tr><td>바뀌는가</td><td>바뀌지 않음</td><td>현장 조정할 때마다 갱신</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tbl-src"><b>근거</b> TEDS는 <a href="https://standards.ieee.org/ieee/1451.0/11001/" target="_blank" rel="noopener">IEEE 1451</a>, 데이터 스토리지는 <a href="https://io-link.com/fileadmin/user_upload/Downloads/Package_2024/IOL-Interface-Spec_10002_V114_Jun24.pdf" target="_blank" rel="noopener">IO-Link 사양서(IEC 61131-9)</a>가 규정하는 서로 다른 기능이다</div>
+
+      <div class="note warn">
+        <span class="t">주의 · 자동 복원이 되지 않는 경우</span>
+        <ul style="margin-bottom:0">
+          <li><strong>다른 형번을 꽂았을 때</strong> — 마스터가 호환되지 않는다고 판단해 설정을 적용하지 않는다</li>
+          <li><strong>다른 포트에 꽂았을 때</strong> — 설정은 포트에 묶여 있으므로 엉뚱한 설정을 받는다</li>
+          <li><strong>데이터 스토리지 기능이 꺼져 있을 때</strong> — 설비에 따라 비활성인 경우가 있다</li>
+          <li><strong>마스터까지 함께 교체했을 때</strong> — 사본도 사라진다. 별도 백업이 필요하다</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ 본문 5 ============ -->
+    <section class="sec" id="s2-3-5">
+      <div class="sec-no">2.3.5</div>
+      <h2>실무 보강<span class="en">교체 작업이 실제로 어떻게 달라지는가</span></h2>
+
+      <p class="keyline">
+        기술자의 작업 범위가 <strong>넓어진다.</strong>
+        설정을 몰라도 교체할 수 있게 되므로, 담당자를 기다리지 않고 라인을 살릴 수 있다.
+      </p>
+
+      <p>
+        아래 다섯 항목은 목차에 명시되어 있지는 않지만
+        <strong>물류설비 운영에서 실제로 필요해 보강한 내용</strong>이다.
+      </p>
+
+      <!-- 1 -->
+      <div class="prac">
+        <h3>1. 스마트센서 교체 표준 절차</h3>
+        <p class="prac-tip">1.2 실무 보강 3의 절차를 스마트센서용으로 갱신한 것.</p>
+
+        <ol>
+          <li><strong>안전 조치</strong> — 설비 정지 및 기동 방지(LOTO). 이 단계는 달라지지 않는다.</li>
+          <li><strong>포트 번호 확인</strong> — 마스터의 몇 번 포트인지 반드시 기록한다.
+              <strong>설정은 포트에 묶여 있다.</strong></li>
+          <li><strong>브래킷 기준 마킹</strong> — 위치·각도는 여전히 사람이 맞춰야 한다. 마킹선을 확인한다.</li>
+          <li><strong>탈거 및 장착</strong> — 같은 형번인지 라벨로 확인. 전원 인가 상태에서 탈착하지 않는다.</li>
+          <li><strong>같은 포트에 연결</strong> — 다른 포트에 꽂으면 다른 설정을 받는다.</li>
+          <li><strong>자동 설정 완료 확인</strong> — 마스터 포트 LED가 정상 통신 상태가 되고,
+              상위 화면에 “설정 적용 완료”가 뜨는지 본다.</li>
+          <li><strong>동작 확인</strong> — 대상물을 실제로 통과시켜 판정이 정상인지 확인한다.</li>
+        </ol>
+
+        <div class="note field">
+          <span class="t">현장 · 6번을 건너뛰지 않는다</span>
+          <p>자동 설정은 대개 몇 초 안에 끝나지만, <strong>실패할 수도 있다.</strong>
+          형번 불일치나 통신 오류로 설정이 적용되지 않은 채 기본값으로 동작하면,
+          겉으로는 멀쩡해 보이지만 판정 기준이 다르다.
+          <strong>“설정 적용 완료”를 눈으로 확인하는 것</strong>이 이 절차의 핵심이다.</p>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="prac">
+        <h3>2. 자동 설정이 실패했을 때의 증상</h3>
+        <p class="prac-tip">실패는 조용히 일어난다. 증상을 알아야 잡을 수 있다.</p>
+
+        <div class="tbl-label" id="b2-3-3"><span class="no">표 2.3-3</span> · 실패 유형과 증상</div>
+        <table>
+          <thead>
+            <tr><th>실패 유형</th><th>증상</th><th>조치</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>형번 불일치</td><td>마스터에 “호환되지 않는 기기” 경고. 통신은 되지만 설정 미적용</td>
+                <td>올바른 형번의 예비품으로 교체</td></tr>
+            <tr><td>다른 포트 연결</td><td>동작은 하는데 판정 기준이 이상하다</td>
+                <td>원래 포트로 재연결</td></tr>
+            <tr><td>데이터 스토리지 비활성</td><td>경고 없이 기본값으로 동작</td>
+                <td class="t-warn">담당자 호출 — 설정 수동 적용 필요</td></tr>
+            <tr><td>통신 불안정</td><td>설정 적용 중 오류. 포트 LED 점멸</td>
+                <td>커넥터 재체결 후 재시도, 반복되면 케이블 점검</td></tr>
+            <tr><td>펌웨어 버전 차이</td><td>일부 설정만 적용되고 나머지는 기본값</td>
+                <td class="t-warn">담당자 호출</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note warn">
+          <span class="t">주의 · 가장 위험한 경우</span>
+          <p>세 번째와 다섯 번째는 <strong>경고 없이 기본값으로 동작</strong>한다.
+          설비는 돌아가고 알람도 없지만 판정 기준이 다르다.
+          그래서 교체 후 <strong>실제 대상물로 동작 확인</strong>을 반드시 해야 한다.
+          박스 몇 개를 흘려 보내 정상 판정되는지 보는 것으로 충분하다.</p>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="prac">
+        <h3>3. 예비품 관리가 달라진다</h3>
+        <p class="prac-tip">TEDS 덕분에 관리는 쉬워지지만, 새로운 주의점이 생긴다.</p>
+
+        <ul>
+          <li><strong>라벨이 떨어져도 괜찮다</strong> — 연결하면 형번·시리얼을 읽을 수 있다.</li>
+          <li><strong>단, 형번은 정확히 같아야 한다</strong> — 데이터 스토리지가 형번을 대조하기 때문이다.
+              “비슷한 모델”은 자동 설정이 적용되지 않는다.</li>
+          <li><strong>펌웨어 버전도 관리 대상이다</strong> — 오래 보관한 예비품은 버전이 낮을 수 있다.
+              대부분 문제없지만, 일부 설정이 적용되지 않는 경우가 있다.</li>
+          <li><strong>설치 이력이 자동으로 남는다</strong> — 시리얼 번호가 기록되므로
+              “이 자리에 언제 어떤 개체를 달았는지”를 나중에 조회할 수 있다.</li>
+        </ul>
+      </div>
+
+      <!-- 4 -->
+      <div class="prac">
+        <h3>4. 마스터를 교체할 때는 다르다</h3>
+        <p class="prac-tip">센서 교체와 마스터 교체는 난이도가 완전히 다르다.</p>
+
+        <p>
+          설정 사본은 <strong>마스터 안에</strong> 있다. 마스터가 죽으면 그 포트들의 설정도 함께 사라진다.
+          센서는 자기 설정을 그대로 가지고 있지만, 새 마스터는 그것을 알지 못한다.
+        </p>
+        <p>
+          그래서 마스터 교체는 <strong>담당자 영역</strong>이다.
+          별도로 백업해 둔 설정 파일을 새 마스터에 복원하는 절차가 필요하다.
+        </p>
+        <div class="note field">
+          <span class="t">현장 · 기술자가 할 수 있는 것</span>
+          <p>마스터 이상이 의심되면 <strong>어느 포트들이 영향받는지</strong>를 먼저 확인해 전달한다.
+          한 포트만 이상이면 케이블·센서 계통, <strong>모든 포트가 동시에 이상</strong>이면
+          마스터 또는 전원 계통이다. 이 구분만으로 담당자의 준비물이 달라진다.</p>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="prac">
+        <h3>5. 현장 점검 체크리스트</h3>
+        <p class="prac-tip">교체 작업 전후에 확인한다.</p>
+
+        <h4>교체 전</h4>
+        <ul class="check">
+          <li>설비 정지 및 기동 방지 조치(LOTO)를 했는가</li>
+          <li>마스터의 <strong>포트 번호</strong>를 기록했는가</li>
+          <li>예비품의 형번이 정확히 일치하는가</li>
+          <li>브래킷 기준 마킹선을 확인했는가</li>
+        </ul>
+
+        <h4>교체 후</h4>
+        <ul class="check">
+          <li>같은 포트에 연결했는가</li>
+          <li>마스터 포트 LED가 정상 통신 상태인가</li>
+          <li>상위 화면에 “설정 적용 완료”가 표시되었는가</li>
+          <li>“호환되지 않는 기기” 또는 “설정 불일치” 경고가 없는가</li>
+          <li><strong>실제 대상물을 통과시켜 판정이 정상인지 확인했는가</strong></li>
+          <li>교체 일자·시리얼 번호가 이력에 기록되었는가</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <span class="t">개념 · 이 장이 남기는 것</span>
+        <p>교체가 어려웠던 이유는 부품이 아니라 설정의 소실이었다(본문 1).
+        TEDS는 센서가 “무엇인지”를 스스로 들고 다니게 하고(본문 2),
+        자동 파라미터 설정은 상위가 보관한 설정을 내려보낸다(본문 3).
+        그 보관은 마스터의 포트별 데이터 스토리지가 담당한다(본문 4).<br>
+        다음 장 2.4에서는 스마트센서의 마지막 능력,
+        <strong>스스로 자기 상태를 진단하고 바로잡는 기능</strong>을 다룬다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 참고자료 ============ -->
+    <section class="ref" id="r2-3">
+      <div class="sec-no">참고자료</div>
+      <h2>참고자료</h2>
+
+      <h3>1. 용어 정리</h3>
+      <dl class="terms">
+        <dt id="t2-3-1">TEDS (Transducer Electronic Data Sheet)</dt>
+        <dd>센서 내부 메모리에 저장된 전자 사양서. 제조사·모델·시리얼·측정 범위·보정 계수 등을 담으며 IEEE 1451이 형식을 규정한다.</dd>
+        <dt id="t2-3-2">플러그 앤 플레이 (Plug and Play)</dt>
+        <dd>연결하면 별도 설정 없이 즉시 동작하는 방식. 기기 인식과 자동 설정이 결합되어야 성립한다.</dd>
+        <dt id="t2-3-3">자동 파라미터 설정 (Auto-Parameterization)</dt>
+        <dd>상위 제어기가 보관 중인 설정값을 새로 연결된 기기에 자동으로 내려보내 적용하는 기능.</dd>
+        <dt id="t2-3-4">데이터 스토리지 (Data Storage)</dt>
+        <dd>IO-Link 마스터가 각 포트에 연결된 기기의 설정 사본을 보관하는 기능. 교체 시 자동 복원의 근거가 된다.</dd>
+        <dt id="t2-3-5">IO-Link 마스터 · 디바이스</dt>
+        <dd>마스터는 상위 제어기와 연결되어 여러 IO-Link 기기를 수용하는 모듈, 디바이스는 마스터에 연결되는 센서·액추에이터를 말한다.</dd>
+        <dt id="t2-3-6">펌웨어 (Firmware)</dt>
+        <dd>기기 내부에서 동작하는 소프트웨어. 버전이 다르면 지원하는 기능이 달라질 수 있다.</dd>
+        <dt id="t2-3-7">포트 (Port)</dt>
+        <dd>마스터에서 기기 하나가 연결되는 물리적 접점. 설정 사본은 포트 단위로 보관된다.</dd>
+      </dl>
+
+      <h3>2. 관련 이미지 — 실물과 도해로 확인하기</h3>
+      <p class="ref-intro">
+        본문에 나온 순서대로 정리했다. 센서·공압은 썬덴코리아 파트너사, 제어기는 미쓰비시전기, 로봇은 야스카와·뉴로메카 기준이다.
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/media/pdf/9/99/399/dataSheet_WTB27-3S3711_1027764_ko.pdf" target="_blank" rel="noopener">광전 센서 데이터시트 (한국어 PDF) — 형번 체계 확인</a>
+          <span class="where">본문 1 · 실무 보강 3 — 예비품 형번이 어디까지 일치해야 하는지</span>
+        </li>
+        <li>
+          <span class="src">IO-Link</span>
+          <a href="https://io-link.com/fileadmin/user_upload/Downloads/Package_2024/IOL-Interface-Spec_10002_V114_Jun24.pdf" target="_blank" rel="noopener">IO-Link 인터페이스 사양서 v1.1.4 (무료 PDF) — 데이터 스토리지 절차 도해</a>
+          <span class="where">본문 4 — 백업·복원 시퀀스가 순서도로 나와 있다. 그림 2.3-4의 원본 근거</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=10&amp;cate_id=2" target="_blank" rel="noopener">PLC (MELSEC) — IO-Link 마스터 모듈과 포트 구성</a>
+          <span class="where">본문 4 · 실무 보강 1 — 포트 번호가 물리적으로 어디에 표기되는지</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/products/detection-sensors/photoelectric-sensors/photoelectric-sensors/c/g172752" target="_blank" rel="noopener">광전 센서 제품군 — IO-Link 대응 모델</a>
+          <span class="where">본문 3 — 자동 설정이 가능한 제품과 그렇지 않은 제품의 구분</span>
+        </li>
+        <li>
+          <span class="src">FESTO</span>
+          <a href="https://www.festo.com/cat/ko_kr/products_050000" target="_blank" rel="noopener">센서 카테고리 — IO-Link 기기 목록</a>
+          <span class="where">실무 보강 3 — 공압 기기 쪽 IO-Link 제품의 형번 체계</span>
+        </li>
+        <li>
+          <span class="src">Balluff</span>
+          <a href="https://www.balluff.com/en-us/products/areas/A0009/groups/G0901/products/F09105" target="_blank" rel="noopener">IO-Link 마스터 — 상위 통신 게이트웨이</a>
+          <span class="where">실무 보강 4 — 제어반에 장착되는 IO-Link 마스터의 실물 형태와, 마스터가 상위 필드버스로 연결되는 방식</span>
+        </li>
+      </ol>
+
+      <h3>3. 학술 · 표준 근거 자료 — 심화 학습용</h3>
+      <p class="ref-intro">
+        무료로 볼 수 있는 자료를 우선했다.<br>
+        <span class="src std">표준</span> 국제 규격 · <span class="src paper">논문</span> 공개 학술 자료
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://standards.ieee.org/standard/1451_4-2004.html" target="_blank" rel="noopener">IEEE 1451.4 : 스마트 트랜스듀서 인터페이스 — TEDS 형식</a>
+          <span class="where">본문 2 — TEDS의 데이터 구조와 항목을 규정한 원 표준.
+          본문의 TEDS 3분류(신원·능력·보정)가 여기서 나온다</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://standards.ieee.org/wp-content/uploads/import/documents/tutorials/1451d4.pdf" target="_blank" rel="noopener">IEEE 1451.4 튜토리얼 (무료 PDF)</a>
+          <span class="where">본문 2 — TEDS가 무엇이고 왜 필요한지를 그림으로 설명한 공식 입문 자료</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://standards.ieee.org/ieee/1451.0/11001/" target="_blank" rel="noopener">IEEE 1451.0 : 공통 TEDS 형식과 트랜스듀서 서비스</a>
+          <span class="where">본문 2 — 여러 통신 방식에서 공통으로 쓰이는 TEDS 형식의 최신판</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/68534" target="_blank" rel="noopener">IEC 61131-9 : SDCI (IO-Link)</a>
+          <span class="where">본문 3 · 4 — 자동 파라미터 설정과 데이터 스토리지를 규정하는 국제 표준</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://www.plcopen.org/standards/logic/iec-61131-9/" target="_blank" rel="noopener">IEC 61131-9 개요 (PLCopen)</a>
+          <span class="where">본문 3 — 표준의 위치와 다른 IEC 61131 파트와의 관계를 무료로 확인</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://www.mdpi.com/1424-8220/22/20/7880" target="_blank" rel="noopener">IEEE 1451 기반 플러그 앤 플레이 모듈 구현 (Sensors 2022, 오픈 액세스)</a>
+          <span class="where">본문 2 — TEDS의 자기 기술 기능과 1451.0 구조를 실제 구현 사례로 확인</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://arxiv.org/pdf/1903.11549" target="_blank" rel="noopener">A Survey of Protocols and Standards for Internet of Things (arXiv 공개)</a>
+          <span class="where">본문 3 · 4 — 기기 자동 인식·설정이 IoT 전반에서 어떻게 다뤄지는지의 조망</span>
+        </li>
+      </ol>
+
+      <h3>4. 이어지는 장과의 연결</h3>
+      <ul style="font-size:13.5px">
+        <li><strong>2.4 지능형 기능</strong> — 자동 설정 이후 센서가 스스로 상태를 관리하는 단계</li>
+        <li><strong>3.3 현장 통신 프로토콜</strong> — IO-Link의 통신 구조와 데이터 종류를 본격적으로 다룸</li>
+        <li><strong>3.4 예지 보전</strong> — 교체 이력·시리얼 기록이 정비 데이터가 된다</li>
+        <li><strong>4.1 산업용 IoT 게이트웨이</strong> — 기기 식별 정보가 상위 시스템으로 올라가는 경로</li>
+      </ul>
+    </section>

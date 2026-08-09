@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2.1 스마트센서의 등장 — 데이터를 읽는 감각</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+
+<!-- ================= 좌측 목차 (build.py 자동 생성) ================= -->
+<aside class="toc">
+  <div class="toc-head" data-part="start">
+    <a class="course-link" href="index.html">
+      <div class="course">제목 : 데이터를 읽는 감각</div>
+      <div class="course-desc">지은이 : 강승태</div>
+      <div class="course-desc">작성일 : 2026-08-10</div>
+    </a>
+  </div>
+
+  <a href="index.html">목차</a>
+  <a href="preface.html">머리말</a>
+  <a class="toc-group" href="index.html#part1">1부 · 센서의 기초 : 데이터의 생성</a>
+  <a href="1-1.html">1.1장 센서의 정의와 원리</a>
+  <a href="1-2.html">1.2장 다양한 센서 분류</a>
+  <a href="1-3.html">1.3장 현장 확인 성능 지표</a>
+  <a href="1-4.html">1.4장 오작동 방지와 기본 세팅</a>
+  <a class="toc-group on" href="index.html#part2">2부 · 스마트센서의 구조 : 데이터의 지능화</a>
+  <a href="2-1.html" class="on">2.1장 스마트센서의 등장</a>
+  <div class="toc-sub" data-for="2-1">
+    <a href="#s2-1-1">2.1.1 스마트센서란 무엇인가</a>
+    <a href="#s2-1-2">2.1.2 MCU가 만들어내는 세 가지 능력</a>
+    <a href="#s2-1-3">2.1.3 에지 컴퓨팅과의 결합</a>
+    <a href="#s2-1-4">2.1.4 수직적 데이터 통합의 출발점</a>
+    <a href="#s2-1-5">2.1.5 실무 보강</a>
+    <a href="#r2-1">참고자료</a>
+  </div>
+  <a href="2-2.html">2.2장 핵심 내부 구조</a>
+  <a href="2-3.html">2.3장 플러그 앤 플레이</a>
+  <a href="2-4.html">2.4장 지능형 기능</a>
+  <a class="toc-group" href="index.html#part3">3부 · 자동화 장비와 스마트센서 : 데이터의 활용</a>
+  <a href="3-1.html">3.1장 장비 제어의 기본 원리</a>
+  <a href="3-2.html">3.2장 서보 모터와 센서의 융합</a>
+  <a href="3-3.html">3.3장 현장 통신 프로토콜</a>
+  <a href="3-4.html">3.4장 예지 보전</a>
+  <a class="toc-group" href="index.html#part4">4부 · 자동화 공정의 운영 : 데이터의 통합</a>
+  <a href="4-1.html">4.1장 산업용 IoT 게이트웨이</a>
+  <a href="4-2.html">4.2장 에지 컴퓨팅 정책</a>
+  <a href="4-3.html">4.3장 생존형 네트워크 인프라</a>
+  <div class="toc-group">찾아보기</div>
+  <a href="index-terms.html">용어 색인</a>
+  <a href="index-figs.html">그림 색인</a>
+  <a href="index-tables.html">표 색인</a>
+  <a href="index-abbr.html">약어 목록</a>
+  <a href="index-refs.html">참고문헌</a>
+</aside>
+
+<!-- ================= 본문 ================= -->
+<div class="main">
+
+  <div class="topbar">
+    <div class="crumb">
+      <span class="c1">2부 · 스마트센서의 구조 : 데이터의 지능화</span>
+      <span>›</span>
+      <span class="c2">2.1 스마트센서의 등장</span>
+    </div>
+    <div class="nav">
+      <a href="index.html" class="home">목차</a>
+      <a href="1-4.html">◀ 이전</a>
+      <span class="count">5 / 15</span>
+      <a href="2-2.html">다음 ▶</a>
+    </div>
+  </div>
+
+  <article class="article">
+
+    <div class="lesson-head">    <h1><span class="lesson-tag">2.1</span>스마트센서의 등장</h1>
+    <p class="subtitle">단순 스위치에서 지능형 소자로 — 센서가 자기 이야기를 하기 시작하다</p>
+    </div>
+
+    <p class="lead">
+      1장의 센서는 말수가 적었다. “있다” 또는 “없다”, 아니면 숫자 하나.
+      그 값이 믿을 만한지, 자기 렌즈가 더러워졌는지는 <strong>사람이 가서 표시등을 봐야</strong> 알 수 있었다.
+      스마트센서는 여기에 한 문장을 더한다. <strong>“지금 내 상태는 이렇습니다.”</strong>
+      이 한 문장이 자동화 공장의 운영 방식을 통째로 바꾼다.
+    </p>
+
+    <div class="goals">
+      <h4>이 장을 읽고 나면</h4>
+      <ol>
+        <li>스마트센서를 “값 + 상태를 함께 보내는 센서”로 정의하고 일반 센서와 구분할 수 있다.</li>
+        <li>MCU 내장이 만들어내는 세 가지 능력(자가 진단·양방향 통신·내부 연산)을 설명할 수 있다.</li>
+        <li>에지 컴퓨팅과 결합해 “의미 있는 변화만 보고”하는 구조를 이해한다.</li>
+        <li>스마트센서가 IIoT 계층 구조의 최하위 노드로서 갖는 위치를 설명할 수 있다.</li>
+        <li>현장에서 스마트센서 여부를 식별하고, 확인할 수 있는 정보가 무엇인지 안다.</li>
+      </ol>
+    </div>
+
+    <!-- ============ 본문 1 ============ -->
+    <section class="sec" id="s2-1-1">
+      <h2><span class="sec-no">2.1.1</span>스마트센서란 무엇인가<span class="en">값 하나에서 값 + 상태로</span></h2>
+
+      <p class="keyline">
+        스마트센서는 <strong>측정값과 함께 자기 상태를 보고하는 센서</strong>다.
+        차이를 만드는 것은 감지 원리가 아니라 <strong>내장된 작은 컴퓨터(MCU)</strong>다.
+      </p>
+
+      <p>
+        1.1에서 센서 출력의 세 가지 형태를 봤다. ON/OFF, 아날로그 값, 그리고 <strong>값 + 상태 정보</strong>.
+        세 번째가 스마트센서다. 빛을 쏘고 되받는 감지 원리는 일반 광전 센서와 똑같다.
+        달라지는 것은 그 뒤다. 스마트센서는 감지한 신호를 <strong>내부에서 한 번 처리하고 판단한 뒤</strong> 내보낸다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-1-1"><span class="no">그림 2.1-1</span> · 일반 센서와 스마트센서의 차이</div>
+          <svg viewBox="0 0 700 330" role="img" aria-label="일반 센서와 스마트센서의 내부 구조 및 출력 비교">
+            <text class="s-hdr" x="350" y="20">일반 센서 — 감지한 것을 그대로 내보낸다</text>
+            <rect class="s-plain" x="30" y="34" width="150" height="62"/>
+            <text class="s-t3" x="105" y="60">감지 소자</text>
+            <text class="s-t2" x="105" y="82">빛 · 자기장 · 음파</text>
+            <path class="s-line-n" d="M186 65 L222 65" marker-end="url(#a51)"/>
+            <rect class="s-plain" x="228" y="34" width="150" height="62"/>
+            <text class="s-t3" x="303" y="60">증폭 · 변환</text>
+            <text class="s-t2" x="303" y="82">아날로그 회로</text>
+            <path class="s-line-n" d="M384 65 L420 65" marker-end="url(#a51)"/>
+            <rect class="s-tint" x="426" y="34" width="244" height="62"/>
+            <text class="s-t" x="548" y="60">출력</text>
+            <text class="s-t2" x="548" y="82">ON/OFF 또는 4~20mA — 값 하나</text>
+
+            <rect class="s-warn" x="228" y="106" width="442" height="30"/>
+            <text class="s-t2" x="449" y="126" style="fill:#8A5A0B;font-weight:700">상태는 사람이 표시등을 보러 가야 안다</text>
+
+            <line class="s-rule" x1="20" y1="156" x2="680" y2="156"/>
+
+            <text class="s-hdr" x="350" y="182">스마트센서 — 처리하고 판단해서 내보낸다</text>
+            <rect class="s-plain" x="30" y="196" width="150" height="62"/>
+            <text class="s-t3" x="105" y="222">감지 소자</text>
+            <text class="s-t2" x="105" y="244">여기까지는 동일</text>
+            <path class="s-line-n" d="M186 227 L222 227" marker-end="url(#a51)"/>
+            <rect class="s-fill" x="228" y="196" width="150" height="62"/>
+            <text class="s-tw" x="303" y="222">MCU</text>
+            <text class="s-t2w" x="303" y="244">연산 · 판단 · 저장</text>
+            <path class="s-line-n" d="M384 227 L420 227" marker-end="url(#a51)"/>
+            <rect class="s-tint" x="426" y="196" width="244" height="62"/>
+            <text class="s-t" x="548" y="222">디지털 통신 출력</text>
+            <text class="s-t2" x="548" y="244">값 + 상태 + 진단 + 식별 정보</text>
+
+            <rect class="s-tint" x="228" y="268" width="442" height="46"/>
+            <text class="s-t3" x="449" y="290" style="font-weight:700">“지금 내 상태는 정상입니다 / 렌즈가 더러워지고 있습니다”</text>
+            <text class="s-t2" x="449" y="308">상태 정보가 값과 함께 자동으로 올라온다</text>
+
+            <defs>
+              <marker id="a51" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>감지 소자는 같다. 그 뒤에 MCU가 들어가면서 출력의 성격이 바뀐다.
+        “값 하나”에서 “값과 상태의 묶음”으로.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b2-1-1"><span class="no">표 2.1-1</span> · 같은 상황, 두 센서의 다른 반응</div>
+      <table>
+        <thead>
+          <tr><th>상황</th><th>일반 센서</th><th>스마트센서</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>렌즈에 분진이 쌓이는 중</td>
+              <td>아무 변화 없음. 임계 넘으면 갑자기 알람</td>
+              <td>“수광량 여유 30%” 경고를 미리 올림</td></tr>
+          <tr><td>대상물 감지</td><td>ON 신호</td><td>ON + 응답 시간 + 신호 여유도</td></tr>
+          <tr><td>센서 교체 직후</td><td>설정을 사람이 다시 넣어야 함</td><td>상위 제어기가 설정을 자동으로 내려보냄</td></tr>
+          <tr><td>온도가 크게 변함</td><td>값이 서서히 밀림 (드리프트)</td><td>내부에서 온도 보정 후 값을 내보냄</td></tr>
+          <tr><td>센서 자체가 고장</td><td>값이 0 또는 이상값. 고장인지 판정인지 모호</td><td>“센서 오류” 코드를 명시적으로 보고</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <span class="t">개념 · 왜 지금 등장했나</span>
+        <p>MCU 가격이 충분히 싸졌기 때문이다. 예전에는 센서 하나에 컴퓨터를 넣는 것이 비쌌지만,
+        지금은 센서 원가에서 MCU가 차지하는 비중이 크지 않다.
+        <strong>기술이 아니라 경제성이 바뀐 것</strong>이며, 그래서 앞으로 현장의 센서는 계속 스마트센서로 교체된다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 2 ============ -->
+    <section class="sec" id="s2-1-2">
+      <h2><span class="sec-no">2.1.2</span>MCU가 만들어내는 세 가지 능력<span class="en">자가 진단 · 양방향 통신 · 내부 연산</span></h2>
+
+      <p class="keyline">
+        MCU 하나가 들어가면서 센서는 <strong>자기를 볼 수 있고, 대답할 수 있고, 생각할 수 있게</strong> 된다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-1-2"><span class="no">그림 2.1-2</span> · MCU 내장이 만드는 세 가지 능력</div>
+          <svg viewBox="0 0 700 274" role="img" aria-label="자가진단 양방향통신 내부연산 세 가지 능력">
+            <rect class="s-fill" x="250" y="10" width="200" height="44"/>
+            <text class="s-tw" x="350" y="38">MCU 내장</text>
+
+            <path class="s-line-n" d="M350 56 L350 76"/>
+            <path class="s-line-n" d="M130 76 L570 76"/>
+            <path class="s-line-n" d="M130 76 L130 100" marker-end="url(#a52)"/>
+            <path class="s-line-n" d="M350 76 L350 100" marker-end="url(#a52)"/>
+            <path class="s-line-n" d="M570 76 L570 100" marker-end="url(#a52)"/>
+
+            <rect class="s-tint" x="24" y="104" width="212" height="86"/>
+            <text class="s-t" x="130" y="130">① 자가 진단</text>
+            <text class="s-t2" x="130" y="152">자기 상태를 스스로 본다</text>
+            <text class="s-t2" x="130" y="172">오염 · 노후 · 범위 이탈</text>
+
+            <rect class="s-tint" x="244" y="104" width="212" height="86"/>
+            <text class="s-t" x="350" y="130">② 양방향 통신</text>
+            <text class="s-t2" x="350" y="152">묻는 말에 대답한다</text>
+            <text class="s-t2" x="350" y="172">설정을 받고 되돌려준다</text>
+
+            <rect class="s-tint" x="464" y="104" width="212" height="86"/>
+            <text class="s-t" x="570" y="130">③ 내부 연산</text>
+            <text class="s-t2" x="570" y="152">보내기 전에 처리한다</text>
+            <text class="s-t2" x="570" y="172">필터 · 보정 · 단위 변환</text>
+
+            <rect class="s-plain" x="24" y="198" width="212" height="56"/>
+            <text class="s-t2" x="130" y="220">고장 전에 알 수 있다</text>
+            <text class="s-t2" x="130" y="240">→ 예지 보전의 출발점</text>
+
+            <rect class="s-plain" x="244" y="198" width="212" height="56"/>
+            <text class="s-t2" x="350" y="220">교체가 쉬워진다</text>
+            <text class="s-t2" x="350" y="240">→ 플러그 앤 플레이 (2.3)</text>
+
+            <rect class="s-plain" x="464" y="198" width="212" height="56"/>
+            <text class="s-t2" x="570" y="220">보낼 데이터가 줄어든다</text>
+            <text class="s-t2" x="570" y="240">→ 에지 컴퓨팅 (4.2)</text>
+
+            <defs>
+              <marker id="a52" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>세 가지 능력은 각각 이 책의 뒤쪽 장으로 이어진다.
+        아래 칸이 그 연결 지점이다.</figcaption>
+      </figure>
+
+      <h3>① 자가 진단 — 자기 상태를 스스로 본다</h3>
+      <p>
+        1.4에서 “수광량 표시등이 알람 전에 잡을 수 있는 유일한 신호”라고 했다.
+        문제는 <strong>사람이 가서 봐야</strong> 한다는 것이었다. 스마트센서는 그 표시등의 내용을
+        숫자로 만들어 상위로 올린다. 수광량 여유가 몇 %인지, 최근 몇 시간 동안 어떻게 변했는지가
+        <strong>사무실 화면에서 보인다.</strong>
+      </p>
+
+      <h3>② 양방향 통신 — 묻는 말에 대답한다</h3>
+      <p>
+        일반 센서는 일방적으로 신호를 흘려보낼 뿐이다. 스마트센서는 상위 제어기가 물으면 대답한다.
+        “너는 어떤 모델이냐”, “지금 감도 설정이 몇이냐”, “오늘 몇 번 동작했느냐”.
+        반대로 상위가 <strong>설정을 내려보낼 수도</strong> 있다. 이것이 2.3의 플러그 앤 플레이를 가능하게 만든다.
+      </p>
+
+      <h3>③ 내부 연산 — 보내기 전에 처리한다</h3>
+      <p>
+        원시 신호를 그대로 내보내는 대신, 노이즈를 걸러내고(필터링), 온도 영향을 보정하고,
+        단위를 사람이 읽을 수 있는 형태(mm, kg, ℃)로 바꿔서 내보낸다.
+        1.3에서 본 선형성 오차와 드리프트를 <strong>센서 스스로 상당 부분 잡아 준다.</strong>
+      </p>
+
+      <div class="note field">
+        <span class="t">현장 · 무엇이 달라지는가</span>
+        <p>기술자 입장에서 가장 크게 바뀌는 것은 <strong>순회 점검의 성격</strong>이다.
+        일반 센서 라인에서는 표시등을 하나하나 눈으로 확인해야 했다.
+        스마트센서 라인에서는 화면에서 “여유도가 떨어진 센서 목록”을 먼저 뽑고,
+        <strong>그 자리만 골라서</strong> 간다. 같은 시간에 훨씬 넓은 구역을 관리할 수 있다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 3 ============ -->
+    <section class="sec" id="s2-1-3">
+      <h2><span class="sec-no">2.1.3</span>에지 컴퓨팅과의 결합<span class="en">다 보내지 않고, 의미 있는 것만 보낸다</span></h2>
+
+      <p class="keyline">
+        센서가 똑똑해지면 <strong>보낼 데이터가 줄어든다.</strong>
+        모든 값을 다 올리는 대신, 판단한 결과와 달라진 것만 올리기 때문이다.
+      </p>
+
+      <p>
+        창고 한 동에 센서가 2,000개 있고 각각 초당 100번 값을 낸다고 하자.
+        전부 상위로 올리면 초당 20만 건이다. 네트워크가 감당하지 못하고,
+        올려 봐야 <strong>대부분이 “아까와 똑같음”</strong>이라 쓸모도 없다.
+      </p>
+      <p>
+        <span class="kw">에지 컴퓨팅</span>은 데이터가 생기는 자리에서 1차 처리를 하는 방식이다.
+        스마트센서는 그 가장 앞단이다. 센서가 스스로 “의미 있는 변화인가”를 판단해
+        <strong>변한 것만, 요약해서</strong> 올린다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-1-3"><span class="no">그림 2.1-3</span> · 데이터가 줄어드는 지점</div>
+          <svg viewBox="0 0 700 288" role="img" aria-label="원시 데이터가 에지에서 걸러지는 과정">
+            <text class="s-hdr" x="350" y="20">방식 A — 모두 올린다</text>
+            <rect class="s-plain" x="30" y="34" width="140" height="54"/>
+            <text class="s-t3" x="100" y="58">센서 2,000개</text>
+            <text class="s-t2" x="100" y="78">초당 100회 측정</text>
+            <path class="s-line-n" d="M176 61 L216 61" marker-end="url(#a53)"/>
+            <rect class="s-warn" x="222" y="34" width="200" height="54"/>
+            <text class="s-t3" x="322" y="58" style="fill:#8A5A0B;font-weight:700">초당 20만 건 전송</text>
+            <text class="s-t2" x="322" y="78" style="fill:#8A5A0B">네트워크 포화</text>
+            <path class="s-line-n" d="M428 61 L468 61" marker-end="url(#a53)"/>
+            <rect class="s-plain" x="474" y="34" width="196" height="54"/>
+            <text class="s-t3" x="572" y="58">상위 시스템</text>
+            <text class="s-t2" x="572" y="78">대부분 “아까와 같음”</text>
+
+            <line class="s-rule" x1="20" y1="108" x2="680" y2="108"/>
+
+            <text class="s-hdr" x="350" y="134">방식 B — 에지에서 걸러 올린다</text>
+            <rect class="s-fill" x="30" y="148" width="140" height="70"/>
+            <text class="s-tw" x="100" y="176">스마트센서</text>
+            <text class="s-t2w" x="100" y="198">내부에서 1차 판단</text>
+            <path class="s-line-n" d="M176 183 L216 183" marker-end="url(#a53)"/>
+            <rect class="s-tint" x="222" y="148" width="200" height="70"/>
+            <text class="s-t3" x="322" y="172" style="font-weight:700">의미 있는 변화만</text>
+            <text class="s-t2" x="322" y="192">기준 이상 변했을 때</text>
+            <text class="s-t2" x="322" y="210">＋ 상태가 바뀌었을 때</text>
+            <path class="s-line-n" d="M428 183 L468 183" marker-end="url(#a53)"/>
+            <rect class="s-plain" x="474" y="148" width="196" height="70"/>
+            <text class="s-t3" x="572" y="176">상위 시스템</text>
+            <text class="s-t2" x="572" y="198">판단에 필요한 것만 도착</text>
+
+            <rect class="s-tint" x="30" y="232" width="640" height="44"/>
+            <text class="s-t3" x="350" y="254" style="font-weight:700">긴급 상황(비상 정지)은 상위에 묻지 않고 센서·에지에서 즉시 판단</text>
+            <text class="s-t2" x="350" y="270">네트워크 지연이 안전에 영향을 주지 않는다</text>
+
+            <defs>
+              <marker id="a53" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>같은 센서 수, 같은 측정 빈도인데 올라가는 데이터 양이 크게 다르다.
+        구체적인 필터링 정책은 4.2에서 다룬다.</figcaption>
+      </figure>
+
+      <div class="note warn">
+        <span class="t">주의 · 줄이는 것에도 대가가 있다</span>
+        <p>“의미 있는 변화만 올린다”는 말은 뒤집으면 <strong>의미 없다고 판단된 것은 사라진다</strong>는 뜻이다.
+        기준을 잘못 잡으면 나중에 원인 분석을 하려 할 때 필요한 데이터가 없다.
+        고장 직전의 미세한 흔들림이 “의미 없음”으로 버려졌다면 예지 보전은 불가능하다.
+        이 균형을 잡는 것이 4.2의 핵심 주제다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 4 ============ -->
+    <section class="sec" id="s2-1-4">
+      <h2><span class="sec-no">2.1.4</span>수직적 데이터 통합의 출발점<span class="en">IIoT 계층 구조에서 센서의 자리</span></h2>
+
+      <p class="keyline">
+        자동화 공장의 데이터는 <strong>아래에서 위로</strong> 흐른다.
+        스마트센서는 그 흐름이 시작되는 <strong>가장 아래 노드</strong>다.
+      </p>
+
+      <p>
+        예전의 공장 시스템은 층마다 끊겨 있었다. 현장 설비는 현장 제어기와만 이야기하고,
+        생산 관리 시스템은 별도로 사람이 입력한 값을 썼다.
+        <span class="kw">IIoT(산업용 사물인터넷)</span>는 이 층들을 데이터로 잇는다.
+        그 첫 단추가 <strong>센서가 스스로 말할 수 있게 되는 것</strong>이다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f2-1-4"><span class="no">그림 2.1-4</span> · 데이터 계층과 스마트센서의 위치</div>
+          <svg viewBox="0 0 700 340" role="img" aria-label="IIoT 계층 구조에서 스마트센서의 위치">
+            <rect class="s-plain" x="150" y="14" width="400" height="46"/>
+            <text class="s-t3" x="350" y="38" style="font-weight:700">경영 · 생산 관리 (ERP · MES)</text>
+            <text class="s-t2" x="350" y="54">무엇을 얼마나 만들고 보낼 것인가</text>
+
+            <rect class="s-plain" x="130" y="70" width="440" height="46"/>
+            <text class="s-t3" x="350" y="94" style="font-weight:700">공장 운영 · 감시 (SCADA · WMS)</text>
+            <text class="s-t2" x="350" y="110">지금 라인이 어떻게 돌고 있는가</text>
+
+            <rect class="s-tint" x="110" y="126" width="480" height="46"/>
+            <text class="s-t3" x="350" y="150" style="font-weight:700">IoT 게이트웨이 · 에지 (4.1 · 4.2)</text>
+            <text class="s-t2" x="350" y="166">현장 언어를 IT 언어로 번역하고 걸러낸다</text>
+
+            <rect class="s-tint" x="90" y="182" width="520" height="46"/>
+            <text class="s-t3" x="350" y="206" style="font-weight:700">제어 (PLC · 서보 드라이브)</text>
+            <text class="s-t2" x="350" y="222">받은 값으로 설비를 움직인다</text>
+
+            <rect class="s-fill" x="70" y="238" width="560" height="58"/>
+            <text class="s-tw" x="350" y="264">현장 · 스마트센서 — 데이터가 태어나는 곳</text>
+            <text class="s-t2w" x="350" y="286">측정값 + 자기 상태 + 식별 정보를 스스로 만들어 올린다</text>
+
+            <path class="s-line-n" d="M646 280 L646 40" marker-end="url(#a54)"/>
+            <text class="s-t2" x="676" y="170" transform="rotate(-90 676 170)">데이터 상향</text>
+            <path class="s-line-d" d="M54 40 L54 280" marker-end="url(#a54g)"/>
+            <text class="s-t2" x="30" y="170" transform="rotate(-90 30 170)">지시 하향</text>
+
+            <text class="s-t2" x="350" y="322">아래층 데이터의 품질이 위층 판단의 품질을 그대로 결정한다</text>
+
+            <defs>
+              <marker id="a54" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+              <marker id="a54g" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#8C9298"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>이 그림이 3장·4장 전체의 지도다. 3장은 아래 두 층(센서–제어), 4장은 위 두 층(에지–운영)을 다룬다.</figcaption>
+      </figure>
+
+      <div class="note">
+        <span class="t">개념 · 기술자의 자리가 왜 중요해지는가</span>
+        <p>위층의 모든 판단은 아래층 데이터에 의존한다.
+        센서 하나가 오염되어 틀린 값을 올리면, 그 값이 제어기를 지나 운영 시스템까지 올라가
+        <strong>잘못된 재고 수량이나 잘못된 설비 가동률</strong>이 된다.
+        현장에서 센서를 관리하는 일이 곧 <strong>공장 전체 데이터의 품질을 관리하는 일</strong>이다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 5 ============ -->
+    <section class="sec" id="s2-1-5">
+      <h2><span class="sec-no">2.1.5</span>실무 보강<span class="en">현장에서 스마트센서를 알아보고 활용한다</span></h2>
+
+      <p class="keyline">
+        스마트센서가 붙어 있는 자리는 <strong>대응 방식이 달라진다.</strong>
+        표시등을 보러 가기 전에 화면에서 먼저 확인할 것이 생긴다.
+      </p>
+
+      <p>
+        아래 다섯 항목은 목차에 명시되어 있지는 않지만
+        <strong>물류설비 운영에서 실제로 필요해 보강한 내용</strong>이다.
+      </p>
+
+      <!-- 1 -->
+      <div class="prac">
+        <h3>1. 스마트센서인지 알아보는 법</h3>
+        <p class="prac-tip">겉모습으로는 구분이 잘 안 된다. 세 가지를 본다.</p>
+
+        <div class="tbl-label" id="b2-1-2"><span class="no">표 2.1-2</span> · 식별 포인트</div>
+        <table>
+          <thead>
+            <tr><th>확인 지점</th><th>일반 센서</th><th>스마트센서</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>케이블 심선 수</td><td>3선 (전원 2 + 신호 1)</td><td>4선 이상 — 통신선이 추가된다</td></tr>
+            <tr><td>제품 표기</td><td>NPN / PNP, Light-ON 등</td><td><code>IO-Link</code> 로고 또는 <code>SDCI</code> 표기</td></tr>
+            <tr><td>연결 상대</td><td>PLC 입력 모듈 직결</td><td><strong>IO-Link 마스터</strong>를 거쳐 연결</td></tr>
+            <tr><td>표시등</td><td>전원 · 출력 (1~2개)</td><td>통신 상태 표시등이 추가되는 경우가 많음</td></tr>
+            <tr><td>설정 방법</td><td>본체 볼륨 · 티치 버튼</td><td>본체 + <strong>상위 소프트웨어에서도</strong> 가능</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note field">
+          <span class="t">현장 · 가장 빠른 확인</span>
+          <p>제어반을 열어 <strong>IO-Link 마스터 모듈이 있는지</strong> 보는 것이 가장 빠르다.
+          마스터가 있다면 거기 연결된 센서들은 스마트센서다.
+          마스터 모듈에는 보통 포트별 상태 LED가 줄지어 있어, 어느 포트가 통신 이상인지 바로 보인다.</p>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="prac">
+        <h3>2. 스마트센서 라인에서 달라지는 알람 대응</h3>
+        <p class="prac-tip">1.1의 30초 판단 절차가 한 단계 앞당겨진다.</p>
+
+        <p>
+          일반 센서에서는 알람이 뜨면 현장에 가서 표시등을 봤다.
+          스마트센서에서는 <strong>알람 자체가 이미 원인을 말해 준다.</strong>
+        </p>
+        <div class="tbl-label" id="b2-1-3"><span class="no">표 2.1-3</span> · 알람 내용의 차이</div>
+        <table class="tbl-span">
+          <thead>
+            <tr><th>일반 센서 알람</th><th>스마트센서 알람</th><th>절약되는 단계</th></tr>
+          </thead>
+          <tbody>
+            <tr><td rowspan="3" class="t-same t-key"><code>PE-207 SENSOR ERROR</code>
+                <span>원인이 무엇이든<br>같은 한 줄</span></td>
+                <td><code>PE-207 신호 여유 부족 (28%)</code></td>
+                <td>표시등 확인 → 바로 청소로</td></tr>
+            <tr><td><code>PE-207 통신 두절</code></td>
+                <td>감지 조건 확인 생략 → 배선 계통으로 직행</td></tr>
+            <tr><td><code>PE-207 측정 범위 이탈</code></td>
+                <td>대상물·설치 위치 문제로 바로 좁혀짐</td></tr>
+            <tr><td class="t-key">알람 없음 (아직 정상)</td><td><code>PE-207 여유도 하락 추세</code></td>
+                <td><strong>정지 전에 계획 정비 가능</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 3 -->
+      <div class="prac">
+        <h3>3. 스마트센서로도 해결되지 않는 것</h3>
+        <p class="prac-tip">기대를 정확히 맞춰 두어야 오해가 없다.</p>
+
+        <ul>
+          <li><strong>감지 원리의 한계는 그대로다.</strong> 투명 랩을 직접반사형으로 잡는 문제는
+              스마트센서로 바꿔도 해결되지 않는다. 다만 “신호 여유 부족”이라고 <strong>이유를 말해 준다.</strong></li>
+          <li><strong>물리적 오염은 여전히 사람이 닦아야 한다.</strong> 언제 닦아야 할지를 알려 줄 뿐이다.</li>
+          <li><strong>브래킷 유격·진동은 스스로 고치지 못한다.</strong> 값이 튄다고 보고할 수는 있다.</li>
+          <li><strong>안전 기능을 대신하지 못한다.</strong> 안전은 여전히 인증받은 안전 규격품의 영역이다(1.2 참조).</li>
+        </ul>
+        <div class="note warn">
+          <span class="t">주의 · “스마트”라는 말의 범위</span>
+          <p>제조사마다 “스마트”의 정의가 다르다. 자가 진단만 있는 제품도,
+          IO-Link 통신까지 되는 제품도 모두 스마트센서로 불린다.
+          <strong>무엇을 보고할 수 있는지는 제품마다 확인해야 한다.</strong>
+          데이터시트의 “진단 정보(Diagnostic)” 항목에 실제로 무엇이 나열되어 있는지가 기준이다.</p>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="prac">
+        <h3>4. 도입 시 현장이 겪는 전환 비용</h3>
+        <p class="prac-tip">라인에 일반 센서와 스마트센서가 섞여 있는 기간이 반드시 온다.</p>
+
+        <p>
+          공장 전체를 하루아침에 교체할 수는 없다. 그래서 현실의 라인은 대개 <strong>혼재 상태</strong>다.
+          기술자는 두 가지 대응 방식을 동시에 유지해야 한다.
+        </p>
+        <ul>
+          <li>어느 구간이 스마트센서인지 <strong>구역도로 정리한다.</strong></li>
+          <li>스마트 구간은 화면 확인 → 현장 확인 순서, 일반 구간은 현장 확인부터.</li>
+          <li>혼재 구간에서 같은 알람 코드가 다른 의미일 수 있으므로, 설비별 알람 정의를 확인한다.</li>
+        </ul>
+      </div>
+
+      <!-- 5 -->
+      <div class="prac">
+        <h3>5. 현장 점검 체크리스트</h3>
+        <p class="prac-tip">스마트센서 구간의 순회 점검 항목.</p>
+
+        <ul class="check">
+          <li>IO-Link 마스터 모듈의 포트별 상태 LED에 이상 표시가 없는가</li>
+          <li>상위 화면에서 “여유도 하락” 또는 “경고” 상태인 센서 목록을 먼저 확인했는가</li>
+          <li>경고 상태인 센서만 골라 현장 조치(청소 등)를 했는가</li>
+          <li>통신 두절 이력이 반복되는 포트가 있는가 (배선·커넥터 계통)</li>
+          <li>일반 센서 구간과 스마트센서 구간의 경계를 알고 있는가</li>
+          <li>새로 교체한 센서가 설정을 자동으로 받아 갔는지 확인했는가 (2.3에서 심화)</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <span class="t">개념 · 이 장이 남기는 것</span>
+        <p>스마트센서는 값과 함께 상태를 보내는 센서이고(본문 1),
+        그것을 가능하게 하는 것은 MCU가 주는 세 능력이다(본문 2).
+        내부 처리 덕분에 올릴 데이터가 줄고(본문 3),
+        센서는 IIoT 계층의 최하위 노드로서 위층 판단의 품질을 결정한다(본문 4).<br>
+        다음 장 2.2에서는 그 MCU가 내부에서 정확히 무엇을 하는지를 들여다본다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 참고자료 ============ -->
+    <section class="ref" id="r2-1">
+      <h2>참고자료</h2>
+
+      <h3>1. 용어 정리</h3>
+      <dl class="terms">
+        <dt id="t2-1-1">MCU (Micro Controller Unit)</dt>
+        <dd>연산 장치·메모리·입출력을 한 칩에 담은 소형 컴퓨터. 스마트센서의 “두뇌”에 해당한다.</dd>
+        <dt id="t2-1-2">스마트센서 (Smart sensor)</dt>
+        <dd>측정 기능에 더해 내부 연산·자가 진단·디지털 통신 기능을 갖춘 센서. 값과 함께 자기 상태를 보고한다.</dd>
+        <dt id="t2-1-3">IIoT (Industrial Internet of Things)</dt>
+        <dd>산업 현장의 설비·센서를 네트워크로 연결해 데이터를 수집·활용하는 체계. 산업용 사물인터넷.</dd>
+        <dt id="t2-1-4">에지 컴퓨팅 (Edge computing)</dt>
+        <dd>데이터가 생성되는 현장 가까이에서 1차 처리·판단을 수행하는 방식. 전송량과 지연을 줄인다.</dd>
+        <dt id="t2-1-5">IO-Link</dt>
+        <dd>센서·액추에이터와 마스터 사이의 점대점 양방향 디지털 통신 표준. IEC 61131-9에 SDCI라는 이름으로 규정되어 있다.</dd>
+        <dt id="t2-1-6">IO-Link 마스터</dt>
+        <dd>여러 IO-Link 기기를 수용해 상위 제어기(PLC)와 이어 주는 모듈. 포트별 상태 표시등이 있다.</dd>
+        <dt id="t2-1-7">OT / IT</dt>
+        <dd>OT(Operational Technology)는 현장 설비 제어 영역, IT(Information Technology)는 정보 시스템 영역. 4.1에서 둘의 연결을 다룬다.</dd>
+        <dt id="t2-1-8">진단 정보 (Diagnostic data)</dt>
+        <dd>측정값과 별개로 센서가 보고하는 자기 상태 정보. 신호 여유도, 내부 온도, 동작 횟수, 오류 코드 등.</dd>
+      </dl>
+
+      <h3>2. 관련 이미지 — 실물과 도해로 확인하기</h3>
+      <p class="ref-intro">
+        본문에 나온 순서대로 정리했다. 센서·공압은 썬덴코리아 파트너사, 제어기는 미쓰비시전기, 로봇은 야스카와·뉴로메카 기준이다.
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/products/detection-sensors/photoelectric-sensors/photoelectric-sensors/c/g172752" target="_blank" rel="noopener">광전 센서 제품군 — IO-Link 지원 모델 표기</a>
+          <span class="where">본문 1 · 실무 보강 1 — 같은 시리즈에서 IO-Link 버전과 일반 버전을 형번으로 구분하는 방법</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/products/detection-sensors/inductive-proximity-sensors/inductive-proximity-sensors/c/g253054" target="_blank" rel="noopener">유도감응형 근접 센서 — 진단 기능 사양</a>
+          <span class="where">본문 2① — 근접 센서가 제공하는 진단 항목(온도·동작 횟수 등) 확인</span>
+        </li>
+        <li>
+          <span class="src">IO-Link</span>
+          <a href="https://io-link.com/fileadmin/user_upload/Downloads/Package_2024/IOL-Interface-Spec_10002_V114_Jun24.pdf" target="_blank" rel="noopener">IO-Link 인터페이스 사양서 v1.1.4 (무료 PDF) — 배선·커넥터 도해</a>
+          <span class="where">실무 보강 1 — 4선 배선 구조와 커넥터 핀 배치가 그림으로 나와 있다</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=10&amp;cate_id=2" target="_blank" rel="noopener">PLC (MELSEC) — IO-Link 마스터 모듈</a>
+          <span class="where">실무 보강 1 — 제어반에서 IO-Link 마스터가 어떻게 생겼는지, 포트 LED 위치</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=514&amp;cate_id=2&amp;out_order=3" target="_blank" rel="noopener">정보 연계 제품 — 상위 시스템으로의 데이터 전달</a>
+          <span class="where">본문 4 — 제어 계층에서 운영 계층으로 데이터가 올라가는 실제 제품 구성</span>
+        </li>
+        <li>
+          <span class="src">FESTO</span>
+          <a href="https://www.festo.com/cat/ko_kr/products_050000" target="_blank" rel="noopener">센서 카테고리 — IO-Link 대응 제품군</a>
+          <span class="where">본문 1 — 공압 기기 쪽에서도 같은 통신 표준이 쓰이는 것을 확인</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/solutions/logistics/sensor-solutions-for-production-logistics/s/production-logistics" target="_blank" rel="noopener">물류 자동화 센서 솔루션 — 생산 물류</a>
+          <span class="where">본문 3 · 4 — 데이터 관리가 물류 솔루션의 한 축으로 제시되는 구성</span>
+        </li>
+      </ol>
+
+      <h3>3. 학술 · 표준 근거 자료 — 심화 학습용</h3>
+      <p class="ref-intro">
+        무료로 볼 수 있는 자료를 우선했다.<br>
+        <span class="src std">표준</span> 국제 규격 · <span class="src paper">논문</span> 공개 학술 자료
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://standards.ieee.org/ieee/1451.0/11001/" target="_blank" rel="noopener">IEEE 1451.0 : 스마트 트랜스듀서 인터페이스 표준</a>
+          <span class="where">본문 1 · 2 — “스마트 트랜스듀서”가 갖춰야 할 공통 기능과 서비스의 국제 정의.
+          본문의 스마트센서 정의가 이 표준 계열을 따른다</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://standards.ieee.org/wp-content/uploads/import/documents/tutorials/1451d4.pdf" target="_blank" rel="noopener">IEEE 1451.4 스마트 트랜스듀서 튜토리얼 (무료 PDF)</a>
+          <span class="where">본문 1 · 2 — 표준 구매 없이 개념을 이해할 수 있는 공식 입문 자료.
+          그림이 많아 비전공자에게 적합하다</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/68534" target="_blank" rel="noopener">IEC 61131-9 : SDCI (IO-Link) — 소형 센서·액추에이터용 단일 디지털 통신 인터페이스</a>
+          <span class="where">본문 2② · 실무 보강 1 — 스마트센서의 양방향 통신을 규정하는 국제 표준.
+          3.3에서 본격적으로 다룬다</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://io-link.com/fileadmin/user_upload/Downloads/Package_2024/IOL-Interface-Spec_10002_V114_Jun24.pdf" target="_blank" rel="noopener">IO-Link 인터페이스 및 시스템 사양서 v1.1.4 (무료 PDF)</a>
+          <span class="where">본문 2② — 통신 절차, 데이터 종류, 진단 정보 구조가 모두 무료로 공개되어 있다</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://arxiv.org/pdf/1903.11549" target="_blank" rel="noopener">A Survey of Protocols and Standards for Internet of Things (arXiv 공개)</a>
+          <span class="where">본문 3 · 4 — IIoT 계층 구조와 각 층에서 쓰이는 프로토콜의 전체 조망.
+          4장의 게이트웨이·통신 주제로 이어지는 배경</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10223387/" target="_blank" rel="noopener">Wide Temperature Range and Low Temperature Drift Eddy Current Displacement Sensor (PMC 공개)</a>
+          <span class="where">본문 2③ — 센서 내부 연산이 온도 드리프트를 보정하는 실제 구현 사례</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://www.nist.gov/document/information-14511588-v36pdf" target="_blank" rel="noopener">IEEE 1451 · 1588 표준 현황 (NIST, 무료 PDF)</a>
+          <span class="where">본문 1 — 1451.0부터 .7까지 각 파트가 무엇을 규정하는지 한 문서에서 확인. 작성 시점이 2016년이라 개정 일정 기술은 오래됐다</span>
+        </li>
+      </ol>
+
+      <h3>4. 이어지는 장과의 연결</h3>
+      <ul style="font-size:13.5px">
+        <li><strong>2.2 핵심 내부 구조</strong> — 본문 2③의 내부 연산이 MCU 안에서 어떻게 이루어지는가</li>
+        <li><strong>2.3 플러그 앤 플레이</strong> — 본문 2②의 양방향 통신이 만들어내는 교체 편의</li>
+        <li><strong>2.4 지능형 기능</strong> — 본문 2①의 자가 진단과 자가 교정의 구체적 동작</li>
+        <li><strong>4.2 에지 컴퓨팅 정책</strong> — 본문 3의 “의미 있는 변화만”을 정책으로 설계</li>
+      </ul>
+    </section>
+  </article>
+</div>
+</div>
+</body>
+</html>

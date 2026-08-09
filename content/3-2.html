@@ -1,0 +1,679 @@
+    <div class="lesson-tag">3.2</div>
+    <h1>서보 모터와 센서의 융합</h1>
+    <p class="subtitle">설비 위치와 속도 제어의 핵심 — 엔코더가 만드는 정밀도</p>
+
+    <p class="lead">
+      스태커크레인이 20m를 달려 12번 랙 앞 ±2mm에 선다.
+      팔레타이저 로봇이 초당 두 개씩 박스를 정확히 같은 자리에 놓는다.
+      이런 정밀도는 <strong>모터가 지금 어디에 있는지를 아주 잘게 알고 있어야</strong> 가능하다.
+      그 역할을 하는 것이 <strong>엔코더</strong>이고, 그것을 모터와 하나로 묶은 것이 <strong>서보</strong>다.
+    </p>
+
+    <div class="goals">
+      <h4>이 장을 읽고 나면</h4>
+      <ol>
+        <li>서보 시스템의 세 요소(모터·엔코더·드라이브)와 각각의 역할을 설명할 수 있다.</li>
+        <li>엔코더가 회전을 숫자로 바꾸는 원리와 해상도의 의미를 이해한다.</li>
+        <li>증분형과 절대형 엔코더의 차이, 정전 시 동작 차이를 설명할 수 있다.</li>
+        <li>전류·속도·위치 3중 다단 제어 구조가 왜 필요한지 설명할 수 있다.</li>
+        <li>스마트 서보 드라이브가 보고하는 데이터로 이상 징후를 읽을 수 있다.</li>
+      </ol>
+    </div>
+
+    <!-- ============ 본문 1 ============ -->
+    <section class="sec" id="s3-2-1">
+      <div class="sec-no">3.2.1</div>
+      <h2>서보란 무엇인가<span class="en">모터 + 엔코더 + 드라이브의 한 묶음</span></h2>
+
+      <p class="keyline">
+        서보는 부품 이름이 아니라 <strong>구조의 이름</strong>이다.
+        “시킨 대로 갔는지 확인하고 고치는 모터 시스템” 전체를 가리킨다.
+      </p>
+
+      <p>
+        3.1에서 폐루프를 봤다. 서보는 그 폐루프를 모터 축에 적용한 것이다.
+        일반 모터는 전원을 넣으면 돌고 끊으면 선다. 어디에 섰는지는 모른다.
+        서보 모터는 <strong>축에 엔코더가 붙어 있어</strong> 매 순간 위치를 안다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f3-2-1"><span class="no">그림 3.2-1</span> · 서보 시스템의 세 요소</div>
+          <svg viewBox="0 0 700 316" role="img" aria-label="서보 드라이브 모터 엔코더의 구성과 신호 흐름">
+            <rect class="s-plain" x="20" y="88" width="110" height="60"/>
+            <text class="s-t3" x="75" y="112">상위 제어기</text>
+            <text class="s-t2" x="75" y="134">“12번 랙으로”</text>
+            <path class="s-line-n" d="M136 118 L166 118" marker-end="url(#aA1)"/>
+
+            <rect class="s-fill" x="172" y="80" width="160" height="76"/>
+            <text class="s-tw" x="252" y="108">서보 드라이브</text>
+            <text class="s-t2w" x="252" y="130">명령을 전류로 바꾸고</text>
+            <text class="s-t2w" x="252" y="148">피드백으로 보정</text>
+            <path class="s-line-n" d="M338 104 L378 104" marker-end="url(#aA1)"/>
+            <text class="s-t2" x="358" y="92">전류</text>
+
+            <rect class="s-tint" x="384" y="80" width="140" height="76"/>
+            <text class="s-t" x="454" y="110">서보 모터</text>
+            <text class="s-t2" x="454" y="134">축을 돌린다</text>
+
+            <path class="s-line-n" d="M530 118 L560 118" marker-end="url(#aA1)"/>
+            <rect class="s-plain" x="566" y="88" width="112" height="60"/>
+            <text class="s-t3" x="622" y="112">기구부</text>
+            <text class="s-t2" x="622" y="134">주행 · 승강</text>
+
+            <rect class="s-fill" x="384" y="176" width="140" height="60"/>
+            <text class="s-tw" x="454" y="202">엔코더</text>
+            <text class="s-t2w" x="454" y="222">축에 직접 부착</text>
+            <path class="s-line-n" d="M454 172 L454 160" marker-end="url(#aA1)"/>
+            <path class="s-line-n" d="M384 206 L252 206 L252 162" marker-end="url(#aA1)"/>
+            <text class="s-t2" x="318" y="196">위치 · 속도 피드백</text>
+
+            <rect class="s-tint" x="20" y="256" width="656" height="46"/>
+            <text class="s-t3" x="348" y="278" style="font-weight:700">엔코더가 없으면 서보가 아니다 — 그냥 모터다</text>
+            <text class="s-t2" x="348" y="296">엔코더 이상은 곧 위치 제어 전체의 이상으로 나타난다</text>
+
+            <defs>
+              <marker id="aA1" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>드라이브는 “머리”, 모터는 “근육”, 엔코더는 “감각”이다.
+        셋 중 하나만 이상해도 정밀 제어가 무너진다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b3-2-1"><span class="no">표 3.2-1</span> · 일반 모터와 서보 모터</div>
+      <table>
+        <thead>
+          <tr><th>구분</th><th>일반 모터 (+ 인버터)</th><th>서보 모터</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>위치 파악</td><td>모름</td><td>엔코더로 상시 파악</td></tr>
+          <tr><td>정지 정밀도</td><td>관성으로 밀림. 스토퍼로 잡음</td><td>지정 위치에 정확히 정지·유지</td></tr>
+          <tr><td>부하 변동 시</td><td>속도가 변함</td><td>토크를 늘려 속도 유지</td></tr>
+          <tr><td>물류설비 적용</td><td>일반 컨베이어, 팬, 펌프</td><td>스태커크레인, 소터 다이버터, 로봇 축, 정밀 반송</td></tr>
+          <tr><td>가격 · 복잡도</td><td>낮음</td><td>높음</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <span class="t">개념 · 정지 상태에서도 일하고 있다</span>
+        <p>서보 모터는 <strong>멈춰 있을 때도 힘을 쓰고 있다.</strong>
+        승강축이 화물을 든 채 정지해 있으면 중력에 밀리지 않으려 계속 토크를 낸다.
+        그래서 정지 중인 서보 모터가 따뜻한 것은 정상이다.
+        다만 <strong>평소보다 더 뜨겁다면</strong> 부하가 늘었다는 신호다(3.1 “가려진 고장”).</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 2 ============ -->
+    <section class="sec" id="s3-2-2">
+      <div class="sec-no">3.2.2</div>
+      <h2>엔코더<span class="en">회전을 숫자로 바꾸는 초정밀 센서</span></h2>
+
+      <p class="keyline">
+        엔코더는 <strong>회전 각도를 세는 센서</strong>다.
+        1회전을 몇 조각으로 나누는지가 <strong>해상도</strong>이고, 그것이 <strong>위치 분해능의 상한</strong>이다. 실제 정밀도는 여기에 기구부 요인이 더해져 결정된다.
+      </p>
+
+      <p>
+        원리는 1.1의 광전 센서와 같다. 축에 붙은 원판에 촘촘한 슬릿이 있고,
+        빛이 슬릿을 지날 때마다 펄스가 하나 나온다. 펄스를 세면 얼마나 돌았는지 안다.
+        슬릿이 촘촘할수록 잘게 셀 수 있다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f3-2-2"><span class="no">그림 3.2-2</span> · 엔코더의 원리와 해상도</div>
+          <svg viewBox="0 0 700 300" role="img" aria-label="엔코더 원판과 펄스 발생 원리">
+            <text class="s-hdr" x="180" y="20">회전 원판 + 광전 감지</text>
+            <circle cx="180" cy="120" r="66" fill="#fff" stroke="#0E2E4F" stroke-width="1.6"/>
+            <circle cx="180" cy="120" r="20" fill="#E7EEF6" stroke="#0E2E4F" stroke-width="1.2"/>
+            <g stroke="#0E2E4F" stroke-width="4">
+              <line x1="180" y1="58" x2="180" y2="74"/><line x1="224" y1="76" x2="213" y2="87"/>
+              <line x1="242" y1="120" x2="226" y2="120"/><line x1="224" y1="164" x2="213" y2="153"/>
+              <line x1="180" y1="182" x2="180" y2="166"/><line x1="136" y1="164" x2="147" y2="153"/>
+              <line x1="118" y1="120" x2="134" y2="120"/><line x1="136" y1="76" x2="147" y2="87"/>
+            </g>
+            <text class="s-t2" x="180" y="124">축</text>
+            <rect class="s-tint" x="252" y="100" width="72" height="40"/>
+            <text class="s-t2" x="288" y="118">광전</text>
+            <text class="s-t2" x="288" y="134">감지부</text>
+            <text class="s-t2" x="180" y="212">슬릿이 지날 때마다 펄스 1개</text>
+
+            <line class="s-rule" x1="350" y1="30" x2="350" y2="250"/>
+
+            <text class="s-hdr" x="520" y="20">펄스를 세면 각도를 안다</text>
+            <path d="M390 90 L410 90 L410 62 L430 62 L430 90 L450 90 L450 62 L470 62 L470 90
+                     L490 90 L490 62 L510 62 L510 90 L530 90 L530 62 L550 62 L550 90 L570 90
+                     L570 62 L590 62 L590 90 L610 90 L610 62 L630 62 L630 90 L650 90"
+                  fill="none" stroke="#0E2E4F" stroke-width="2.2"/>
+            <text class="s-t2" x="520" y="112">펄스 신호</text>
+
+            <rect class="s-plain" x="386" y="132" width="268" height="46"/>
+            <text class="s-t3" x="520" y="154">1회전 = 4,096 펄스라면</text>
+            <text class="s-t2" x="520" y="172">한 펄스 = 약 0.088°</text>
+
+            <rect class="s-fill" x="386" y="186" width="268" height="46"/>
+            <text class="s-tw" x="520" y="208" style="font-size:13.5px">이것이 위치 분해능의 상한</text>
+            <text class="s-t2w" x="520" y="226">더 잘게 셀 수 없다</text>
+
+            <rect class="s-tint" x="40" y="256" width="620" height="36"/>
+            <text class="s-t3" x="350" y="280" style="font-weight:700">1.3의 해상도 개념이 회전에 그대로 적용된다</text>
+          </svg>
+        </div>
+        <figcaption>엔코더는 결국 광전 센서다. 1.1에서 배운 원리가 여기서 초정밀 형태로 쓰인다.
+        다만 해상도가 정하는 것은 <strong>분해능의 상한</strong>이며, 실제 도달 정밀도는 기구 강성·백래시·유격이 함께 결정한다.</figcaption>
+      </figure>
+
+      <h3>증분형과 절대형 — 정전 후가 다르다</h3>
+
+      <div class="tbl-label" id="b3-2-2"><span class="no">표 3.2-2</span> · 두 가지 엔코더 방식</div>
+      <table class="sourced">
+        <thead>
+          <tr><th>구분</th><th>증분형 (Incremental)</th><th>절대형 (Absolute)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>세는 방식</td><td>펄스를 <strong>세어 나간다</strong></td><td>각 위치마다 <strong>고유 코드</strong>가 있다</td></tr>
+          <tr><td>전원을 끄면</td><td class="t-warn">세던 숫자가 사라진다</td><td>위치를 그대로 기억</td></tr>
+          <tr><td>복전 후</td><td class="t-warn"><strong>원점 복귀 필요</strong></td><td>즉시 운전 재개</td></tr>
+          <tr><td>노이즈 영향</td><td class="t-warn">펄스를 잘못 세면 계속 어긋남</td><td>매 순간 절대 위치를 읽으므로 자가 복원</td></tr>
+          <tr><td>가격</td><td>저렴</td><td>비쌈</td></tr>
+          <tr><td>물류설비 적용</td><td>일반 반송, 회전 감지</td><td>스태커크레인, 고소 승강축, 로봇 관절</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tbl-src"><b>근거</b> 증분형·절대형 구분과 원점 복귀 동작은 엔코더 제조사 공통 사양이다. <a href="https://kr.misumi-ec.com/pr/vona/mech_20200829/OMRON_encoder01.pdf" target="_blank" rel="noopener">OMRON 기술편 · 로터리 엔코더</a>에 두 방식의 출력 형식과 A상·B상 위상차에 의한 방향 판별이 정리되어 있다</div>
+
+      <div class="note field">
+        <span class="t">현장 · 복전 후 원점 복귀를 한다면</span>
+        <p>정전 복구 후 설비가 <strong>천천히 한쪽 끝으로 이동했다가 돌아오는</strong> 동작을 한다면
+        증분형 엔코더를 쓰는 축이다. 이 동작이 <strong>원점 복귀</strong>이며 정상이다.
+        이때 원점 도그(기준 표식)가 밀려 있으면 <strong>이후 모든 위치가 그만큼 어긋난다.</strong>
+        정전 후 위치 이상이 생겼다면 3.1 실무 보강 1의 STEP 1(영점 계통)부터 확인한다.</p>
+      </div>
+
+      <h3>엔코더를 어디에 다는가 — 반폐루프와 완전폐루프</h3>
+
+      <p>
+        같은 폐루프라도 <strong>엔코더가 붙어 있는 위치</strong>에 따라 두 가지로 갈린다.
+        서보 카탈로그에 나오는 구분이며, 고장 증상이 완전히 다르다.
+      </p>
+
+      <div class="tbl-label" id="b3-2-2b"><span class="no">표 3.2-2b</span> · 피드백을 어디서 받는가</div>
+      <table>
+        <thead>
+          <tr><th>구분</th><th>엔코더 위치</th><th>아는 것 / 모르는 것</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>반폐루프<br>(Semi-closed)</td>
+              <td>모터축</td>
+              <td><strong>모터가 얼마나 돌았는지</strong>만 안다. 벨트·감속기·커플링에서 생긴 어긋남은 모른다</td></tr>
+          <tr><td>완전폐루프<br>(Full-closed)</td>
+              <td>부하 쪽 (리니어 스케일 등)</td>
+              <td><strong>화물이 실제로 어디 있는지</strong>를 직접 잰다. 기구부 오차까지 보정하지만 비싸다</td></tr>
+        </tbody>
+      </table>
+
+      <p>
+        물류설비 대부분은 반폐루프다. 그래서 <strong>모터는 정확한데 화물은 어긋나는</strong> 상황이 생긴다.
+        벨트가 미끄러지거나 커플링이 헐거워지면 엔코더는 “제대로 갔다”고 보고하지만
+        실제 위치는 틀어져 있다. 드라이브에는 아무 알람도 뜨지 않는다.
+      </p>
+
+      <div class="note warn">
+        <span class="t">주의 · 알람 없는 위치 이탈</span>
+        <p>위치가 어긋나는데 서보 알람이 없다면 <strong>반폐루프 구간의 기구부</strong>를 먼저 본다.
+        커플링 고정 나사, 벨트 장력, 감속기 백래시 순이다.
+        엔코더나 드라이브를 의심하는 것은 그다음이다. 피드백 경로 밖에서 벌어진 일은
+        제어기가 알 방법이 없다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 3 ============ -->
+    <section class="sec" id="s3-2-3">
+      <div class="sec-no">3.2.3</div>
+      <h2>다중 루프 제어<span class="en">전류 · 속도 · 위치의 3중 구조</span></h2>
+
+      <p class="keyline">
+        서보는 폐루프가 <strong>하나가 아니라 셋</strong>이다.
+        안쪽 루프일수록 빠르게 돌고, 바깥쪽 루프일수록 큰 그림을 본다.
+        안쪽 루프의 응답 속도(대역폭)는 통상 바깥쪽의 <strong>3~5배 이상</strong>으로 잡는다.
+      </p>
+
+      <p>
+        위치 하나만 보고 제어하면 반응이 늦고 거칠다.
+        그래서 서보 드라이브는 세 겹의 고리를 겹쳐 놓는다.
+        가장 안쪽은 전류(토크), 그다음이 속도, 가장 바깥이 위치다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f3-2-3"><span class="no">그림 3.2-3</span> · 3중 다단 제어 구조</div>
+          <svg viewBox="0 0 700 320" role="img" aria-label="전류 속도 위치의 3중 제어 루프">
+            <rect class="s-plain" x="20" y="20" width="660" height="230" fill="#FAFBFC" stroke="#C9CCD0" stroke-width="1.2"/>
+            <text class="s-t3" x="350" y="44" style="font-weight:700">위치 루프 — 가장 바깥 · 가장 느림 (수 ms)</text>
+            <text class="s-t2" x="350" y="64">“12번 랙 앞에 서라” — 목표 위치와 엔코더 값을 비교</text>
+
+            <rect class="s-tint" x="90" y="76" width="520" height="158"/>
+            <text class="s-t3" x="350" y="100" style="font-weight:700">속도 루프 — 중간 · 더 빠름 (수백 µs)</text>
+            <text class="s-t2" x="350" y="120">“지금 이 속도로 가라” — 목표 속도와 실제 회전 속도를 비교</text>
+
+            <rect class="s-fill" x="160" y="132" width="380" height="90"/>
+            <text class="s-tw" x="350" y="158" style="font-size:13.5px">전류(토크) 루프 — 가장 안쪽 · 가장 빠름 (수십 µs)</text>
+            <text class="s-t2w" x="350" y="180">“이만큼의 힘을 내라” — 목표 전류와 실제 전류를 비교</text>
+            <text class="s-t2w" x="350" y="204">모터에 흐르는 전류를 직접 감지해 즉시 조정</text>
+
+            <text class="s-tl" x="24" y="272" style="font-size:12.5px">안쪽일수록 빠르고 단순 · 바깥쪽일수록 느리고 큰 판단</text>
+
+            <rect class="s-warn" x="380" y="252" width="300" height="34"/>
+            <text class="s-t2" x="530" y="274" style="fill:#8A5A0B;font-weight:700">안쪽 루프가 흔들리면 바깥 전체가 흔들린다</text>
+
+            <text class="s-t2" x="350" y="308">전류 이상 → 속도 불안정 → 위치 헌팅 순으로 증상이 번진다</text>
+
+            <defs>
+              <marker id="aA3" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>세 루프가 동시에, 서로 다른 속도로 돌아간다.
+        증상이 위치에서 보이더라도 원인은 더 안쪽 루프에 있을 수 있다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b3-2-3"><span class="no">표 3.2-3</span> · 루프별 이상 증상</div>
+      <table>
+        <thead>
+          <tr><th>이상 루프</th><th>증상</th><th>확인 지점</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>전류(토크) 루프</td><td>진동·소음, 발열, 과전류 알람</td>
+              <td>기구부 저항 증가, 모터 배선, 커플링 상태</td></tr>
+          <tr><td>속도 루프</td><td>속도가 일정하지 않음, 가감속이 거침</td>
+              <td>엔코더 신호 품질, 부하 급변, 벨트 미끄러짐</td></tr>
+          <tr><td>위치 루프</td><td>정위치 오차, 헌팅</td>
+              <td>원점 위치, 엔코더 커플링, 기구 유격</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note warn">
+        <span class="t">주의 · 증상이 나타나는 곳 ≠ 원인이 있는 곳</span>
+        <p>안쪽 루프가 바깥쪽보다 충분히 빠르지 않으면 두 루프가 서로를 흔들어 진동이 생긴다.
+        그래서 <strong>안쪽 루프의 이상은 반드시 바깥쪽 증상으로 번진다.</strong>
+        반대로 위치 루프만 손봐서는 전류 루프에서 온 문제를 잡을 수 없다.</p>
+        <p>“정위치가 안 맞는다”(위치 루프 증상)의 원인이 <strong>레일 이물로 인한 저항 증가</strong>
+        (전류 루프 문제)인 경우가 흔하다. 위치만 보고 엔코더를 의심하면 헛수고가 된다.
+        <strong>전류·토크 값이 평소보다 높은지</strong>를 먼저 확인하면 방향이 잡힌다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 4 ============ -->
+    <section class="sec" id="s3-2-4">
+      <div class="sec-no">3.2.4</div>
+      <h2>스마트 서보 드라이브<span class="en">모터가 자기 상태를 보고한다</span></h2>
+
+      <p class="keyline">
+        2장에서 센서가 자기 상태를 보고하기 시작했다.
+        서보 드라이브도 마찬가지다. <strong>발열·진동·과부하를 스스로 감시하고 올린다.</strong>
+      </p>
+
+      <p>
+        예전의 서보 드라이브는 알람 램프 하나가 전부였다. 과부하가 걸리면 정지하고 램프가 켜졌다.
+        <strong>왜 걸렸는지, 언제부터 나빠졌는지</strong>는 알 수 없었다.
+        스마트 서보 드라이브는 그 과정을 숫자로 남긴다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f3-2-4"><span class="no">그림 3.2-4</span> · 서보 드라이브가 보고하는 데이터</div>
+          <svg viewBox="0 0 700 300" role="img" aria-label="스마트 서보 드라이브가 보고하는 진단 데이터">
+            <rect class="s-fill" x="240" y="10" width="220" height="44"/>
+            <text class="s-tw" x="350" y="38">스마트 서보 드라이브</text>
+
+            <path class="s-line-n" d="M350 56 L350 74"/>
+            <path class="s-line-n" d="M110 74 L590 74"/>
+            <path class="s-line-n" d="M110 74 L110 96" marker-end="url(#aA4)"/>
+            <path class="s-line-n" d="M270 74 L270 96" marker-end="url(#aA4)"/>
+            <path class="s-line-n" d="M430 74 L430 96" marker-end="url(#aA4)"/>
+            <path class="s-line-n" d="M590 74 L590 96" marker-end="url(#aA4)"/>
+
+            <rect class="s-tint" x="20" y="100" width="180" height="84"/>
+            <text class="s-t3" x="110" y="126" style="font-weight:700">토크 · 전류</text>
+            <text class="s-t2" x="110" y="148">지금 얼마나</text>
+            <text class="s-t2" x="110" y="166">힘을 쓰고 있는가</text>
+
+            <rect class="s-tint" x="208" y="100" width="140" height="84"/>
+            <text class="s-t3" x="278" y="126" style="font-weight:700">온도</text>
+            <text class="s-t2" x="278" y="148">모터 · 드라이브</text>
+            <text class="s-t2" x="278" y="166">내부 온도</text>
+
+            <rect class="s-tint" x="356" y="100" width="140" height="84"/>
+            <text class="s-t3" x="426" y="126" style="font-weight:700">진동</text>
+            <text class="s-t2" x="426" y="148">축 흔들림 ·</text>
+            <text class="s-t2" x="426" y="166">공진 감지</text>
+
+            <rect class="s-tint" x="504" y="100" width="176" height="84"/>
+            <text class="s-t3" x="592" y="126" style="font-weight:700">누적 이력</text>
+            <text class="s-t2" x="592" y="148">가동 시간 · 회전수</text>
+            <text class="s-t2" x="592" y="166">알람 발생 이력</text>
+
+            <rect class="s-plain" x="20" y="196" width="660" height="46"/>
+            <text class="s-t3" x="350" y="218" style="font-weight:700">같은 동작을 반복하는 설비에서는 “평소값”이 명확하다</text>
+            <text class="s-t2" x="350" y="238">평소보다 토크가 15% 높다 → 무언가 무거워졌거나 뻑뻑해졌다</text>
+
+            <rect class="s-tint" x="20" y="252" width="660" height="40"/>
+            <text class="s-t3" x="350" y="277" style="font-weight:700">3.1의 “가려진 고장”을 드러내는 것이 바로 이 데이터다</text>
+
+            <defs>
+              <marker id="aA4" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>물류설비는 같은 동작을 반복한다. 그래서 “평소와 다르다”가 매우 강한 신호가 된다.</figcaption>
+      </figure>
+
+      <div class="note">
+        <span class="t">개념 · 반복 동작이 주는 이점</span>
+        <p>물류설비의 큰 장점은 <strong>같은 동작을 하루에 수천 번 반복</strong>한다는 것이다.
+        같은 구간을 같은 속도로 같은 무게를 들고 이동하므로, 정상 상태의 토크·온도 패턴이 매우 일정하다.
+        그래서 <strong>작은 변화도 눈에 띈다.</strong>
+        제조 공정 설비보다 오히려 예지 보전에 유리한 조건이며, 3.4의 전제가 된다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 5 ============ -->
+    <section class="sec" id="s3-2-5">
+      <div class="sec-no">3.2.5</div>
+      <h2>실무 보강<span class="en">서보 계통 이상을 현장에서 읽는다</span></h2>
+
+      <p class="keyline">
+        서보 알람은 코드가 많고 복잡하다. 그러나 <strong>세 부류</strong>로 나누면 대응이 명확해진다.
+        <strong>과부하 / 피드백 이상 / 위치 편차</strong>.
+      </p>
+
+      <p>
+        아래 다섯 항목은 목차에 명시되어 있지는 않지만
+        <strong>물류설비 운영에서 실제로 필요해 보강한 내용</strong>이다.
+      </p>
+
+      <!-- 1 -->
+      <div class="prac">
+        <h3>1. 서보 알람 세 부류와 대응</h3>
+        <p class="prac-tip">제조사마다 코드는 다르지만 성격은 같다.</p>
+
+        <div class="tbl-label" id="b3-2-4"><span class="no">표 3.2-4</span> · 알람 부류별 대응</div>
+        <table>
+          <thead>
+            <tr><th>부류</th><th>대표 알람</th><th>1차 확인</th><th>조치 주체</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>과부하 계통</td><td>과부하, 과전류, 과열</td>
+                <td>기구부 저항(이물·윤활), 적재 중량, 브레이크 해제 여부</td><td>기술자 1차 가능</td></tr>
+            <tr><td>피드백 계통</td><td>엔코더 이상, 통신 오류, 단선</td>
+                <td>엔코더 케이블 체결·손상, 커넥터 상태</td><td>확인 후 담당자</td></tr>
+            <tr><td>위치 편차 계통</td><td>편차 과대, 추종 오차</td>
+                <td>기구 유격, 원점 위치, 부하 급변</td><td>확인 후 담당자</td></tr>
+            <tr><td class="t-warn">전원 · 회생 계통</td><td class="t-warn">전압 이상, 회생 과전압</td>
+                <td class="t-warn">전기 계통 — 접근 금지</td><td class="t-warn">즉시 담당자</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note field">
+          <span class="t">현장 · 브레이크를 먼저 의심한다</span>
+          <p>승강축 서보에는 정전 시 화물이 떨어지지 않도록 <strong>전자 브레이크</strong>가 붙어 있다.
+          이 브레이크가 제대로 풀리지 않은 채 모터가 돌면 <strong>즉시 과부하</strong>가 걸린다.
+          승강축에서 과부하 알람이 반복되면 브레이크 동작음(딸깍)이 나는지 확인한다.
+          이 한 가지 확인으로 원인이 특정되는 경우가 많다.</p>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="prac">
+        <h3>2. 엔코더 케이블은 특별 취급 대상</h3>
+        <p class="prac-tip">가장 예민하고, 가장 자주 문제가 되는 배선.</p>
+
+        <p>
+          엔코더 신호는 미약하고 고속이다. 그래서 1.4에서 본 전기적 노이즈에 매우 취약하다.
+          물류설비는 케이블 베어를 따라 계속 움직이므로 <strong>굴곡 피로</strong>도 쌓인다.
+        </p>
+        <ul>
+          <li><strong>동력선과 나란히 묶지 않는다</strong> — 인버터 노이즈가 그대로 실린다</li>
+          <li><strong>케이블 베어 안의 굴곡 반경</strong> — 규정보다 급하게 꺾이면 수명이 급감한다</li>
+          <li><strong>커넥터 체결과 잠금</strong> — 진동으로 미세하게 풀리면 간헐적 오류가 난다</li>
+          <li><strong>실드 접지</strong> — 담당자 영역이지만, 접지선 탈락은 눈으로 확인 가능하다</li>
+        </ul>
+        <div class="note warn">
+          <span class="t">주의 · 간헐적 엔코더 오류의 무서움</span>
+          <p>엔코더 신호가 순간적으로 끊기면 제어기는 <strong>위치를 잘못 알게 된다.</strong>
+          증분형이라면 그 오차가 이후 계속 누적된다.
+          “가끔 엔코더 알람이 뜨는데 리셋하면 된다”는 상태를 방치하면,
+          어느 순간 <strong>랙에 포크를 밀어 넣는 사고</strong>로 이어질 수 있다.
+          간헐적 피드백 오류는 반드시 기록하고 에스컬레이션한다.</p>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="prac">
+        <h3>3. 토크 값으로 기구 상태 읽기</h3>
+        <p class="prac-tip">고장 나기 전에 잡을 수 있는 가장 좋은 지표.</p>
+
+        <p>
+          같은 구간을 같은 조건으로 이동할 때의 토크 값은 <strong>기구부 상태를 그대로 반영</strong>한다.
+        </p>
+        <div class="tbl-label" id="b3-2-5"><span class="no">표 3.2-5</span> · 토크 변화가 말해 주는 것</div>
+        <table>
+          <thead>
+            <tr><th>토크 패턴</th><th>가능성</th><th>조치</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>전 구간에서 서서히 상승</td><td>윤활 부족, 베어링 마모</td><td>윤활 상태 확인 후 보고</td></tr>
+            <tr><td>특정 구간에서만 급등</td><td>해당 위치에 이물 · 레일 손상</td><td>그 구간을 육안 점검</td></tr>
+            <tr><td>가속 시에만 높음</td><td>적재 중량 증가, 관성 변화</td><td>운용 조건 변경 여부 확인</td></tr>
+            <tr><td>불규칙하게 튐</td><td>커플링 헐거움, 벨트 미끄러짐</td><td>기구 결합부 점검</td></tr>
+            <tr><td>정지 중에도 높음</td><td>브레이크 미해제, 축 간섭</td><td class="t-warn">즉시 확인 — 발열·손상 위험</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 4 -->
+      <div class="prac">
+        <h3>4. 안전과 관련된 주의</h3>
+        <p class="prac-tip">서보 축은 힘이 세다. 안전 규칙이 다르다.</p>
+
+        <ul>
+          <li><strong>승강축 아래에 들어가지 않는다</strong> — 브레이크가 있어도 정비 시에는 반드시 기계적 지지대를 쓴다</li>
+          <li><strong>서보 온 상태에서 축을 손으로 만지지 않는다</strong> — 위치 유지 토크가 걸려 있다</li>
+          <li><strong>전원 차단 후에도 잔류 전압이 있다</strong> — 드라이브 내부 커패시터 방전까지 대기</li>
+          <li><strong>안전 기능(STO 등)을 임의로 우회하지 않는다</strong> — 1.2 안전 센서와 같은 원칙</li>
+        </ul>
+        <div class="note warn">
+          <span class="t">주의 · 티칭 · 수동 조작 시</span>
+          <p>로봇이나 크레인을 수동으로 움직일 때는 <strong>속도 제한 모드</strong>가 걸려 있어야 한다.
+          이 제한을 해제하는 것은 담당자 권한이며, 해제 상태에서의 수동 조작은
+          가장 사고가 잦은 상황이다.</p>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="prac">
+        <h3>5. 현장 점검 체크리스트</h3>
+        <p class="prac-tip">서보 계통 순회 점검 항목.</p>
+
+        <h4>일상</h4>
+        <ul class="check">
+          <li>모터·드라이브 온도가 평소 범위 안인가 (손으로 만지지 말고 화면 또는 열화상으로)</li>
+          <li>같은 구간의 토크 값이 평소와 비슷한가</li>
+          <li>동작 소음·진동이 달라지지 않았는가</li>
+          <li>드라이브의 알람 이력에 리셋으로 넘긴 간헐적 오류가 쌓여 있지 않은가</li>
+        </ul>
+
+        <h4>기구</h4>
+        <ul class="check">
+          <li>커플링·벨트·감속기 결합부에 유격이나 이음이 없는가</li>
+          <li>레일·가이드에 이물이 없고 윤활이 유지되는가</li>
+          <li>원점 도그가 제자리에 있는가</li>
+        </ul>
+
+        <h4>배선</h4>
+        <ul class="check">
+          <li>엔코더 케이블이 동력선과 나란히 묶여 있지 않은가</li>
+          <li>케이블 베어 안에서 급하게 꺾이거나 눌린 곳이 없는가</li>
+          <li>엔코더 커넥터가 끝까지 체결·잠금되어 있는가</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <span class="t">개념 · 이 장이 남기는 것</span>
+        <p>서보는 모터·엔코더·드라이브가 한 묶음이 된 폐루프 구조이고(본문 1),
+        엔코더의 해상도가 위치 정밀도의 상한을 정한다(본문 2).
+        제어는 전류·속도·위치 3중 루프로 겹쳐 있어 증상과 원인의 층이 다를 수 있다(본문 3).
+        스마트 서보 드라이브는 토크·온도·진동을 보고해 “가려진 고장”을 드러낸다(본문 4).<br>
+        다음 장 3.3에서는 이 모든 데이터가 오가는 길 —
+        <strong>현장 통신 프로토콜</strong>을 다룬다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 참고자료 ============ -->
+    <section class="ref" id="r3-2">
+      <div class="sec-no">참고자료</div>
+      <h2>참고자료</h2>
+
+      <h3>1. 용어 정리</h3>
+      <dl class="terms">
+        <dt id="t3-2-1">서보 (Servo)</dt>
+        <dd>목표대로 움직였는지 확인하고 보정하는 구조를 갖춘 구동 시스템. 모터·엔코더·드라이브가 한 세트다.</dd>
+        <dt id="t3-2-2">엔코더 (Encoder)</dt>
+        <dd>회전 각도나 직선 이동량을 전기 신호(펄스 또는 코드)로 바꾸는 센서. 서보의 피드백 요소다.</dd>
+        <dt id="t3-2-3">증분형 엔코더 (Incremental)</dt>
+        <dd>기준점에서부터 펄스를 세어 위치를 파악한다. 전원이 끊기면 세던 값이 사라져 원점 복귀가 필요하다.</dd>
+        <dt id="t3-2-4">절대형 엔코더 (Absolute)</dt>
+        <dd>위치마다 고유한 코드를 갖고 있어 전원이 끊겼다 들어와도 위치를 그대로 안다.</dd>
+        <dt id="t3-2-5">반폐루프 / 완전폐루프 (Semi-closed / Full-closed)</dt>
+        <dd>엔코더를 <strong>모터축</strong>에 달면 반폐루프, <strong>부하 쪽</strong>(리니어 스케일 등)에 달면 완전폐루프다.
+        반폐루프는 벨트·커플링·감속기에서 생긴 어긋남을 알지 못한다.</dd>
+        <dt id="t3-2-6">원점 복귀 (Homing)</dt>
+        <dd>기준 위치를 다시 찾는 동작. 증분형 엔코더를 쓰는 축에서 복전 후 필요하다.</dd>
+        <dt id="t3-2-7">토크 (Torque)</dt>
+        <dd>축을 돌리는 <strong>회전력(모멘트)</strong>. 힘에 회전 중심으로부터의 거리를 곱한 값이며 단위는 <strong>N·m</strong>다. 모터 전류에 비례하며, 기구부 저항이 커지면 함께 커진다.</dd>
+        <dt id="t3-2-8">다중 루프 제어 (Cascade control)</dt>
+        <dd>전류–속도–위치처럼 여러 제어 루프를 겹쳐 구성하는 방식. 안쪽일수록 빠르게 동작한다.</dd>
+        <dt id="t3-2-9">전자 브레이크</dt>
+        <dd>전원이 끊기면 자동으로 축을 잠그는 장치. 승강축에서 화물 낙하를 막는다.</dd>
+        <dt id="t3-2-10">STO (Safe Torque Off)</dt>
+        <dd>안전 회로가 동작하면 모터에 토크를 발생시키지 않도록 하는 안전 기능. 임의 우회는 금지된다.</dd>
+      </dl>
+
+      <h3>2. 관련 이미지 — 실물과 도해로 확인하기</h3>
+      <p class="ref-intro">
+        본문에 나온 순서대로 정리했다. 센서·공압은 썬덴코리아 파트너사, 제어기는 미쓰비시전기, 로봇은 야스카와·뉴로메카 기준이다.
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src">OMRON</span>
+          <a href="https://kr.misumi-ec.com/pr/vona/mech_20200829/OMRON_encoder01.pdf" target="_blank" rel="noopener">기술편 · 로터리 엔코더 (한국어 PDF · 17p)</a>
+          <span class="where">본문 3.2.2 — 인크리멘털형과 앱솔루트형의 차이, A상·B상 출력 타이밍으로 회전 방향을 읽는 방법, 방향 판별 유닛</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/catalog/products/motion-control-sensors/motion-control-sensors/c/g576775" target="_blank" rel="noopener">모션 센서 — 엔코더 제품군</a>
+          <span class="where">본문 2 — 리니어·앱솔루트 엔코더와 모터 피드백 시스템의 실물 형상과 축 결합 방식</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/mobile.do?act=product_list_mobile&amp;parent_id=528&amp;cate_id=2" target="_blank" rel="noopener">MELSEC iQ-R 시리즈 — 모션 제어 CPU</a>
+          <span class="where">본문 1 · 3 — 다축 서보를 통합 제어하는 모듈 구성</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=10&amp;cate_id=2" target="_blank" rel="noopener">PLC (MELSEC) — 서보 드라이브 연계 제품</a>
+          <span class="where">본문 4 — 드라이브가 보고하는 데이터가 상위에서 어떻게 보이는지</span>
+        </li>
+        <li>
+          <span class="src">Yaskawa</span>
+          <a href="https://www.motoman.com/en-us/applications/palletizing" target="_blank" rel="noopener">팔레타이징 로봇 — 다축 서보 시스템</a>
+          <span class="where">본문 1 · 3 — 여러 서보 축이 협조 동작하는 실제 설비</span>
+        </li>
+        <li>
+          <span class="src">Yaskawa</span>
+          <a href="https://www.yaskawa-global.com/newsrelease/product/36574" target="_blank" rel="noopener">MOTOMAN-PL 시리즈 팔레타이징 로봇 (제품 발표 자료)</a>
+          <span class="where">본문 4 — 에너지 절감·유지보수성 개선이 서보 제어와 어떻게 연결되는지</span>
+        </li>
+        <li>
+          <span class="src">뉴로메카</span>
+          <a href="https://www.neuromeka.com/indy" target="_blank" rel="noopener">협동로봇 인디(Indy) — 관절 서보와 충돌 감지</a>
+          <span class="where">본문 3 · 4 — 토크 값을 실시간 감시해 충돌을 판단하는 국내 사례</span>
+        </li>
+        <li>
+          <span class="src">SANTEST</span>
+          <a href="https://www.santest.co.jp/en/product/index.php" target="_blank" rel="noopener">자기변형식 변위 센서 (Magnetostrictive transducer) — 직선축 절대 위치</a>
+          <span class="where">본문 2 — 썬덴코리아 파트너사(일본). 회전 엔코더 대신 <strong>직선 스트로크를 절대값으로</strong> 읽는 방식.
+          정전 후 원점 복귀가 필요 없어 실린더·승강축에 쓰인다</span>
+        </li>
+        <li>
+          <span class="src">SANTEST</span>
+          <a href="https://www.santest.co.jp/en/product/use.php" target="_blank" rel="noopener">용도별 제품 목록 — 실린더 내장형 · 프로파일형</a>
+          <span class="where">본문 2 · 실무 보강 3 — 실린더 안에 센서를 넣어 스트로크를 상시 감시하는 구성.
+          공압·유압 기구부의 상태 감시로 이어진다</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/catalog/products/distance-sensors/laser-distance-sensors/od2000/od2000/c/g547590?tab=overview" target="_blank" rel="noopener">레이저 거리 센서 — 직선축 위치 피드백</a>
+          <span class="where">본문 2 — 회전 엔코더 대신 직선 거리로 위치를 피드백하는 방식</span>
+        </li>
+      </ol>
+
+      <h3>3. 학술 · 표준 근거 자료 — 심화 학습용</h3>
+      <p class="ref-intro">
+        무료로 볼 수 있는 자료를 우선했다.<br>
+        <span class="src std">표준</span> 국제 규격 · <span class="src paper">논문</span> 공개 학술 자료
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/63115" target="_blank" rel="noopener">IEC 61496-1 : 기계 안전 — ESPE</a>
+          <span class="where">실무 보강 4 — 서보 축의 안전 기능이 연동되는 안전 시스템의 요구사항</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://standards.globalspec.com/std/14302628/IEC%2061496-1" target="_blank" rel="noopener">IEC 61496-1 개요 및 ISO 13849-1 연계</a>
+          <span class="where">실무 보강 4 — STO 같은 안전 기능의 성능 수준(PL) 결정 근거</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/68534" target="_blank" rel="noopener">IEC 61131-9 : SDCI (IO-Link)</a>
+          <span class="where">본문 4 — 드라이브·센서의 진단 데이터가 상위로 전달되는 통신 규격</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://www.bipm.org/documents/20126/2071204/JCGM_200_2012.pdf" target="_blank" rel="noopener">JCGM 200:2012 국제 계량 용어집 VIM (무료 PDF)</a>
+          <span class="where">본문 2 — 엔코더 해상도·분해능의 표준 정의</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8470825/" target="_blank" rel="noopener">Research on Coil Impedance of Self-Inductive Displacement Sensor Considering Core Eddy Current (PMC 공개)</a>
+          <span class="where">본문 1 · 3 — 자기 부상 베어링의 고속 폐루프 제어에서 변위 센서의 역할.
+          다중 루프 제어의 대표적 응용 사례</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://www.mdpi.com/2076-3417/11/21/10134" target="_blank" rel="noopener">Analysis of Inductive Displacement Sensors with Large Range and Nanoscale Resolution (MDPI)</a>
+          <span class="where">본문 2 — 측정 범위와 해상도를 동시에 확보하는 것이 왜 어려운지의 학술적 분석</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://www.mdpi.com/1424-8220/22/19/7444" target="_blank" rel="noopener">Design and Analysis of Small Size Eddy Current Displacement Sensor (Sensors, MDPI)</a>
+          <span class="where">본문 2 — 소형 고정밀 위치 센서의 설계 제약과 성능 한계</span>
+        </li>
+      </ol>
+
+      <h3>4. 이어지는 장과의 연결</h3>
+      <ul style="font-size:13.5px">
+        <li><strong>3.3 현장 통신 프로토콜</strong> — 엔코더·드라이브 데이터가 오가는 통신 경로</li>
+        <li><strong>3.4 예지 보전</strong> — 본문 4의 토크·온도·진동 데이터가 정비 판단으로</li>
+        <li><strong>4.2 에지 컴퓨팅 정책</strong> — 고속 제어 루프를 상위에 의존할 수 없는 이유</li>
+        <li><strong>4.3 생존형 네트워크 인프라</strong> — 서보 통신이 끊겼을 때의 설비 거동</li>
+      </ul>
+    </section>

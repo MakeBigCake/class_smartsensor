@@ -1,0 +1,658 @@
+    <div class="lesson-tag">1.3</div>
+    <h1>현장 확인 성능 지표</h1>
+    <p class="subtitle">데이터의 신뢰성 지표 — 이 값을 얼마나 믿을 수 있는가</p>
+
+    <p class="lead">
+      스태커크레인이 랙 앞에 섰는데 포크가 5mm 어긋나 들어간다. 센서는 “정위치”라고 보고했다.
+      센서가 고장 난 것이 아니다. 그 센서가 <strong>낼 수 있는 값의 한계</strong>가 그만큼이었을 뿐이다.
+      값이 있다고 해서 그 값이 맞는 것은 아니다. 이 장은 <strong>값의 품질</strong>을 읽는 법이다.
+    </p>
+
+    <div class="goals">
+      <h4>이 장을 읽고 나면</h4>
+      <ol>
+        <li>정확도(치우침)와 정밀도(흩어짐)를 구분하고, 현장 증상으로 어느 쪽 문제인지 판별할 수 있다.</li>
+        <li>감도와 해상도의 차이를 설명하고, 왜 감도가 좋아도 해상도가 나쁠 수 있는지 이해한다.</li>
+        <li>선형성 오차가 왜 “구간마다 다르게 틀리는” 증상으로 나타나는지 설명할 수 있다.</li>
+        <li>반복 정밀도가 나쁜 센서의 현장 증상(값이 튄다)을 알아보고 원인 계통을 좁힐 수 있다.</li>
+        <li>데이터시트에서 네 가지 지표를 찾아 요구 조건과 대조할 수 있다.</li>
+      </ol>
+    </div>
+
+    <!-- ============ 본문 1 ============ -->
+    <section class="sec" id="s1-3-1">
+      <div class="sec-no">1.3.1</div>
+      <h2>값을 믿는다는 것<span class="en">정확도와 정밀도는 다른 문제다</span></h2>
+
+      <p class="keyline">
+        <strong>정확도</strong>는 참값에서 얼마나 치우쳤는가, <strong>정밀도</strong>는 값끼리 얼마나 흩어졌는가다.
+        치우친 것은 보정으로 잡히고, 흩어진 것은 보정으로 잡히지 않는다.
+      </p>
+
+      <p>
+        현장에서 “센서가 부정확하다”는 말은 두 가지 전혀 다른 상황을 뭉뚱그린 표현이다.
+        하나는 <strong>항상 같은 만큼 틀리는</strong> 경우고, 다른 하나는 <strong>잴 때마다 다른 값이 나오는</strong> 경우다.
+        이 둘은 원인도 조치도 완전히 다르다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f1-3-1"><span class="no">그림 1.3-1</span> · 정확도와 정밀도의 네 가지 조합</div>
+          <svg viewBox="0 0 700 296" role="img" aria-label="정확도와 정밀도의 네 가지 조합을 과녁으로 표현">
+            <text class="s-hdr" x="200" y="20">정밀도 높음 · 값이 모여 있다</text>
+            <text class="s-hdr" x="500" y="20">정밀도 낮음 · 값이 흩어진다</text>
+            <line class="s-rule" x1="60" y1="30" x2="680" y2="30"/>
+
+            <text class="s-tl" x="14" y="90" style="font-weight:700;fill:#0E2E4F">정확도</text>
+            <text class="s-tl" x="14" y="110" style="font-weight:700;fill:#0E2E4F">높음</text>
+
+            <rect class="s-tint" x="60" y="42" width="280" height="104"/>
+            <circle cx="140" cy="94" r="34" fill="#fff" stroke="#0E2E4F" stroke-width="1.2"/>
+            <circle cx="140" cy="94" r="18" fill="#fff" stroke="#0E2E4F" stroke-width="1"/>
+            <circle cx="138" cy="92" r="3.4" fill="#0E2E4F"/><circle cx="143" cy="96" r="3.4" fill="#0E2E4F"/>
+            <circle cx="140" cy="98" r="3.4" fill="#0E2E4F"/><circle cx="144" cy="90" r="3.4" fill="#0E2E4F"/>
+            <text class="s-t3" x="256" y="86" style="font-weight:700">이상적</text>
+            <text class="s-t2" x="256" y="108">믿고 쓸 수 있는 값</text>
+
+            <rect class="s-warn" x="360" y="42" width="320" height="104"/>
+            <circle cx="440" cy="94" r="34" fill="#fff" stroke="#A67C1F" stroke-width="1.2"/>
+            <circle cx="440" cy="94" r="18" fill="#fff" stroke="#A67C1F" stroke-width="1"/>
+            <circle cx="424" cy="80" r="3.4" fill="#8A5A0B"/><circle cx="456" cy="104" r="3.4" fill="#8A5A0B"/>
+            <circle cx="432" cy="110" r="3.4" fill="#8A5A0B"/><circle cx="452" cy="78" r="3.4" fill="#8A5A0B"/>
+            <text class="s-t3" x="576" y="80" style="font-weight:700;fill:#8A5A0B">값이 튄다</text>
+            <text class="s-t2" x="576" y="102" style="fill:#8A5A0B">평균은 맞는데 매번 다르다</text>
+            <text class="s-t2" x="576" y="122" style="fill:#8A5A0B">보정으로 못 잡는다</text>
+
+            <text class="s-tl" x="14" y="204" style="font-weight:700;fill:#0E2E4F">정확도</text>
+            <text class="s-tl" x="14" y="224" style="font-weight:700;fill:#0E2E4F">낮음</text>
+
+            <rect class="s-plain" x="60" y="156" width="280" height="104"/>
+            <circle cx="140" cy="208" r="34" fill="#fff" stroke="#8C9298" stroke-width="1.2"/>
+            <circle cx="140" cy="208" r="18" fill="#fff" stroke="#8C9298" stroke-width="1"/>
+            <circle cx="160" cy="192" r="3.4" fill="#0E2E4F"/><circle cx="165" cy="196" r="3.4" fill="#0E2E4F"/>
+            <circle cx="162" cy="198" r="3.4" fill="#0E2E4F"/><circle cx="166" cy="190" r="3.4" fill="#0E2E4F"/>
+            <text class="s-t3" x="256" y="200" style="font-weight:700">치우쳤다</text>
+            <text class="s-t2" x="256" y="222">영점 조절로 잡힌다</text>
+
+            <rect class="s-plain" x="360" y="156" width="320" height="104"/>
+            <circle cx="440" cy="208" r="34" fill="#fff" stroke="#8C9298" stroke-width="1.2"/>
+            <circle cx="440" cy="208" r="18" fill="#fff" stroke="#8C9298" stroke-width="1"/>
+            <circle cx="418" cy="186" r="3.4" fill="#0E2E4F"/><circle cx="466" cy="228" r="3.4" fill="#0E2E4F"/>
+            <circle cx="470" cy="184" r="3.4" fill="#0E2E4F"/><circle cx="416" cy="232" r="3.4" fill="#0E2E4F"/>
+            <text class="s-t3" x="576" y="200" style="font-weight:700">쓸 수 없다</text>
+            <text class="s-t2" x="576" y="222">센서 · 설치 조건부터 재검토</text>
+
+            <text class="s-t2" x="350" y="286">치우침은 조정으로, 흩어짐은 조건 개선으로만 줄어든다</text>
+          </svg>
+        </div>
+        <figcaption>같은 “부정확”이라도 오른쪽(흩어짐)은 영점 조절로 해결되지 않는다.
+        값이 튀는데 영점만 반복해 맞추는 것은 시간 낭비다.</figcaption>
+      </figure>
+
+      <p>
+        네 가지 지표는 이 두 축을 더 세분한 것이다. <strong>감도·선형성</strong>은 “얼마나 제대로 옮기는가”,
+        <strong>반복 정밀도</strong>는 “얼마나 흔들리지 않는가”, <strong>해상도</strong>는 “얼마나 잘게 나누는가”를 말한다.
+      </p>
+
+      <div class="tbl-label" id="b1-3-1"><span class="no">표 1.3-1</span> · 네 가지 지표 한눈에</div>
+      <table>
+        <thead>
+          <tr><th>지표</th><th>묻는 것</th><th>나쁠 때의 현장 증상</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>감도<br>Sensitivity</td><td>입력이 조금 변할 때 출력이 얼마나 변하는가</td>
+              <td>변화가 있는데 설비가 반응하지 않음</td></tr>
+          <tr><td>선형성<br>Linearity</td><td>구간에 상관없이 같은 비율로 변하는가</td>
+              <td>가까울 땐 맞는데 멀어지면 틀림 (또는 반대)</td></tr>
+          <tr><td>반복 정밀도<br>Repeatability</td><td>같은 조건에서 몇 번을 재도 같은 값인가</td>
+              <td>값이 튄다. 정위치 판정이 들쭉날쭉</td></tr>
+          <tr><td>해상도<br>Resolution</td><td>구별할 수 있는 최소 변화량은 얼마인가</td>
+              <td>미세한 변화가 아예 값에 나타나지 않음</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <span class="t">개념 · 왜 기술자가 이걸 알아야 하나</span>
+        <p>지표를 계산할 일은 없다. 그러나 <strong>“센서가 고장인가, 원래 이만큼인가”</strong>를 가르는 데 반드시 필요하다.
+        해상도 1mm짜리 센서에 0.5mm 정밀도를 기대하면 아무리 교체해도 해결되지 않는다.
+        이 판단이 서면 에스컬레이션 내용이 “센서 불량”에서 “요구 정밀도와 사양 불일치”로 바뀐다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 2 ============ -->
+    <section class="sec" id="s1-3-2">
+      <div class="sec-no">1.3.2</div>
+      <h2>감도와 해상도<span class="en">얼마나 민감한가 vs 얼마나 잘게 나누는가</span></h2>
+
+      <p class="keyline">
+        감도는 <strong>기울기</strong>, 해상도는 <strong>계단의 높이</strong>다.
+        기울기가 가팔라도 계단이 크면 미세한 변화는 여전히 사라진다.
+      </p>
+
+      <p>
+        <span class="kw">감도(Sensitivity)</span>는 입력 물리량이 1만큼 변할 때 출력 신호가 얼마나 변하는가다.
+        거리 센서라면 “1mm 움직일 때 출력 전압이 몇 mV 변하는가”가 감도다.
+        감도가 높으면 작은 변화도 큰 신호로 나타나므로 뒤에서 다루기 쉬워진다.
+      </p>
+
+      <p>
+        <span class="kw">해상도(Resolution)</span>는 센서가 <strong>구별할 수 있는 최소 변화량</strong>이다.
+        디지털 값으로 바꾸는 과정에서 값이 계단처럼 뚝뚝 끊기는데, 그 계단 하나의 크기가 해상도다.
+        해상도가 1mm라면 0.4mm의 이동은 값이 전혀 변하지 않거나 갑자기 1mm 뛴다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f1-3-2"><span class="no">그림 1.3-2</span> · 감도(기울기)와 해상도(계단)</div>
+          <svg viewBox="0 0 700 300" role="img" aria-label="감도는 기울기 해상도는 계단 높이로 표현한 그래프">
+            <text class="s-hdr" x="180" y="20">감도 = 그래프의 기울기</text>
+            <line class="s-line" x1="60" y1="230" x2="330" y2="230"/>
+            <line class="s-line" x1="60" y1="230" x2="60" y2="46"/>
+            <text class="s-t2" x="195" y="256">입력 물리량 (거리 · mm)</text>
+            <text class="s-t2" x="32" y="140" transform="rotate(-90 32 140)">출력</text>
+            <line x1="60" y1="230" x2="320" y2="70" stroke="#0E2E4F" stroke-width="2.4"/>
+            <text class="s-t3" x="228" y="86" style="fill:#0E2E4F;font-weight:700">감도 높음</text>
+            <line x1="60" y1="230" x2="320" y2="168" stroke="#8C9298" stroke-width="2" stroke-dasharray="6 4"/>
+            <text class="s-t2" x="262" y="206">감도 낮음</text>
+            <text class="s-t2" x="195" y="278">같은 이동량이 더 큰 신호 변화로 나타난다</text>
+
+            <line class="s-rule" x1="360" y1="34" x2="360" y2="270"/>
+
+            <text class="s-hdr" x="530" y="20">해상도 = 계단 하나의 크기</text>
+            <line class="s-line" x1="404" y1="230" x2="674" y2="230"/>
+            <line class="s-line" x1="404" y1="230" x2="404" y2="46"/>
+            <text class="s-t2" x="539" y="256">입력 물리량 (거리 · mm)</text>
+            <path d="M404 214 L444 214 L444 182 L484 182 L484 150 L524 150 L524 118 L564 118 L564 86 L604 86 L604 62 L644 62"
+                  fill="none" stroke="#0E2E4F" stroke-width="2.4"/>
+            <line x1="404" y1="222" x2="644" y2="54" stroke="#8C9298" stroke-width="1.4" stroke-dasharray="5 4"/>
+            <line x1="484" y1="182" x2="484" y2="150" stroke="#A67C1F" stroke-width="3"/>
+            <text class="s-t2" x="588" y="206" style="fill:#8A5A0B">계단 1칸 = 해상도</text>
+            <text class="s-t2" x="539" y="278">계단보다 작은 변화는 값에 나타나지 않는다</text>
+          </svg>
+        </div>
+        <figcaption>왼쪽은 감도, 오른쪽은 해상도. 감도가 높아도(가파른 직선) 계단이 크면
+        계단 안의 변화는 사라진다. 두 지표는 독립적이다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b1-3-2"><span class="no">표 1.3-2</span> · 물류설비에서 요구되는 해상도 감각</div>
+      <table>
+        <thead>
+          <tr><th>적용</th><th>필요한 구별 단위</th><th>부족하면 생기는 일</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>컨베이어 박스 유무</td><td>있다/없다 (해상도 개념 없음)</td><td>—</td></tr>
+          <tr><td>소터 갭 관리</td><td>수 cm</td><td>박스가 붙어 들어가 오분류</td></tr>
+          <tr><td>스태커크레인 정위치</td><td>수 mm</td><td>포크가 랙에 걸리거나 화물 손상</td></tr>
+          <tr><td>AGV 도킹 · 충전 접점</td><td>수 mm</td><td>도킹 실패 반복, 접점 마모</td></tr>
+          <tr><td>로드셀 중량 판정</td><td>정격의 0.1% 수준</td><td>과적 판정 누락 또는 과잉 정지</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note field">
+        <span class="t">현장 · 감도를 올리면 다 해결되나</span>
+        <p>아니다. 감도를 올리면 신호와 함께 <strong>노이즈도 같이 커진다.</strong>
+        감도 조정 볼륨을 끝까지 올려 놓은 광전 센서가 오히려 오검출을 더 내는 이유가 이것이다.
+        감도는 “필요한 만큼만” 올리는 것이 원칙이며, 조정 자체는 담당자 영역이다.
+        기술자는 <strong>감도 볼륨이 끝까지 돌아가 있는지</strong>를 확인해 기록하면 된다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 3 ============ -->
+    <section class="sec" id="s1-3-3">
+      <div class="sec-no">1.3.3</div>
+      <h2>선형성<span class="en">구간마다 다르게 틀리는 문제</span></h2>
+
+      <p class="keyline">
+        <strong>“가까울 땐 맞는데 멀어지면 틀린다”</strong>는 증상은 거의 언제나 선형성 문제다.
+        고장이 아니라 그 센서의 특성일 수 있다.
+      </p>
+
+      <p>
+        <span class="kw">선형성(Linearity)</span>은 입력과 출력이 <strong>측정 범위 전체에서</strong>
+        같은 비율을 유지하는 정도다. 이상적인 센서라면 그래프가 완전한 직선이지만,
+        실제 센서는 범위의 양 끝으로 갈수록 직선에서 벗어난다.
+        이 벗어난 정도를 <span class="kw">선형성 오차</span>라 하고, 보통 풀스케일 대비 백분율(%FS)로 표기한다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f1-3-3"><span class="no">그림 1.3-3</span> · 선형성 오차가 나타나는 방식</div>
+          <svg viewBox="0 0 700 300" role="img" aria-label="이상 직선과 실제 곡선의 차이로 표현한 선형성 오차">
+            <line class="s-line" x1="90" y1="240" x2="640" y2="240"/>
+            <line class="s-line" x1="90" y1="240" x2="90" y2="40"/>
+            <text class="s-t2" x="365" y="266">입력 물리량 — 측정 범위 전체</text>
+            <text class="s-t2" x="58" y="140" transform="rotate(-90 58 140)">출력</text>
+
+            <line x1="90" y1="240" x2="630" y2="60" stroke="#8C9298" stroke-width="1.6" stroke-dasharray="6 4"/>
+            <text class="s-t2" x="560" y="68">이상 직선</text>
+
+            <path d="M90 240 Q210 176 330 148 Q470 116 630 60" fill="none" stroke="#0E2E4F" stroke-width="2.6"/>
+            <text class="s-t3" x="300" y="128" style="fill:#0E2E4F;font-weight:700">실제 출력 곡선</text>
+
+            <line x1="330" y1="148" x2="330" y2="184" stroke="#A67C1F" stroke-width="3"/>
+            <circle cx="330" cy="148" r="4" fill="#0E2E4F"/>
+            <circle cx="330" cy="184" r="4" fill="#8C9298"/>
+            <text class="s-t2" x="410" y="176" style="fill:#8A5A0B">선형성 오차 (최대 편차)</text>
+
+            <rect class="s-warn" x="90" y="270" width="270" height="26"/>
+            <text class="s-t2" x="225" y="288" style="fill:#8A5A0B">근거리 — 오차 작음</text>
+            <rect class="s-warn" x="370" y="270" width="270" height="26"/>
+            <text class="s-t2" x="505" y="288" style="fill:#8A5A0B">원거리 — 오차 커짐</text>
+          </svg>
+        </div>
+        <figcaption>실제 센서는 범위 중간에서 이상 직선과 가장 크게 벌어진다.
+        “가까울 때와 멀 때의 정확도가 다르다”는 현장 경험이 이 그래프의 다른 표현이다.</figcaption>
+      </figure>
+
+      <p>
+        선형성 오차가 문제가 되는 곳은 <strong>값을 그대로 쓰는 자리</strong>다.
+        박스 유무처럼 있다/없다만 보는 자리는 선형성과 무관하다.
+        반면 스태커크레인의 위치 결정, 슈트 적재 높이 판정, 로드셀 중량처럼
+        <strong>값의 크기로 판단하는 자리</strong>에서는 선형성이 곧 판정의 신뢰도다.
+      </p>
+
+      <div class="note warn">
+        <span class="t">주의 · 설치 위치가 선형성을 망친다</span>
+        <p>사양상 선형성이 좋은 센서라도 <strong>측정 범위의 양 끝에 걸쳐 설치하면</strong>
+        가장 오차가 큰 구간을 쓰게 된다. 예를 들어 감지 거리 0~1,000mm 센서를
+        950mm 지점에 대상이 오도록 설치하면, 사양표의 좋은 숫자는 의미가 없다.
+        “설비를 옮기고 나서 값이 이상해졌다”면 <strong>측정 범위 안 어디를 쓰고 있는지</strong>를 먼저 본다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 4 ============ -->
+    <section class="sec" id="s1-3-4">
+      <div class="sec-no">1.3.4</div>
+      <h2>반복 정밀도<span class="en">같은 조건에서 같은 값이 나오는가</span></h2>
+
+      <p class="keyline">
+        반복 정밀도가 나쁘면 <strong>어떤 보정으로도 구제되지 않는다.</strong>
+        치우침은 고칠 수 있어도, 흔들림은 원인을 없애는 수밖에 없다.
+      </p>
+
+      <p>
+        <span class="kw">반복 정밀도(Repeatability)</span>는 동일한 대상을 동일한 조건에서 여러 번 측정했을 때
+        값이 얼마나 모이는가다. 사양서에는 “±0.5mm” 같은 형태로 적힌다.
+        이 숫자는 <strong>그 센서가 낼 수 있는 최선의 흔들림 폭</strong>이며,
+        현장 조건(진동·온도·오염)이 나빠지면 실제로는 더 벌어진다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f1-3-4"><span class="no">그림 1.3-4</span> · 같은 대상을 10번 측정했을 때</div>
+          <svg viewBox="0 0 700 288" role="img" aria-label="반복 측정값의 산포 비교">
+            <text class="s-hdr" x="350" y="20">측정 회차 →</text>
+            <line class="s-line" x1="70" y1="120" x2="650" y2="120" stroke-dasharray="0"/>
+            <text class="s-t2" x="42" y="124">기준</text>
+
+            <text class="s-t3" x="350" y="46" style="font-weight:700;fill:#0E2E4F">반복 정밀도 양호 — 값이 모인다</text>
+            <circle cx="110" cy="76" r="4.5" fill="#0E2E4F"/><circle cx="170" cy="82" r="4.5" fill="#0E2E4F"/>
+            <circle cx="230" cy="74" r="4.5" fill="#0E2E4F"/><circle cx="290" cy="80" r="4.5" fill="#0E2E4F"/>
+            <circle cx="350" cy="76" r="4.5" fill="#0E2E4F"/><circle cx="410" cy="79" r="4.5" fill="#0E2E4F"/>
+            <circle cx="470" cy="74" r="4.5" fill="#0E2E4F"/><circle cx="530" cy="81" r="4.5" fill="#0E2E4F"/>
+            <circle cx="590" cy="77" r="4.5" fill="#0E2E4F"/><circle cx="640" cy="78" r="4.5" fill="#0E2E4F"/>
+            <rect x="70" y="68" width="590" height="20" fill="none" stroke="#0E2E4F" stroke-width="1" stroke-dasharray="4 3"/>
+            <text class="s-t2" x="350" y="106">판정 기준선을 넘나들지 않는다 → 안정적으로 정위치 판정</text>
+
+            <line class="s-rule" x1="20" y1="140" x2="680" y2="140"/>
+
+            <text class="s-t3" x="350" y="170" style="font-weight:700;fill:#8A5A0B">반복 정밀도 불량 — 값이 튄다</text>
+            <line class="s-line" x1="70" y1="232" x2="650" y2="232"/>
+            <text class="s-t2" x="42" y="236">기준</text>
+            <circle cx="110" cy="204" r="4.5" fill="#8A5A0B"/><circle cx="170" cy="248" r="4.5" fill="#8A5A0B"/>
+            <circle cx="230" cy="196" r="4.5" fill="#8A5A0B"/><circle cx="290" cy="252" r="4.5" fill="#8A5A0B"/>
+            <circle cx="350" cy="212" r="4.5" fill="#8A5A0B"/><circle cx="410" cy="244" r="4.5" fill="#8A5A0B"/>
+            <circle cx="470" cy="198" r="4.5" fill="#8A5A0B"/><circle cx="530" cy="254" r="4.5" fill="#8A5A0B"/>
+            <circle cx="590" cy="210" r="4.5" fill="#8A5A0B"/><circle cx="640" cy="240" r="4.5" fill="#8A5A0B"/>
+            <rect x="70" y="190" width="590" height="70" fill="none" stroke="#A67C1F" stroke-width="1" stroke-dasharray="4 3"/>
+            <text class="s-t2" x="350" y="278" style="fill:#8A5A0B">기준선을 오갈 때마다 판정이 뒤집힌다 → 간헐적 알람</text>
+          </svg>
+        </div>
+        <figcaption>평균은 두 경우 모두 기준에 맞다. 그러나 아래쪽은 판정 기준선을 오가므로
+        “가끔 멈춘다”는 가장 다루기 어려운 증상이 된다.</figcaption>
+      </figure>
+
+      <h3>반복 정밀도를 떨어뜨리는 현장 요인</h3>
+
+      <div class="tbl-label" id="b1-3-3"><span class="no">표 1.3-3</span> · 값이 튀는 원인과 확인 지점</div>
+      <table>
+        <thead>
+          <tr><th>원인 계통</th><th>구체적 요인</th><th>1차 확인 지점</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>기계</td><td>브래킷 유격, 고정 나사 풀림, 설비 진동</td>
+              <td>손으로 흔들었을 때 유격이 있는가, 마킹선 이탈</td></tr>
+          <tr><td>환경</td><td>온도 변화, 기류, 조명 점멸, 분진 부유</td>
+              <td>특정 시간대·특정 작업에만 나는가</td></tr>
+          <tr><td>전기</td><td>전원 변동, 인버터 노이즈, 접지 불량, 케이블 병렬 포설</td>
+              <td>인접 대용량 설비 기동과 타이밍이 겹치는가</td></tr>
+          <tr><td>대상물</td><td>표면 반사율 편차, 자세 흔들림, 포장 상태 변화</td>
+              <td>특정 품목에서만 나는가</td></tr>
+          <tr><td>설정</td><td>응차(히스테리시스) 부족, 감도 과다</td>
+              <td>감도 볼륨이 끝까지 돌아가 있는가 (1.4에서 심화)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note field">
+        <span class="t">현장 · “가끔 멈춘다”의 관찰 기록법</span>
+        <p>반복 정밀도 문제는 <strong>재현 조건을 잡는 것이 전부</strong>다.
+        발생할 때마다 네 가지만 적어 둔다 — <strong>시각 / 품목 / 라인 속도 / 인접 설비 가동 여부</strong>.
+        서너 번만 모여도 위 표의 어느 행인지 대부분 좁혀진다.
+        이 기록이 있으면 담당자는 현장에 오기 전에 원인을 절반쯤 정한다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 5 ============ -->
+    <section class="sec" id="s1-3-5">
+      <div class="sec-no">1.3.5</div>
+      <h2>실무 보강<span class="en">사양서의 숫자를 현장 판단으로 바꾼다</span></h2>
+
+      <p class="keyline">
+        지표를 계산할 일은 없다. 다만 <strong>“이 증상이 사양의 한계인지 고장인지”</strong>를
+        가르는 데는 반드시 쓰인다.
+      </p>
+
+      <p>
+        아래 다섯 항목은 목차에 명시되어 있지는 않지만
+        <strong>물류설비 운영에서 실제로 필요해 보강한 내용</strong>이다.
+      </p>
+
+      <!-- 1 -->
+      <div class="prac">
+        <h3>1. 데이터시트에서 네 가지 지표 찾기</h3>
+        <p class="prac-tip">같은 지표라도 제조사마다 표기가 다르다.</p>
+
+        <div class="tbl-label" id="b1-3-4"><span class="no">표 1.3-4</span> · 사양서 표기와 읽는 법</div>
+        <table class="sourced">
+          <thead>
+            <tr><th>지표</th><th>사양서 표기 예</th><th>읽는 법</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>감도</td><td>Sensitivity, 감도, mV/V, 분해 감도</td>
+                <td>보통 조정 가능. 볼륨 또는 티치 버튼으로 설정</td></tr>
+            <tr><td>선형성</td><td>Linearity error, 직선성, ±0.5 %FS</td>
+                <td>풀스케일 대비 %. 범위가 1,000mm면 ±5mm라는 뜻</td></tr>
+            <tr><td>반복 정밀도</td><td>Repeatability, 반복 정도, ±0.2mm</td>
+                <td>같은 조건 반복 시 흔들림 폭. 현장에서는 더 커진다</td></tr>
+            <tr><td>해상도</td><td>Resolution, 분해능, 최소 감지 단위</td>
+                <td>이보다 작은 변화는 값에 나타나지 않는다</td></tr>
+            <tr><td>응답 시간</td><td>Response time, 응답 주파수, ms / Hz</td>
+                <td>고속 라인에서는 이 값이 판정 누락을 좌우 (보강 4 참조)</td></tr>
+          </tbody>
+        </table>
+
+      <div class="tbl-src"><b>근거</b> 지표의 정의는 <a href="https://www.bipm.org/documents/20126/2071204/JCGM_200_2012.pdf" target="_blank" rel="noopener">JCGM 200 (VIM)</a> 국제 계량 용어집을 따른다. <span class="fld">표기 예는 특정 제품의 사양이 아니라 일반적인 표기 형식을 보인 것이다</span></div>
+
+        <div class="note">
+          <span class="t">개념 · %FS를 mm로 바꿔 읽는 습관</span>
+          <p>사양서의 <code>±0.5 %FS</code>는 그 자체로는 감이 오지 않는다.
+          <strong>측정 범위를 곱해 mm로 바꿔 보는 습관</strong>을 들이면 판단이 즉시 선다.
+          범위 300mm 센서의 ±0.5%FS는 ±1.5mm, 범위 2,000mm면 ±10mm다.
+          같은 사양이라도 요구 정밀도와 맞는지는 완전히 달라진다.</p>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="prac">
+        <h3>2. 사양이 좋은 센서가 현장에서 나쁜 값을 내는 이유</h3>
+        <p class="prac-tip">사양서의 숫자는 실험실 조건에서 나온 값이다.</p>
+
+        <p>
+          제조사 사양은 <strong>정해진 온도, 정해진 대상, 진동 없는 상태</strong>에서 측정한 값이다.
+          현장은 그 조건이 아니다. 아래 네 가지가 사양과 현실의 격차를 만든다.
+        </p>
+        <ul>
+          <li><strong>온도</strong> — 온도가 바뀌면 회로 특성이 변해 값이 서서히 이동한다(드리프트).
+              사양서의 “온도 특성 ±0.05 %FS/℃”가 이것을 말한다.</li>
+          <li><strong>대상 표면</strong> — 사양은 표준 반사판(백색 무광) 기준이다.
+              실제 골판지·필름·검은 봉투는 조건이 다르다.</li>
+          <li><strong>설치 각도와 거리</strong> — 측정 범위의 끝단을 쓰거나 비스듬히 설치하면
+              선형성과 반복 정밀도가 함께 나빠진다.</li>
+          <li><strong>전기 환경</strong> — 인버터·서보 드라이브가 만드는 노이즈는 사양서에 없는 변수다.</li>
+        </ul>
+        <div class="note warn">
+          <span class="t">주의 · 사양 비교로 결론 내지 않기</span>
+          <p>“A사 센서가 반복 정밀도 ±0.1mm라 더 좋다”는 비교는 <strong>시험 조건이 같을 때만</strong> 성립한다.
+          제조사마다 측정 온도·대상·거리 조건이 다르므로, 숫자만 놓고 우열을 가릴 수 없다.
+          현장에서 할 수 있는 유일한 비교는 <strong>같은 자리에 달아 같은 조건에서 보는 것</strong>이며,
+          이는 담당자 영역이다.</p>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="prac">
+        <h3>3. 값이 이상할 때의 30초 판단</h3>
+        <p class="prac-tip">증상을 세 가지로 나누면 원인 계통이 바로 좁혀진다.</p>
+
+        <figure>
+          <div class="fig">
+            <div class="fig-label" id="f1-3-5"><span class="no">그림 1.3-5</span> · 값 이상 증상별 판단 절차</div>
+            <svg viewBox="0 0 700 360" role="img" aria-label="값 이상 증상별 원인 계통 판단">
+              <rect class="s-fill" x="20" y="10" width="660" height="40"/>
+              <text class="s-tw" x="350" y="36">값이 이상하다 — 증상을 먼저 셋으로 나눈다</text>
+
+              <rect class="s-tint" x="20" y="66" width="200" height="80"/>
+              <text class="s-t3" x="120" y="94" style="font-weight:700">증상 A</text>
+              <text class="s-t3" x="120" y="116">항상 같은 만큼</text>
+              <text class="s-t3" x="120" y="136">치우쳐 있다</text>
+              <path class="s-line-n" d="M226 106 L262 106" marker-end="url(#a31)"/>
+              <rect class="s-plain" x="268" y="66" width="412" height="80"/>
+              <text class="s-t3" x="474" y="94" style="font-weight:700;fill:#0E2E4F">정확도 계통 — 영점 이탈</text>
+              <text class="s-t2" x="474" y="116">브래킷 이동 / 기준물 변경 / 온도 드리프트</text>
+              <text class="s-t2" x="474" y="136">→ 영점 재조정 필요 (담당자 영역, 1.4에서 다룸)</text>
+
+              <rect class="s-tint" x="20" y="158" width="200" height="80"/>
+              <text class="s-t3" x="120" y="186" style="font-weight:700">증상 B</text>
+              <text class="s-t3" x="120" y="208">잴 때마다</text>
+              <text class="s-t3" x="120" y="228">값이 튄다</text>
+              <path class="s-line-n" d="M226 198 L262 198" marker-end="url(#a31)"/>
+              <rect class="s-plain" x="268" y="158" width="412" height="80"/>
+              <text class="s-t3" x="474" y="186" style="font-weight:700;fill:#0E2E4F">정밀도 계통 — 흔들림</text>
+              <text class="s-t2" x="474" y="208">유격 / 진동 / 전기 노이즈 / 대상 자세 불안정</text>
+              <text class="s-t2" x="474" y="228">→ 표 1.3-3의 다섯 계통으로 좁힌다</text>
+
+              <rect class="s-tint" x="20" y="250" width="200" height="80"/>
+              <text class="s-t3" x="120" y="278" style="font-weight:700">증상 C</text>
+              <text class="s-t3" x="120" y="300">특정 구간에서만</text>
+              <text class="s-t3" x="120" y="320">틀린다</text>
+              <path class="s-line-n" d="M226 290 L262 290" marker-end="url(#a31)"/>
+              <rect class="s-plain" x="268" y="250" width="412" height="80"/>
+              <text class="s-t3" x="474" y="278" style="font-weight:700;fill:#0E2E4F">선형성 · 해상도 계통</text>
+              <text class="s-t2" x="474" y="300">측정 범위 끝단 사용 / 요구 정밀도가 해상도보다 작음</text>
+              <text class="s-t2" x="474" y="320">→ 센서 교체가 아니라 사양 검토 대상</text>
+
+              <text class="s-t2" x="350" y="350">증상 C를 A·B로 오인해 센서를 반복 교체하는 것이 가장 흔한 낭비다</text>
+
+              <defs>
+                <marker id="a31" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                  <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+          <figcaption>증상 A는 조정, B는 조건 개선, C는 사양 검토로 간다. 조치의 종류가 완전히 다르다.</figcaption>
+        </figure>
+      </div>
+
+      <!-- 4 -->
+      <div class="prac">
+        <h3>4. 응답 시간 — 다섯 번째 지표</h3>
+        <p class="prac-tip">목차의 네 지표에는 없지만, 고속 물류 라인에서는 가장 자주 문제가 된다.</p>
+
+        <p>
+          <span class="kw">응답 시간(Response time)</span>은 물리량이 변한 뒤 출력이 실제로 바뀌기까지 걸리는 시간이다.
+          정확도와 무관하게, <strong>느리면 놓친다.</strong>
+        </p>
+        <p>
+          고속 소터에서 초당 3개의 박스가 지나간다면 하나가 센서 앞을 지나는 시간은 수십 ms다.
+          응답 시간이 이보다 길면 <strong>박스가 있는데 신호가 안 나거나, 두 개를 하나로 센다.</strong>
+          라인 속도를 올린 직후부터 카운트가 안 맞는다면 거의 확실히 이 문제다.
+        </p>
+        <div class="note field">
+          <span class="t">현장 · 라인 속도를 바꿨다면</span>
+          <p>증속 후 생긴 문제는 센서 고장으로 보기 전에 <strong>“속도를 원래대로 낮추면 사라지는가”</strong>를 먼저 본다.
+          사라진다면 응답 시간(또는 제어기 스캔 주기) 문제이며, 센서를 교체해도 해결되지 않는다.
+          이 한 문장이 에스컬레이션 내용을 정확하게 만든다.</p>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="prac">
+        <h3>5. 현장 점검 체크리스트</h3>
+        <p class="prac-tip">값의 품질이 의심될 때 순서대로 확인한다.</p>
+
+        <ul class="check">
+          <li>증상이 A(치우침) · B(튐) · C(구간별) 중 어느 것인지 먼저 분류했는가</li>
+          <li>센서·브래킷에 손으로 느껴지는 유격이 없는가</li>
+          <li>고정 나사와 기준 마킹선이 제자리인가</li>
+          <li>대상물이 측정 범위의 끝단이 아니라 중간에 오도록 설치되어 있는가</li>
+          <li>감도 조정 볼륨이 끝까지 돌아가 있지 않은가</li>
+          <li>특정 품목 · 특정 시간대 · 특정 인접 설비 가동 시에만 발생하는가 (기록)</li>
+          <li>최근 라인 속도나 설비 위치가 변경되지 않았는가</li>
+          <li>요구 정밀도가 사양서의 해상도보다 작지 않은가 (작다면 사양 검토 대상)</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <span class="t">개념 · 이 장이 남기는 것</span>
+        <p>값의 품질은 치우침과 흩어짐 두 축으로 갈리고(본문 1),
+        감도는 기울기·해상도는 계단이며(본문 2),
+        선형성은 구간별 오차를(본문 3), 반복 정밀도는 흔들림을 말한다(본문 4).
+        증상을 세 가지로 나누면 조정 · 조건 개선 · 사양 검토 중 어디로 갈지가 정해진다(본문 5).<br>
+        다음 장 1.4에서는 흔들림의 원인인 노이즈를 다루고,
+        치우침을 잡는 영점 조절의 의미를 살펴본다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 참고자료 ============ -->
+    <section class="ref" id="r1-3">
+      <div class="sec-no">참고자료</div>
+      <h2>참고자료</h2>
+
+      <h3>1. 용어 정리</h3>
+      <dl class="terms">
+        <dt id="t1-3-1">정확도 (Accuracy) / 정밀도 (Precision)</dt>
+        <dd>정확도는 측정값이 참값에 얼마나 가까운가를 말하며, <strong>치우침(정확성 · trueness)과 흩어짐(정밀도)이 함께 결정한다.</strong> 과녁 비유에서 흔히 “정확도”라 부르는 축은 엄밀히는 치우침이다. 정밀도와 서로 독립인 것은 이 치우침 쪽이다.</dd>
+        <dt id="t1-3-2">감도 (Sensitivity)</dt>
+        <dd>입력 물리량의 변화량에 대한 출력 신호 변화량의 비. 그래프의 기울기에 해당한다.</dd>
+        <dt id="t1-3-3">선형성 오차 (Linearity error)</dt>
+        <dd>측정 범위 전체에서 실제 출력이 이상 직선에서 벗어난 최대 편차. 통상 풀스케일 대비 %(%FS)로 표기한다.</dd>
+        <dt id="t1-3-4">반복 정밀도 (Repeatability)</dt>
+        <dd>동일 대상·동일 조건에서 반복 측정한 값의 흩어짐 폭. 사양서에는 ±값으로 표기된다.</dd>
+        <dt id="t1-3-5">해상도 / 분해능 (Resolution)</dt>
+        <dd>센서가 구별할 수 있는 최소 변화량. 이보다 작은 변화는 출력에 나타나지 않는다.</dd>
+        <dt id="t1-3-6">%FS (Percent of Full Scale)</dt>
+        <dd>측정 범위 전체 대비 백분율. 같은 %라도 측정 범위가 크면 실제 오차(mm·kg)는 커진다.</dd>
+        <dt id="t1-3-7">드리프트 (Drift)</dt>
+        <dd>입력이 변하지 않았는데도 시간·온도에 따라 출력이 서서히 이동하는 현상.</dd>
+        <dt id="t1-3-8">응답 시간 (Response time)</dt>
+        <dd>물리량 변화가 출력에 반영되기까지 걸리는 시간. <strong>사양서는 통상 최종값의 10~90 % 구간 또는 63.2 %(시정수 1τ) 도달 시점을 기준으로 표기하므로, 기준이 다르면 제조사 간 수치를 그대로 비교할 수 없다.</strong> 고속 라인에서는 정확도보다 중요할 수 있다.</dd>
+      </dl>
+
+      <h3>2. 관련 이미지 — 실물과 도해로 확인하기</h3>
+      <p class="ref-intro">
+        본문에 나온 순서대로 정리했다. 센서·공압은 썬덴코리아 파트너사, 제어기는 미쓰비시전기, 로봇은 야스카와·뉴로메카 기준이다.
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/media/pdf/9/99/399/dataSheet_WTB27-3S3711_1027764_ko.pdf" target="_blank" rel="noopener">광전 센서 데이터시트 (한국어 PDF) — 사양 항목의 실제 표기</a>
+          <span class="where">실무 보강 1 — 감도·반복 정밀도·응답 시간이 데이터시트 어느 위치에 적히는지</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/products/distance-sensors/ultrasonic-distance-sensors/ultrasonic-distance-sensors/c/g584816" target="_blank" rel="noopener">초음파 거리 센서 — 측정 범위와 정밀도 사양</a>
+          <span class="where">본문 2 · 3 — 모델별 측정 범위와 해상도·선형성 사양 비교</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/catalog/products/distance-sensors/laser-distance-sensors/od2000/od2000/c/g547590?tab=overview" target="_blank" rel="noopener">레이저 거리 센서 — 고정밀 계열의 사양 수준</a>
+          <span class="where">표 1.3-2 — 스태커크레인 정위치처럼 mm 단위가 필요한 자리의 사양 예</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/products/detection-sensors/inductive-proximity-sensors/inductive-proximity-sensors/c/g253054" target="_blank" rel="noopener">유도감응형 근접 센서 — 반복 정밀도 표기</a>
+          <span class="where">본문 4 — 근접 센서의 반복 정밀도가 감지거리 대비 %로 표기되는 방식</span>
+        </li>
+        <li>
+          <span class="src">FESTO</span>
+          <a href="https://www.festo.com/cat/ko_kr/products_041000" target="_blank" rel="noopener">압력 · 진공 센서 — 아날로그 출력 사양</a>
+          <span class="where">본문 2 · 3 — 아날로그 출력 센서에서 선형성·해상도가 어떻게 표기되는지</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=10&amp;cate_id=2" target="_blank" rel="noopener">PLC (MELSEC) — 아날로그 입력 모듈의 분해능</a>
+          <span class="where">본문 2 · 실무 보강 4 — 센서 해상도와 별개로 제어기 쪽 분해능·스캔 주기도 한계가 된다</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/solutions/logistics/s/logistics" target="_blank" rel="noopener">물류 자동화 센서 솔루션 — 산업 분야 개요</a>
+          <span class="where">실무 보강 4 — 소화물·우편·화물, 유통·풀필먼트 등 고속 처리 분야 구분</span>
+        </li>
+      </ol>
+
+      <h3>3. 학술 · 표준 근거 자료 — 심화 학습용</h3>
+      <p class="ref-intro">
+        무료로 볼 수 있는 자료를 우선했다.<br>
+        <span class="src std">표준</span> 국제 규격 · <span class="src paper">논문</span> 공개 학술 자료
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src">MISUMI</span>
+          <a href="https://kr.misumi-ec.com/pr/vona/mech_20200829/" target="_blank" rel="noopener">센서 관련 용어 — 성능 항목 정의 (한국어)</a>
+          <span class="where">본문 1.3 전체 — 페이지 중간 ‘2. 센서 관련 용어’ 항목. 표준 검출 물체·응답 시간(t1/t2)·검출 거리·응답 주파수 정의. 설정 거리는 정격 검출 거리의 약 70~80 %라는 수치 기준 포함</span>
+        </li>
+        <li>
+          <span class="src">OMRON</span>
+          <a href="https://kr.misumi-ec.com/pr/vona/mech_20200829/OMRON_sensor03.pdf" target="_blank" rel="noopener">기술편 · 근접 센서 (한국어 PDF · 13p)</a>
+          <span class="where">본문 1.3.2 — 검출 거리·응답 주파수·응차 등 성능 항목의 제조사 정의</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://www.bipm.org/documents/20126/2071204/JCGM_200_2012.pdf" target="_blank" rel="noopener">JCGM 200:2012 국제 계량 용어집 VIM (BIPM 무료 PDF)</a>
+          <span class="where">본문 1~4 — 정확도·정밀도·감도·분해능·반복성의 국제 표준 정의.
+          본문의 용어 구분이 모두 이 문서를 따른다. 무료 공개 자료이므로 심화 학습의 1순위</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://www.oiml.org/en/files/pdf_v/v002-200-e07.pdf" target="_blank" rel="noopener">OIML V 2-200 : VIM 국제법정계량기구 판 (무료 PDF)</a>
+          <span class="where">본문 1 — 같은 용어집의 다른 배포본. 항목별 주석이 조금 더 상세하다</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://www.bipm.org/en/committees/jc/jcgm/publications" target="_blank" rel="noopener">JCGM 간행물 목록 (GUM 측정 불확도 표현 지침 포함)</a>
+          <span class="where">본문 4 — 반복 측정의 흩어짐을 “불확도”로 정량화하는 방법. GUM(JCGM 100)이 그 표준</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/32517" target="_blank" rel="noopener">IEC 60947-5-2 : 근접 스위치 — 반복 정밀도 시험 방법</a>
+          <span class="where">본문 4 — 근접 센서의 반복 정밀도를 어떤 조건에서 측정하는지 규정.
+          제조사 사양의 시험 조건이 여기 근거한다</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://www.mdpi.com/2673-4591/24/1/8" target="_blank" rel="noopener">An Approach for Precise Distance Measuring Using Ultrasonic Sensors (MDPI)</a>
+          <span class="where">본문 3 · 실무 보강 2 — 온도가 측정값을 밀어내는 드리프트의 정량 근거.
+          공기 온도 ±1℃ 변화가 음속을 약 ±0.59 m/s 바꾼다</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10223387/" target="_blank" rel="noopener">Wide Temperature Range and Low Temperature Drift Eddy Current Displacement Sensor (PMC 공개)</a>
+          <span class="where">실무 보강 2 — 온도 드리프트를 줄이기 위해 센서 내부에서 어떤 보정을 하는지.
+          2장의 스마트센서 자가 교정으로 이어지는 배경</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10934737/" target="_blank" rel="noopener">Eddy Current Position Measurement in Harsh Environments: Temperature Compensation and Calibration (PMC 공개)</a>
+          <span class="where">본문 3 · 4 — 가혹 환경에서 선형성·반복 정밀도가 무너지는 과정과 보정 접근</span>
+        </li>
+      </ol>
+
+      <h3>4. 이어지는 장과의 연결</h3>
+      <ul style="font-size:13.5px">
+        <li><strong>1.4 오작동 방지와 기본 세팅</strong> — 본문 4의 “값이 튀는” 원인(노이즈)과 “치우침”을 잡는 영점 조절</li>
+        <li><strong>2.2 핵심 내부 구조</strong> — 스마트센서가 내부 연산으로 선형성·드리프트를 스스로 보정하는 방식</li>
+        <li><strong>2.4 지능형 기능</strong> — 자가 교정이 온도 드리프트를 실시간으로 잡는 원리</li>
+        <li><strong>3.2 서보 모터와 센서의 융합</strong> — 엔코더의 해상도가 위치 제어 정밀도를 직접 결정</li>
+      </ul>
+    </section>

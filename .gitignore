@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# 작업 중 생긴 임시 파일
+_refpolicy.html
+_v.png
+
+# 변환 전 원고 백업 (저장소에 올리지 않는다)
+content.bak/
+
+# 아티팩트용 사본 — 필요할 때 bundle.py 로 다시 만든다
+artifact_교재.html

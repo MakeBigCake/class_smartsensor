@@ -1,0 +1,368 @@
+/* =========================================================
+   데이터를 읽는 감각 — 물류 자동화 현장의 센서
+   공통 스타일 v2.1  (컨설팅 리포트 톤)
+
+   ── 색 사용 규칙 ─────────────────────────────────────────
+   NAVY      #0E2E4F : 주체 · 핵심 · 결론 · 모든 제목
+   TINT      #E7EEF6 : 주요 구성 요소 (네이비 계열 옅은 면)
+   WHITE     #FFFFFF : 부가 요소 · 대상물
+   GOLD      #E8A33D : 주의 · 취약 (면 채움 · 좌측 룰 · 표식에만)
+   GOLD-INK  #8A5A0B : 골드 계열 '글자' 전용 (흰 바탕 대비 확보)
+   GRAY      #8C9298 : 연결선   /  보조 텍스트는 #5E6367
+   진한 면 위 글자는 흰색(#FFFFFF) 또는 #DCE7F3 만 사용
+   → 위 6색 외에는 사용하지 않는다.
+   → 강조색(GOLD)은 채도를 낮추지 말고, 대신 쓰는 면적을 줄인다.
+   ========================================================= */
+
+:root{
+  --bg:          #FFFFFF;
+  --panel:       #F4F5F6;
+  --panel-2:     #FAFAFB;
+  --line:        #E2E4E7;
+  --line-mid:    #C9CCD0;
+  --line-strong: #0E2E4F;
+
+  --ink:         #1A1A1A;
+  --ink-2:       #454749;
+  --ink-3:       #767A7E;
+
+  --navy:        #0E2E4F;
+  --navy-2:      #2F5F91;
+  --navy-tint:   #E7EEF6;
+  --navy-tint-2: #F5F8FC;
+
+  --gold:        #E8A33D;
+  --gold-ink:    #8A5A0B;
+  --gold-tint:   #FCF3E3;
+
+  --gray:        #8C9298;
+
+  --maxw:        860px;
+  --sidebar:     288px;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",
+              -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15.5px;
+  line-height:1.8;
+  -webkit-font-smoothing:antialiased;
+  word-break:keep-all;
+}
+
+/* ---------- 레이아웃 ---------- */
+.layout{display:flex;min-height:100vh;}
+
+/* ---------- 좌측 목차 ---------- */
+.toc{
+  width:var(--sidebar);flex:0 0 var(--sidebar);
+  background:var(--panel);border-right:1px solid var(--line);
+  padding:26px 0 60px;position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.toc-head{padding:22px;background:var(--navy);border-bottom:2px solid var(--navy);
+  margin-bottom:0;text-align:center;}
+.toc-head .course{color:#fff;}
+.toc-head .course-desc{font-size:13.5px;font-weight:700;line-height:1.6;
+  color:#fff;margin-top:8px;letter-spacing:0;}
+.toc-head .course{font-size:17px;font-weight:700;line-height:1.4;letter-spacing:-.015em;}
+.toc-head .course-link{text-decoration:none;display:block;}
+.toc-head .course-link:hover .course{color:var(--navy-tint);}
+.toc-home{color:var(--navy);font-weight:700;text-decoration:none;}
+.toc-home:hover{color:var(--gold-ink);}
+.nav a.home{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600;}
+.nav a.home:hover{background:var(--gold-ink);border-color:var(--gold-ink);}
+
+.toc-group{
+  font-size:13.5px;font-weight:700;color:var(--ink-3);
+  padding:20px 22px 7px;line-height:1.55;letter-spacing:.01em;text-transform:none;
+  border-top:1px solid var(--line);margin-top:8px;
+}
+.toc-group:first-of-type{border-top:none;margin-top:0;}
+.toc a{
+  display:block;padding:7px 22px;font-size:13px;color:var(--ink-2);
+  text-decoration:none;border-left:3px solid transparent;line-height:1.5;
+}
+.toc a:hover{background:#EAECEE;color:var(--navy);}
+.toc a.on{background:var(--navy-tint);color:var(--navy);font-weight:700;border-left-color:var(--navy);}
+
+/* 링크가 된 '부' 라벨 : 그룹 모양을 그대로 유지한다 */
+.toc a.toc-group{font-size:13.5px;font-weight:700;color:var(--ink-3);
+  padding:20px 22px 7px;line-height:1.55;letter-spacing:.01em;
+  border-top:1px solid var(--line);border-left:none;margin-top:8px;background:none;}
+.toc a.toc-group:hover{background:#EAECEE;color:var(--navy);}
+.toc a.toc-group.on,.toc a.toc-group.on:hover{color:#fff;background:var(--navy);}
+
+/* 현재 절의 3뎁스 목차 */
+.toc-sub{background:var(--navy-tint-2);border-left:3px solid var(--navy);
+  padding:4px 0 6px;margin-bottom:2px;}
+.toc-sub a{padding:5px 22px 5px 34px;font-size:12.5px;color:var(--ink-2);
+  border-left:none;line-height:1.5;}
+.toc-sub a:hover{background:#DCE4EC;color:var(--navy);}
+.toc-sub a.here{color:var(--navy);font-weight:700;}
+.toc-sub a.here:before{content:"▸ ";color:var(--ink-3);}
+
+/* ---------- 우측 본문 ---------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+
+.topbar{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;
+  padding:13px 30px;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-3);
+}
+.crumb{display:flex;align-items:center;gap:9px;min-width:0;}
+.crumb .c1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.crumb .c2{color:var(--navy);font-weight:600;white-space:nowrap;}
+.nav{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+.nav .count{font-variant-numeric:tabular-nums;color:var(--ink-3);padding:0 4px;}
+.nav a,.nav span.disabled{
+  display:inline-block;padding:5px 12px;border:1px solid var(--line-mid);
+  font-size:12px;text-decoration:none;color:var(--ink-2);background:#fff;
+}
+.nav a:hover{background:var(--navy);border-color:var(--navy);color:#fff;}
+.nav span.disabled{opacity:.35;}
+
+.article{max-width:var(--maxw);margin:0 auto;padding:48px 30px 130px;width:100%;}
+
+/* ---------- 표제 ---------- */
+.lesson-tag{
+  font-size:12.5px;font-weight:700;color:var(--navy);letter-spacing:.02em;
+  margin-bottom:10px;text-transform:none;
+}
+h1{font-size:30px;line-height:1.32;font-weight:700;letter-spacing:-.025em;
+   margin:0 0 10px;color:var(--navy);}
+.subtitle{font-size:14.5px;color:var(--ink-3);margin:0 0 24px;
+  padding-bottom:20px;border-bottom:2px solid var(--navy);}
+.lead{font-size:16.5px;line-height:1.82;color:var(--ink-2);margin:0 0 28px;}
+.lead strong{color:var(--ink);font-weight:700;}
+
+/* 학습목표 */
+.goals{background:var(--panel-2);border:1px solid var(--line);border-top:3px solid var(--navy);
+  padding:20px 24px 18px;margin:0 0 44px;}
+.goals h4{margin:0 0 12px;font-size:12.5px;letter-spacing:.02em;color:var(--navy);
+  font-weight:700;text-transform:none;}
+.goals ol{margin:0;padding-left:19px;}
+.goals li{font-size:14px;color:var(--ink-2);margin:6px 0;line-height:1.72;}
+
+/* ---------- 섹션 ---------- */
+section.sec{margin:0 0 30px;padding:26px 24px 20px;
+  border:1px solid var(--line);border-top:2px solid var(--navy);background:#fff;}
+section.sec:first-of-type{margin-top:0;}
+.sec-no{font-size:12.5px;font-weight:700;color:var(--ink-3);letter-spacing:.02em;
+  margin-bottom:8px;text-transform:none;}
+h2 > .sec-no{display:inline;font-size:inherit;color:inherit;
+  letter-spacing:0;margin:0 12px 0 0;}
+h2{font-size:23px;line-height:1.38;font-weight:700;color:var(--navy);
+  letter-spacing:-.02em;margin:0 0 14px;}
+h2 .en{display:block;font-size:13px;font-weight:500;color:var(--ink-3);
+  letter-spacing:0;margin-top:8px;}
+h3{font-size:17px;font-weight:700;margin:34px 0 10px;letter-spacing:-.012em;color:var(--navy);}
+h4{font-size:14.5px;font-weight:700;margin:22px 0 6px;color:var(--ink);}
+
+p{margin:0 0 15px;}
+ul,ol{margin:0 0 17px;padding-left:21px;}
+li{margin:7px 0;}
+li>ul,li>ol{margin:6px 0;}
+strong{font-weight:700;}
+.kw{color:var(--navy);font-weight:700;border-bottom:1px solid var(--line-mid);}
+code{background:var(--panel);border:1px solid var(--line);padding:1px 5px;font-size:12.5px;
+  font-family:"SFMono-Regular",Consolas,monospace;color:var(--navy);}
+
+/* 핵심 한 줄 */
+.keyline{
+  border-top:2px solid var(--navy);border-bottom:1px solid var(--line);
+  padding:15px 2px 16px;margin:20px 0 26px;
+  font-size:16px;font-weight:600;color:var(--navy);line-height:1.7;
+}
+section.sec > .keyline:last-child{margin-bottom:0;border-bottom:none;}
+
+/* ---------- 콜아웃 : 3종만 사용 ----------
+   .note        개념  — 네이비 틴트 + 네이비 좌측 룰
+   .note.field  현장  — .note 와 동일 (제목 표기로 구분)
+   .note.warn   주의  — 골드 틴트  + 골드   좌측 룰
+   ------------------------------------------- */
+.note{border-left:3px solid var(--navy);background:var(--navy-tint-2);border-top:1px solid var(--line);
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:16px 20px;margin:22px 0;font-size:14px;color:var(--ink-2);}
+.note .t{display:block;font-size:14px;font-weight:700;letter-spacing:.04em;
+  margin-bottom:8px;text-transform:uppercase;color:var(--navy);}
+/* .note.field 는 .note 와 같은 형식을 쓴다 — 구분은 제목의 「현장 ·」 표기가 한다 */
+.note.warn{background:var(--gold-tint);border-color:#EFDCB6;border-left-color:var(--gold);}
+.note.warn .t{color:var(--gold-ink);}
+.note p:last-child,.note ul:last-child,.note ol:last-child{margin-bottom:0;}
+
+/* ---------- 도해 ---------- */
+figure{margin:26px 0 28px;}
+.fig{background:#fff;border:1px solid var(--line);padding:20px 18px 14px;text-align:center;}
+.fig svg{max-width:100%;height:auto;display:block;margin:0 auto;}
+.fig-label{font-size:13.5px;font-weight:500;color:var(--ink-2);letter-spacing:0;
+  margin:0 0 12px;text-align:left;text-transform:none;line-height:1.6;}
+figcaption{font-size:12px;color:var(--ink-3);text-align:left;margin-top:12px;line-height:1.65;
+  padding-top:10px;border-top:1px solid var(--line);}
+
+/* SVG 공통 클래스 — 색 사용 규칙 준수 */
+.s-fill    {fill:#0E2E4F;stroke:none;}                       /* 핵심 · 결론 */
+.s-tint    {fill:#E7EEF6;stroke:#0E2E4F;stroke-width:1.2;}   /* 주요 구성 요소 */
+.s-plain   {fill:#FFFFFF;stroke:#C9CCD0;stroke-width:1.2;}   /* 부가 · 대상물 */
+.s-head    {fill:#F4F5F6;stroke:#C9CCD0;stroke-width:1.2;}   /* 표 머리 */
+.s-warn    {fill:#FCF3E3;stroke:#E8A33D;stroke-width:1.2;}   /* 주의 */
+
+.s-t   {font-family:inherit;font-size:16px;font-weight:700;fill:#0E2E4F;text-anchor:middle;}
+.s-tw  {font-family:inherit;font-size:16px;font-weight:700;fill:#FFFFFF;text-anchor:middle;}
+.s-t2  {font-family:inherit;font-size:13.5px;fill:#5E6367;text-anchor:middle;}
+.s-t2w {font-family:inherit;font-size:13.5px;fill:#DCE7F3;text-anchor:middle;}
+.s-t3  {font-family:inherit;font-size:14.5px;fill:#454749;text-anchor:middle;}
+.s-tl  {font-family:inherit;font-size:14.5px;fill:#454749;text-anchor:start;}
+.s-hdr {font-family:inherit;font-size:11.5px;font-weight:700;fill:#767A7E;
+        letter-spacing:.13em;text-anchor:middle;}
+.s-line  {stroke:#8C9298;stroke-width:1.4;fill:none;}
+.s-line-n{stroke:#0E2E4F;stroke-width:1.6;fill:none;}
+.s-line-d{stroke:#8C9298;stroke-width:1.2;fill:none;stroke-dasharray:5 4;}
+.s-beam  {stroke:#0E2E4F;stroke-width:1.5;fill:none;stroke-dasharray:6 4;}
+.s-rule  {stroke:#E2E4E7;stroke-width:1;}
+.s-hb    {font-family:inherit;font-size:17px;font-weight:700;fill:#0E2E4F;text-anchor:middle;}
+
+/* ---------- 표 ---------- */
+.tbl-label{font-size:13.5px;font-weight:500;color:var(--ink-2);letter-spacing:0;
+  margin:28px 0 9px;text-transform:none;line-height:1.6;}
+.tbl-label .no,.fig-label .no{font-weight:700;color:var(--navy);margin-right:2px;}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:14px;margin:0 0 24px;
+  border-top:2px solid var(--navy);border-bottom:2px solid var(--navy);}
+thead th{background:#fff;text-align:left;font-weight:700;font-size:12.5px;color:var(--navy);
+  padding:10px 12px;border-bottom:1px solid var(--line-mid);white-space:nowrap;}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.68;
+  color:var(--ink-2);}
+tbody tr:last-child td{border-bottom:none;}
+tbody td:first-child{font-weight:700;color:var(--navy);white-space:nowrap;}
+tbody tr:hover{background:var(--navy-tint-2);}
+.t-c{text-align:center;}
+.t-warn{color:var(--gold-ink);font-weight:700;}
+
+/* 표 근거 표기 : 마커 + 각주 */
+.mk{font-size:10.5px;font-weight:700;color:var(--ink-3);vertical-align:super;
+  letter-spacing:0;margin-left:1px;}
+.mk.fld{color:var(--gold-ink);}
+table.sourced{margin-bottom:9px;}
+.tbl-src{font-size:11.5px;color:var(--ink-3);line-height:1.75;margin:0 0 26px;
+  padding-left:11px;border-left:2px solid var(--line-mid);}
+.tbl-src b{color:var(--navy);font-weight:700;}
+.tbl-src .fld{color:var(--gold-ink);font-weight:700;}
+.tbl-src a{color:var(--ink-3);text-decoration:underline;text-underline-offset:2px;}
+.tbl-src a:hover{color:var(--navy);}
+
+/* ---------- 실무 보강 항목 ---------- */
+.prac{margin-top:36px;}
+.prac h3{margin:0 0 4px;}
+.prac-tip{font-size:12.5px;color:var(--ink-3);margin:0 0 16px;padding-bottom:10px;
+  border-bottom:1px solid var(--line);}
+
+/* ---------- 참고자료 ---------- */
+section.ref{margin-top:52px;padding:34px 30px 28px;background:var(--panel-2);
+  border:1px solid var(--line);border-top:3px solid var(--navy);}
+section.ref h2{font-size:20.5px;}   /* 본문 23px × 0.9 */
+section.ref h3{font-size:15.5px;margin:28px 0 10px;}  /* 본문 17px × 0.9 */
+section.ref h3:first-of-type{margin-top:18px;}
+section.ref table{font-size:12.5px;}  /* 본문 표 14px × 0.9 */
+.ref-intro{font-size:13px;color:var(--ink-3);margin-bottom:16px;}
+
+/* 용어 정의 */
+dl.terms{margin:0 0 18px;font-size:13.5px;}
+dl.terms dt{font-weight:700;color:var(--navy);margin-top:13px;}
+dl.terms dd{margin:2px 0 0;padding-left:0;color:var(--ink-2);line-height:1.72;}
+
+/* 참고 링크 목록 */
+ol.linklist{list-style:none;counter-reset:lk;padding-left:0;margin:0 0 20px;font-size:13.5px;}
+ol.linklist li{counter-increment:lk;position:relative;padding-left:34px;margin:15px 0;line-height:1.62;}
+ol.linklist li:before{
+  content:counter(lk,decimal-leading-zero);position:absolute;left:0;top:2px;
+  font-size:11px;font-weight:700;color:var(--gold-ink);letter-spacing:.04em;
+}
+ol.linklist a{color:var(--navy);text-decoration:none;border-bottom:1px solid var(--line-mid);font-weight:600;}
+ol.linklist a:hover{border-bottom-color:var(--navy);background:var(--navy-tint);}
+.src{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;
+  border:1px solid var(--line-mid);color:var(--ink-3);padding:2px 7px;margin-right:8px;
+  vertical-align:2px;white-space:nowrap;text-transform:uppercase;}
+.src.std{border-color:var(--navy);color:var(--navy);}
+.src.paper{border-color:var(--gold);color:var(--gold-ink);}
+.where{display:block;font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.6;}
+
+/* 체크리스트 */
+ul.check{list-style:none;padding-left:0;}
+ul.check li{position:relative;padding-left:25px;font-size:13.8px;margin:9px 0;}
+ul.check li:before{content:"";position:absolute;left:0;top:6px;width:12px;height:12px;
+  border:1.5px solid var(--navy);background:#fff;}
+
+/* 반응형 */
+@media (max-width:900px){
+  .toc{display:none;}
+  .article{padding:34px 20px 90px;}
+  h1{font-size:25px;}
+  h2{font-size:20px;}
+  table{font-size:12px;}
+}
+@media print{
+  .toc,.topbar{display:none;}
+  .article{max-width:none;padding:0;}
+  section.sec{break-inside:avoid;}
+}
+
+/* ---------- 찾아보기 (용어 색인 · 참고문헌) ---------- */
+.idx-nav{display:flex;flex-wrap:wrap;gap:6px;margin:22px 0 8px;padding:14px 0;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.idx-nav a{display:inline-block;min-width:30px;text-align:center;padding:5px 8px;
+  font-size:13px;font-weight:700;color:var(--navy);text-decoration:none;
+  border:1px solid var(--line-mid);}
+.idx-nav a:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+dl.terms.idx dt{display:flex;align-items:baseline;gap:10px;}
+.idx-at{margin-left:auto;font-size:11.5px;font-weight:400;color:var(--ink-3);
+  white-space:nowrap;letter-spacing:.02em;}
+.idx-at a{color:var(--ink-3);text-decoration:none;border-bottom:1px solid var(--line-mid);}
+.idx-at a:hover{color:var(--navy);border-color:var(--navy);}
+
+/* 색인에서 찾아온 용어 강조 */
+dl.terms dt:target{background:var(--gold-tint);box-shadow:-6px 0 0 var(--gold-tint),6px 0 0 var(--gold-tint);}
+dl.terms dt:target+dd{background:var(--gold-tint);box-shadow:-6px 0 0 var(--gold-tint),6px 0 0 var(--gold-tint);}
+
+/* 여러 행이 같은 값으로 수렴하는 셀 */
+td.t-same{vertical-align:middle;text-align:center;background:var(--panel-2);}
+td.t-same span{display:block;margin-top:8px;font-size:11.5px;color:var(--ink-3);line-height:1.55;}
+
+/* rowspan 이 있는 표 : 첫 열 강조를 '위치'가 아니라 '지정'으로 */
+table.tbl-span tbody td:first-child{font-weight:400;color:var(--ink-2);white-space:normal;}
+table.tbl-span tbody td.t-key{font-weight:700;color:var(--navy);}
+
+/* ---------- 그림 · 표 색인 목록 ---------- */
+ul.idx-list{list-style:none;padding-left:0;margin:0 0 6px;}
+ul.idx-list li{margin:0;border-bottom:1px solid var(--line);}
+ul.idx-list li:last-child{border-bottom:none;}
+ul.idx-list a{display:flex;align-items:baseline;gap:14px;padding:10px 2px;
+  font-size:14.5px;color:var(--ink);text-decoration:none;line-height:1.6;}
+ul.idx-list a:hover{background:var(--navy-tint-2);color:var(--navy);}
+ul.idx-list .no{flex:0 0 88px;font-size:12.5px;font-weight:700;color:var(--navy);
+  letter-spacing:.02em;white-space:nowrap;}
+
+/* 현재 읽는 부(部)를 목차에서 표시 */
+.toc-group.on{color:#fff;background:var(--navy);}
+
+/* ---------- 구성 안내 격자 (표지 · 머리말 공용) ---------- */
+.struct{display:flex;border-top:2px solid var(--navy);border-bottom:2px solid var(--navy);
+  margin:0 0 18px;}
+.struct div{flex:1 1 0;min-width:0;padding:14px 13px;border-right:1px solid var(--line);
+  font-size:13px;color:var(--ink-2);line-height:1.6;}
+.struct div:last-child{border-right:none;}
+.struct div b{display:block;color:var(--navy);font-size:12.5px;font-weight:700;letter-spacing:.01em;margin-bottom:7px;}
+.struct div span{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.55;margin-top:5px;}
+.struct div span b{display:inline;font-size:inherit;color:var(--navy);margin:0;}
+.struct div.hi{background:var(--navy-tint-2);}
+
+/* ---------- 장 머리 띠 : 좌측 목차의 '장' 반전과 같은 색 ---------- */
+.lesson-head{background:var(--navy-tint);border-left:3px solid var(--navy);
+  padding:24px 26px 20px;margin:0 0 32px;}
+.lesson-head h1 > .lesson-tag{display:inline;font-size:inherit;color:inherit;
+  letter-spacing:0;margin:0 14px 0 0;}
+.lesson-head h1{margin:0 0 8px;}
+.lesson-head .subtitle{margin:0;padding:0;border-bottom:none;color:var(--ink-2);}

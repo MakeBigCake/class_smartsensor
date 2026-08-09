@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3.1 장비 제어의 기본 원리 — 데이터를 읽는 감각</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+
+<!-- ================= 좌측 목차 (build.py 자동 생성) ================= -->
+<aside class="toc">
+  <div class="toc-head" data-part="start">
+    <a class="course-link" href="index.html">
+      <div class="course">제목 : 데이터를 읽는 감각</div>
+      <div class="course-desc">지은이 : 강승태</div>
+      <div class="course-desc">작성일 : 2026-08-10</div>
+    </a>
+  </div>
+
+  <a href="index.html">목차</a>
+  <a href="preface.html">머리말</a>
+  <a class="toc-group" href="index.html#part1">1부 · 센서의 기초 : 데이터의 생성</a>
+  <a href="1-1.html">1.1장 센서의 정의와 원리</a>
+  <a href="1-2.html">1.2장 다양한 센서 분류</a>
+  <a href="1-3.html">1.3장 현장 확인 성능 지표</a>
+  <a href="1-4.html">1.4장 오작동 방지와 기본 세팅</a>
+  <a class="toc-group" href="index.html#part2">2부 · 스마트센서의 구조 : 데이터의 지능화</a>
+  <a href="2-1.html">2.1장 스마트센서의 등장</a>
+  <a href="2-2.html">2.2장 핵심 내부 구조</a>
+  <a href="2-3.html">2.3장 플러그 앤 플레이</a>
+  <a href="2-4.html">2.4장 지능형 기능</a>
+  <a class="toc-group on" href="index.html#part3">3부 · 자동화 장비와 스마트센서 : 데이터의 활용</a>
+  <a href="3-1.html" class="on">3.1장 장비 제어의 기본 원리</a>
+  <div class="toc-sub" data-for="3-1">
+    <a href="#s3-1-1">3.1.1 목표와 현재를 비교한다</a>
+    <a href="#s3-1-2">3.1.2 개루프와 폐루프</a>
+    <a href="#s3-1-3">3.1.3 오차 계산과 보정</a>
+    <a href="#s3-1-4">3.1.4 외란 억제</a>
+    <a href="#s3-1-5">3.1.5 실무 보강</a>
+    <a href="#r3-1">참고자료</a>
+  </div>
+  <a href="3-2.html">3.2장 서보 모터와 센서의 융합</a>
+  <a href="3-3.html">3.3장 현장 통신 프로토콜</a>
+  <a href="3-4.html">3.4장 예지 보전</a>
+  <a class="toc-group" href="index.html#part4">4부 · 자동화 공정의 운영 : 데이터의 통합</a>
+  <a href="4-1.html">4.1장 산업용 IoT 게이트웨이</a>
+  <a href="4-2.html">4.2장 에지 컴퓨팅 정책</a>
+  <a href="4-3.html">4.3장 생존형 네트워크 인프라</a>
+  <div class="toc-group">찾아보기</div>
+  <a href="index-terms.html">용어 색인</a>
+  <a href="index-figs.html">그림 색인</a>
+  <a href="index-tables.html">표 색인</a>
+  <a href="index-abbr.html">약어 목록</a>
+  <a href="index-refs.html">참고문헌</a>
+</aside>
+
+<!-- ================= 본문 ================= -->
+<div class="main">
+
+  <div class="topbar">
+    <div class="crumb">
+      <span class="c1">3부 · 자동화 장비와 스마트센서 : 데이터의 활용</span>
+      <span>›</span>
+      <span class="c2">3.1 장비 제어의 기본 원리</span>
+    </div>
+    <div class="nav">
+      <a href="index.html" class="home">목차</a>
+      <a href="2-4.html">◀ 이전</a>
+      <span class="count">9 / 15</span>
+      <a href="3-2.html">다음 ▶</a>
+    </div>
+  </div>
+
+  <article class="article">
+
+    <div class="lesson-head">    <h1><span class="lesson-tag">3.1</span>장비 제어의 기본 원리</h1>
+    <p class="subtitle">센서 데이터 기반 제어 — 값이 어떻게 설비를 움직이는가</p>
+    </div>
+
+    <p class="lead">
+      1장에서 값이 어떻게 만들어지는지, 2장에서 그 값에 지능이 더해지는 과정을 봤다.
+      이제 그 값이 <strong>실제로 설비를 움직이는</strong> 이야기다.
+      자동화 설비는 목표를 정하고, 센서로 현재를 재고, 둘의 차이만큼 움직인다.
+      이 <strong>단순한 반복</strong>이 스태커크레인을 랙 앞 ±2mm에 세우고, 컨베이어 속도를 일정하게 유지한다.
+    </p>
+
+    <div class="goals">
+      <h4>이 장을 읽고 나면</h4>
+      <ol>
+        <li>목표값과 실측값의 비교로 동작이 결정되는 폐루프 구조를 설명할 수 있다.</li>
+        <li>개루프와 폐루프의 차이, 그리고 각각이 쓰이는 자리를 구분할 수 있다.</li>
+        <li>오차(Error)가 계산되고 보정되는 순환을 순서대로 설명할 수 있다.</li>
+        <li>외란(Disturbance)이 무엇이고 폐루프가 어떻게 억제하는지 이해한다.</li>
+        <li>제어 이상 증상을 보고 센서·제어·기구 중 어느 계통인지 좁힐 수 있다.</li>
+      </ol>
+    </div>
+
+    <!-- ============ 본문 1 ============ -->
+    <section class="sec" id="s3-1-1">
+      <h2><span class="sec-no">3.1.1</span>목표와 현재를 비교한다<span class="en">자동화 제어의 유일한 원리</span></h2>
+
+      <p class="keyline">
+        자동화 설비는 복잡해 보이지만 하는 일은 하나다.
+        <strong>“가야 할 곳”과 “지금 있는 곳”을 비교해서, 차이만큼 움직인다.</strong>
+      </p>
+
+      <p>
+        스태커크레인에게 “12번 랙으로 가라”는 명령이 내려간다.
+        12번 랙의 위치가 <span class="kw">목표값(Target)</span>이고,
+        엔코더가 알려 주는 현재 위치가 <span class="kw">실측값(Actual)</span>이다.
+        둘의 차이가 <span class="kw">오차(Error)</span>이고, 제어기는 이 오차를 줄이는 방향으로 모터를 돌린다.
+        오차가 0에 가까워지면 멈춘다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f3-1-1"><span class="no">그림 3.1-1</span> · 폐루프 제어의 기본 구조</div>
+          <svg viewBox="0 0 700 300" role="img" aria-label="목표값과 실측값을 비교하는 폐루프 제어 구조">
+            <rect class="s-plain" x="20" y="76" width="118" height="58"/>
+            <text class="s-t3" x="79" y="100">목표값</text>
+            <text class="s-t2" x="79" y="120">Target</text>
+            <path class="s-line-n" d="M144 105 L172 105" marker-end="url(#a91)"/>
+
+            <circle cx="196" cy="105" r="22" fill="#fff" stroke="#0E2E4F" stroke-width="1.6"/>
+            <text class="s-t" x="196" y="112" style="font-size:18px">−</text>
+            <text class="s-t2" x="196" y="62">비교</text>
+
+            <path class="s-line-n" d="M220 105 L256 105" marker-end="url(#a91)"/>
+            <text class="s-t2" x="238" y="92">오차</text>
+
+            <rect class="s-fill" x="262" y="76" width="130" height="58"/>
+            <text class="s-tw" x="327" y="100" style="font-size:13.5px">제어기</text>
+            <text class="s-t2w" x="327" y="120">얼마나 움직일지 계산</text>
+
+            <path class="s-line-n" d="M398 105 L434 105" marker-end="url(#a91)"/>
+
+            <rect class="s-tint" x="440" y="76" width="130" height="58"/>
+            <text class="s-t3" x="505" y="100" style="font-weight:700">액추에이터</text>
+            <text class="s-t2" x="505" y="120">모터 · 실린더</text>
+
+            <path class="s-line-n" d="M576 105 L606 105" marker-end="url(#a91)"/>
+            <rect class="s-plain" x="612" y="76" width="66" height="58"/>
+            <text class="s-t2" x="645" y="100">설비</text>
+            <text class="s-t2" x="645" y="120">동작</text>
+
+            <path class="s-line-n" d="M645 140 L645 190 L338 190" />
+            <rect class="s-fill" x="212" y="166" width="126" height="48"/>
+            <text class="s-tw" x="275" y="188" style="font-size:13.5px">센서</text>
+            <text class="s-t2w" x="275" y="206">실측값 측정</text>
+            <path class="s-line-n" d="M212 190 L196 190 L196 133" marker-end="url(#a91)"/>
+
+            <text class="s-t2" x="480" y="182">피드백 — 결과를 다시 잰다</text>
+
+            <rect class="s-tint" x="20" y="238" width="660" height="46"/>
+            <text class="s-t3" x="350" y="260" style="font-weight:700">이 순환이 초당 수백~수천 번 반복된다</text>
+            <text class="s-t2" x="350" y="278">센서 값이 틀리면 제어 전체가 틀린 곳을 향한다</text>
+
+            <defs>
+              <marker id="a91" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>고리가 닫혀 있어서 <strong>폐루프(Closed loop)</strong>다.
+        센서는 이 고리를 닫는 유일한 요소이며, 그래서 데이터 품질이 곧 제어 품질이 된다.</figcaption>
+      </figure>
+
+      <div class="note">
+        <span class="t">개념 · 1장이 왜 중요했는지</span>
+        <p>1.3에서 다룬 반복 정밀도와 해상도가 여기서 결과로 나타난다.
+        센서 해상도가 1mm면 제어는 <strong>1mm보다 정밀하게 멈출 수 없다.</strong>
+        반복 정밀도가 ±2mm면 같은 명령에도 매번 다른 곳에 선다.
+        “정위치가 안 맞는다”는 증상의 상당수가 제어 문제가 아니라 <strong>센서 사양의 한계</strong>다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 2 ============ -->
+    <section class="sec" id="s3-1-2">
+      <h2><span class="sec-no">3.1.2</span>개루프와 폐루프<span class="en">확인하는가, 확인하지 않는가</span></h2>
+
+      <p class="keyline">
+        <strong>개루프</strong>는 시키고 확인하지 않는다.
+        <strong>폐루프</strong>는 시키고 결과를 확인한다. 물류설비는 두 가지를 섞어 쓴다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f3-1-2"><span class="no">그림 3.1-2</span> · 개루프와 폐루프</div>
+          <svg viewBox="0 0 700 300" role="img" aria-label="개루프와 폐루프 제어 구조 비교">
+            <text class="s-hdr" x="350" y="18">개루프 — 명령만 내리고 결과를 재지 않는다</text>
+            <rect class="s-plain" x="60" y="32" width="140" height="52"/>
+            <text class="s-t3" x="130" y="63">명령</text>
+            <path class="s-line-n" d="M206 58 L242 58" marker-end="url(#a92)"/>
+            <rect class="s-tint" x="248" y="32" width="140" height="52"/>
+            <text class="s-t3" x="318" y="63">액추에이터</text>
+            <path class="s-line-n" d="M394 58 L430 58" marker-end="url(#a92)"/>
+            <rect class="s-plain" x="436" y="32" width="204" height="52"/>
+            <text class="s-t3" x="538" y="55">결과</text>
+            <text class="s-t2" x="538" y="75">맞았는지 모른다</text>
+            <text class="s-t2" x="350" y="104">단순 · 저렴 · 빠르지만, 외란이 생기면 그대로 틀어진다</text>
+
+            <line class="s-rule" x1="20" y1="124" x2="680" y2="124"/>
+
+            <text class="s-hdr" x="350" y="150">폐루프 — 결과를 재서 다시 비교한다</text>
+            <rect class="s-plain" x="60" y="164" width="140" height="52"/>
+            <text class="s-t3" x="130" y="195">명령</text>
+            <path class="s-line-n" d="M206 190 L242 190" marker-end="url(#a92)"/>
+            <rect class="s-tint" x="248" y="164" width="140" height="52"/>
+            <text class="s-t3" x="318" y="195">액추에이터</text>
+            <path class="s-line-n" d="M394 190 L430 190" marker-end="url(#a92)"/>
+            <rect class="s-plain" x="436" y="164" width="204" height="52"/>
+            <text class="s-t3" x="538" y="195">결과</text>
+            <path class="s-line-n" d="M538 222 L538 252 L318 252"/>
+            <rect class="s-fill" x="196" y="230" width="122" height="44"/>
+            <text class="s-tw" x="257" y="258" style="font-size:13.5px">센서 피드백</text>
+            <path class="s-line-n" d="M196 252 L130 252 L130 222" marker-end="url(#a92)"/>
+            <text class="s-t2" x="428" y="246">틀린 만큼 다시 보정</text>
+
+            <defs>
+              <marker id="a92" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>같은 설비 안에도 두 방식이 공존한다. 정밀도가 필요한 축만 폐루프로 만든다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b3-1-1"><span class="no">표 3.1-1</span> · 물류설비에서의 개루프 · 폐루프 사용처</div>
+      <table>
+        <thead>
+          <tr><th>구분</th><th>물류설비 적용</th><th>특징</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>개루프</td>
+              <td>일반 컨베이어 구동, 공압 실린더 전·후진, 단순 다이버터</td>
+              <td>빠르고 저렴. 위치를 “확인”하지 않고 “끝까지 밀어붙임”</td></tr>
+          <tr><td>도달 확인형<br>(인터록)</td>
+              <td>실린더 위치 확인용 근접센서, 컨베이어 정지 위치 광전센서</td>
+              <td>도착 여부만 ON/OFF로 확인. 중간 과정은 제어하지 않음</td></tr>
+          <tr><td>폐루프</td>
+              <td>스태커크레인 주행·승강, 서보 컨베이어, 팔레타이저 로봇 축</td>
+              <td>위치·속도를 연속 확인하며 보정. 정밀하지만 복잡·고가</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note field">
+        <span class="t">현장 · 증상으로 구분하기</span>
+        <p><strong>개루프 계통의 고장</strong>은 “동작은 했는데 결과가 틀림”으로 나타난다 —
+        실린더가 끝까지 안 나갔는데 다음 동작으로 넘어간다.
+        <strong>폐루프 계통의 고장</strong>은 “목표에 도달하지 못하고 계속 시도함”으로 나타난다 —
+        크레인이 랙 앞에서 앞뒤로 미세하게 왔다 갔다 한다(<span class="kw">헌팅</span>).
+        이 두 증상은 확인할 곳이 완전히 다르다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 3 ============ -->
+    <section class="sec" id="s3-1-3">
+      <h2><span class="sec-no">3.1.3</span>오차 계산과 보정<span class="en">얼마나 틀렸는지, 얼마나 고칠지</span></h2>
+
+      <p class="keyline">
+        제어기는 오차의 <strong>크기</strong>만 보는 것이 아니라
+        <strong>얼마나 오래 남아 있었는지</strong>와 <strong>얼마나 빨리 변하는지</strong>도 함께 본다.
+      </p>
+
+      <p>
+        오차가 크면 세게, 작으면 살살 움직이는 것이 기본이다.
+        그런데 그것만으로는 부족하다. 계속 조금씩 모자란 상태가 유지되거나,
+        너무 세게 움직여서 목표를 지나쳐 버리는 문제가 생긴다.
+        그래서 실제 제어기는 세 가지 요소를 조합해 계산한다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f3-1-3"><span class="no">그림 3.1-3</span> · 제어기가 오차를 다루는 세 가지 방식</div>
+          <svg viewBox="0 0 700 316" role="img" aria-label="비례 적분 미분 제어 요소의 역할">
+            <rect class="s-fill" x="250" y="10" width="200" height="42"/>
+            <text class="s-tw" x="350" y="37">오차를 어떻게 다룰까</text>
+
+            <path class="s-line-n" d="M350 54 L350 72"/>
+            <path class="s-line-n" d="M130 72 L570 72"/>
+            <path class="s-line-n" d="M130 72 L130 94" marker-end="url(#a93)"/>
+            <path class="s-line-n" d="M350 72 L350 94" marker-end="url(#a93)"/>
+            <path class="s-line-n" d="M570 72 L570 94" marker-end="url(#a93)"/>
+
+            <rect class="s-tint" x="24" y="98" width="212" height="92"/>
+            <text class="s-t" x="130" y="124">지금 얼마나 틀렸나</text>
+            <text class="s-t2" x="130" y="146">비례 (P)</text>
+            <text class="s-t2" x="130" y="166">오차가 크면 크게 움직임</text>
+            <text class="s-t2" x="130" y="184">가장 기본이 되는 힘</text>
+
+            <rect class="s-tint" x="244" y="98" width="212" height="92"/>
+            <text class="s-t" x="350" y="124">얼마나 오래 틀렸나</text>
+            <text class="s-t2" x="350" y="146">적분 (I)</text>
+            <text class="s-t2" x="350" y="166">조금씩 계속 모자라면</text>
+            <text class="s-t2" x="350" y="184">누적해서 더 밀어줌</text>
+
+            <rect class="s-tint" x="464" y="98" width="212" height="92"/>
+            <text class="s-t" x="570" y="124">얼마나 빨리 변하나</text>
+            <text class="s-t2" x="570" y="146">미분 (D)</text>
+            <text class="s-t2" x="570" y="166">빠르게 접근하면</text>
+            <text class="s-t2" x="570" y="184">미리 브레이크</text>
+
+            <rect class="s-plain" x="24" y="200" width="212" height="52"/>
+            <text class="s-t2" x="130" y="222">약하면 도달 못 함</text>
+            <text class="s-t2" x="130" y="242">세면 지나침 · 진동</text>
+
+            <rect class="s-plain" x="244" y="200" width="212" height="52"/>
+            <text class="s-t2" x="350" y="222">없으면 미세하게 모자람</text>
+            <text class="s-t2" x="350" y="242">과하면 느리게 출렁</text>
+
+            <rect class="s-plain" x="464" y="200" width="212" height="52"/>
+            <text class="s-t2" x="570" y="222">없으면 목표를 지나침</text>
+            <text class="s-t2" x="570" y="242">과하면 노이즈에 민감</text>
+
+            <rect class="s-warn" x="24" y="264" width="652" height="42"/>
+            <text class="s-t3" x="350" y="290" style="fill:#8A5A0B;font-weight:700">이 세 값의 조정(튜닝)은 담당자 영역 — 임의 변경 시 설비 손상 위험</text>
+
+            <defs>
+              <marker id="a93" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>세 가지를 조합한 것이 흔히 말하는 PID 제어다.
+        기술자가 계산할 일은 없으나, <strong>증상이 어느 요소의 문제인지</strong>는 짐작할 수 있다.</figcaption>
+      </figure>
+
+      <div class="tbl-label" id="b3-1-2"><span class="no">표 3.1-2</span> · 제어 이상 증상과 짐작할 수 있는 원인</div>
+      <table>
+        <thead>
+          <tr><th>증상</th><th>가능성 있는 원인</th><th>기술자가 확인할 것</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>목표를 지나쳤다가 되돌아옴</td><td>보정이 과함 (P·I 요소)</td>
+              <td>적재 중량이 평소와 다른가, 최근 튜닝 변경이 있었는가</td></tr>
+          <tr><td>목표 근처에서 계속 떪 (헌팅)</td><td>보정이 과하거나 센서 값이 튐</td>
+              <td class="t-warn">센서 반복 정밀도, 브래킷 유격 — 1.3 증상 B</td></tr>
+          <tr><td>목표에 조금 못 미치고 멈춤</td><td>보정이 약함 · 기구부 저항 증가</td>
+              <td>레일 이물, 베어링 뻑뻑함, 윤활 상태</td></tr>
+          <tr><td>매번 같은 만큼 어긋남</td><td>영점 이탈</td>
+              <td class="t-warn">1.3 증상 A — 원점 재설정 필요 (담당자)</td></tr>
+          <tr><td>무거울 때만 어긋남</td><td>부하에 따른 보정 부족</td>
+              <td>중량과 오차의 상관관계를 기록해 전달</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note warn">
+        <span class="t">주의 · 제어 파라미터는 절대 만지지 않는다</span>
+        <p>제어기의 P·I·D 값은 설비의 무게·관성·속도에 맞춰 정해진 것이다.
+        임의로 키우면 <strong>기구부에 충격이 가해져 파손</strong>될 수 있고,
+        줄이면 정밀도를 잃는다. 안전 관련 축이라면 위험은 더 크다.
+        증상을 기록해 전달하는 것까지가 기술자의 역할이다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 본문 4 ============ -->
+    <section class="sec" id="s3-1-4">
+      <h2><span class="sec-no">3.1.4</span>외란 억제<span class="en">예상하지 못한 방해를 어떻게 이겨내는가</span></h2>
+
+      <p class="keyline">
+        <span class="kw">외란(Disturbance)</span>은 명령과 상관없이 결과를 밀어내는 힘이다.
+        폐루프의 진짜 가치는 정밀도가 아니라 <strong>외란을 스스로 이겨내는 것</strong>에 있다.
+      </p>
+
+      <p>
+        물류 현장의 외란은 도처에 있다. 파렛트 중량이 매번 다르고, 레일에 먼지가 쌓이고,
+        온도가 변해 벨트 장력이 달라지고, 바람이 불고, 바닥이 미세하게 기울어 있다.
+        개루프는 이 모든 것에 그대로 당한다. 폐루프는 <strong>결과를 다시 재기 때문에</strong> 스스로 만회한다.
+      </p>
+
+      <figure>
+        <div class="fig">
+          <div class="fig-label" id="f3-1-4"><span class="no">그림 3.1-4</span> · 외란이 들어왔을 때</div>
+          <svg viewBox="0 0 700 316" role="img" aria-label="외란 발생 시 개루프와 폐루프의 반응 차이">
+            <rect class="s-warn" x="230" y="10" width="240" height="38"/>
+            <text class="s-t3" x="350" y="35" style="fill:#8A5A0B;font-weight:700">외란 발생 — 중량 증가 · 마찰 증가</text>
+
+            <text class="s-hdr" x="180" y="72">개루프</text>
+            <line class="s-line" x1="40" y1="150" x2="320" y2="150" stroke-dasharray="4 3"/>
+            <text class="s-t2" x="26" y="154">목표</text>
+            <path d="M40 150 L120 150 L160 150" fill="none" stroke="#0E2E4F" stroke-width="2.4"/>
+            <path d="M160 150 L200 168 L260 186 L320 190" fill="none" stroke="#A67C1F" stroke-width="2.6"/>
+            <path class="s-line" d="M160 118 L160 142" stroke="#A67C1F" stroke-width="2" marker-end="url(#a94w)"/>
+            <text class="s-t2" x="160" y="112" style="fill:#8A5A0B">외란</text>
+            <text class="s-t2" x="180" y="214" style="fill:#8A5A0B;font-weight:700">밀린 채로 끝난다</text>
+            <text class="s-t2" x="180" y="234">되돌릴 방법이 없다</text>
+
+            <line class="s-rule" x1="350" y1="60" x2="350" y2="250"/>
+
+            <text class="s-hdr" x="520" y="72">폐루프</text>
+            <line class="s-line" x1="380" y1="150" x2="660" y2="150" stroke-dasharray="4 3"/>
+            <text class="s-t2" x="366" y="154">목표</text>
+            <path d="M380 150 L460 150 L500 150" fill="none" stroke="#0E2E4F" stroke-width="2.4"/>
+            <path d="M500 150 L530 170 L560 176 L590 162 L620 152 L660 150" fill="none" stroke="#0E2E4F" stroke-width="2.6"/>
+            <path class="s-line" d="M500 118 L500 142" stroke="#A67C1F" stroke-width="2" marker-end="url(#a94w)"/>
+            <text class="s-t2" x="500" y="112" style="fill:#8A5A0B">외란</text>
+            <text class="s-t2" x="520" y="214" style="font-weight:700">밀렸다가 스스로 복귀</text>
+            <text class="s-t2" x="520" y="234">센서가 차이를 잡아냈다</text>
+
+            <rect class="s-tint" x="40" y="262" width="620" height="46"/>
+            <text class="s-t3" x="350" y="284" style="font-weight:700">그래서 폐루프에서는 “외란이 있었다”는 사실 자체가 드러나지 않는다</text>
+            <text class="s-t2" x="350" y="302">보정량이 커지는 것으로만 알 수 있다 — 2.4의 “보정량 증가”와 같은 원리</text>
+
+            <defs>
+              <marker id="a94w" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#A67C1F"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>폐루프는 외란을 지워 준다. 문제는 <strong>지워진 외란이 계속 커지고 있어도 겉으로는 정상</strong>이라는 점이다.</figcaption>
+      </figure>
+
+      <div class="note">
+        <span class="t">개념 · 폐루프가 가려 주는 고장</span>
+        <p>레일에 이물이 끼어 마찰이 커지면 폐루프는 모터에 더 큰 힘을 준다.
+        위치는 여전히 정확하므로 <strong>겉으로는 문제가 없다.</strong>
+        그러나 모터는 무리하고 있고, 결국 과부하로 정지하거나 부품이 먼저 망가진다.
+        이런 “가려진 고장”을 잡는 방법이 <strong>보정량 감시</strong>이며,
+        3.2의 스마트 서보 드라이브와 3.4의 예지 보전이 정확히 이 주제를 다룬다.</p>
+      </div>
+
+      <div class="tbl-label" id="b3-1-3"><span class="no">표 3.1-3</span> · 물류설비의 대표적 외란</div>
+      <table>
+        <thead>
+          <tr><th>외란</th><th>어디서</th><th>겉으로 드러나는 시점</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>적재 중량 변동</td><td>스태커크레인 승강, 팔레타이저</td><td>정상 — 폐루프가 흡수</td></tr>
+          <tr><td>레일·베어링 마찰 증가</td><td>주행부, 컨베이어 롤러</td><td class="t-warn">과부하 알람 또는 발열</td></tr>
+          <tr><td>벨트 장력 변화</td><td>컨베이어, 소터 유도부</td><td class="t-warn">속도 편차, 미끄러짐</td></tr>
+          <tr><td>바닥 요철 · 경사</td><td>AGV · AMR 주행</td><td>주행 보정량 증가</td></tr>
+          <tr><td>공압 압력 변동</td><td>실린더, 이재기 클램프</td><td class="t-warn">동작 시간 편차</td></tr>
+          <tr><td>온도에 의한 열팽창</td><td>장거리 레일, 프레임</td><td>계절성 위치 편차</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ 본문 5 ============ -->
+    <section class="sec" id="s3-1-5">
+      <h2><span class="sec-no">3.1.5</span>실무 보강<span class="en">제어 이상 앞에서 계통을 좁힌다</span></h2>
+
+      <p class="keyline">
+        “위치가 안 맞는다”는 신고 하나에 확인할 계통은 셋이다.
+        <strong>센서 · 제어 · 기구</strong>. 순서대로 배제하면 빠르게 좁혀진다.
+      </p>
+
+      <p>
+        아래 다섯 항목은 목차에 명시되어 있지는 않지만
+        <strong>물류설비 운영에서 실제로 필요해 보강한 내용</strong>이다.
+      </p>
+
+      <!-- 1 -->
+      <div class="prac">
+        <h3>1. 위치 이상 30초 판단 절차</h3>
+        <p class="prac-tip">1.1의 절차를 제어 문제용으로 확장한 것.</p>
+
+        <figure>
+          <div class="fig">
+            <div class="fig-label" id="f3-1-5"><span class="no">그림 3.1-5</span> · 위치 이상 원인 계통 판단</div>
+            <svg viewBox="0 0 700 356" role="img" aria-label="위치 이상 발생 시 원인 계통 판단 절차">
+              <rect class="s-fill" x="20" y="10" width="660" height="40"/>
+              <text class="s-tw" x="350" y="36">위치가 맞지 않는다 — 어떻게 틀리는지를 먼저 본다</text>
+
+              <rect class="s-tint" x="20" y="66" width="220" height="76"/>
+              <text class="s-hdr" x="130" y="88">STEP 1</text>
+              <text class="s-t3" x="130" y="110">매번 같은 만큼</text>
+              <text class="s-t3" x="130" y="130">일정하게 어긋나는가?</text>
+              <path class="s-line-n" d="M246 104 L280 104" marker-end="url(#a95)"/>
+              <rect class="s-plain" x="286" y="66" width="394" height="76"/>
+              <text class="s-t3" x="483" y="90" style="font-weight:700">예 → 영점 · 원점 계통</text>
+              <text class="s-t2" x="483" y="112">원점 도그 위치 이동 / 브래킷 밀림 / 커플링 헐거움</text>
+              <text class="s-t2" x="483" y="132">확인 후 담당자 — 원점 재설정 필요</text>
+
+              <path class="s-line-n" d="M130 146 L130 166" marker-end="url(#a95)"/>
+
+              <rect class="s-tint" x="20" y="170" width="220" height="76"/>
+              <text class="s-hdr" x="130" y="192">STEP 2</text>
+              <text class="s-t3" x="130" y="214">매번 다르게</text>
+              <text class="s-t3" x="130" y="234">들쭉날쭉한가?</text>
+              <path class="s-line-n" d="M246 208 L280 208" marker-end="url(#a95)"/>
+              <rect class="s-plain" x="286" y="170" width="394" height="76"/>
+              <text class="s-t3" x="483" y="194" style="font-weight:700">예 → 센서 · 기구 유격 계통</text>
+              <text class="s-t2" x="483" y="216">엔코더 이상 / 브래킷 유격 / 벨트 미끄러짐</text>
+              <text class="s-t2" x="483" y="236">손으로 흔들어 유격 확인 — 1.3 증상 B</text>
+
+              <path class="s-line-n" d="M130 250 L130 270" marker-end="url(#a95)"/>
+
+              <rect class="s-tint" x="20" y="274" width="220" height="76"/>
+              <text class="s-hdr" x="130" y="296">STEP 3</text>
+              <text class="s-t3" x="130" y="318">특정 조건에서만</text>
+              <text class="s-t3" x="130" y="338">(무거울 때 · 빠를 때)</text>
+              <path class="s-line-n" d="M246 312 L280 312" marker-end="url(#a95)"/>
+              <rect class="s-warn" x="286" y="274" width="394" height="76"/>
+              <text class="s-t3" x="483" y="298" style="fill:#8A5A0B;font-weight:700">예 → 제어 · 외란 계통</text>
+              <text class="s-t2" x="483" y="320" style="fill:#8A5A0B">부하 조건 대비 보정 부족 / 마찰 증가</text>
+              <text class="s-t2" x="483" y="340" style="fill:#8A5A0B">조건을 기록해 담당자에게 — 튜닝 영역</text>
+
+              <defs>
+                <marker id="a95" markerWidth="8" markerHeight="8" refX="7.5" refY="4" orient="auto">
+                  <path d="M0,0 L8,4 L0,8 z" fill="#0E2E4F"/>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+          <figcaption>“어떻게 틀리는가”가 “왜 틀리는가”를 결정한다. 1.3의 증상 분류가 그대로 적용된다.</figcaption>
+        </figure>
+      </div>
+
+      <!-- 2 -->
+      <div class="prac">
+        <h3>2. 헌팅(떨림)을 만났을 때</h3>
+        <p class="prac-tip">가장 눈에 띄고, 가장 오해하기 쉬운 증상.</p>
+
+        <p>
+          목표 위치 근처에서 설비가 앞뒤로 미세하게 진동하는 것을 <span class="kw">헌팅</span>이라 한다.
+          원인은 크게 둘이다.
+        </p>
+        <ul>
+          <li><strong>센서 값이 튀는 경우</strong> — 제어기는 정직하게 반응하고 있을 뿐이다.
+              튀는 값을 따라가느라 계속 움직인다. 1.3 증상 B의 확인 절차를 따른다.</li>
+          <li><strong>제어 보정이 과한 경우</strong> — 센서는 정확한데 제어기가 과잉 반응한다.
+              적재 중량이 평소와 크게 다르거나, 최근 튜닝이 바뀐 경우 의심한다.</li>
+        </ul>
+        <div class="note field">
+          <span class="t">현장 · 둘을 가르는 방법</span>
+          <p>설비를 정지시킨 상태에서 <strong>센서 값이 안정적인지 화면에서 확인</strong>한다.
+          움직이지 않는데도 값이 흔들리면 <strong>센서 계통</strong>,
+          정지 시 값이 안정적이면 <strong>제어 계통</strong>이다.
+          이 한 가지 확인이 담당자의 출동 준비를 완전히 바꾼다.</p>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="prac">
+        <h3>3. “가려진 고장”을 찾아내기</h3>
+        <p class="prac-tip">폐루프가 잘 동작할수록 문제가 늦게 드러난다.</p>
+
+        <p>
+          본문 4에서 봤듯이 폐루프는 외란을 지워 준다. 그래서 위치는 정확한데
+          내부적으로는 무리하고 있는 상태가 오래 지속될 수 있다. 아래 신호를 본다.
+        </p>
+        <ul>
+          <li><strong>모터·드라이브 발열 증가</strong> — 같은 작업인데 온도가 올라간다</li>
+          <li><strong>전류·토크 값 상승</strong> — 스마트 서보 드라이브가 보고한다(3.2)</li>
+          <li><strong>동작 소음 변화</strong> — 사람의 귀가 여전히 좋은 센서다</li>
+          <li><strong>사이클 타임 미세 증가</strong> — 같은 동작에 시간이 더 걸린다</li>
+          <li><strong>보정량 누적 증가</strong> — 제어기가 점점 더 많이 개입하고 있다</li>
+        </ul>
+        <div class="note warn">
+          <span class="t">주의 · 위치가 맞으면 정상이라는 착각</span>
+          <p>“결과가 맞으니 괜찮다”가 폐루프에서 가장 위험한 판단이다.
+          결과를 맞추기 위해 얼마나 무리하고 있는지는 결과만 봐서는 알 수 없다.
+          <strong>과정을 보여 주는 값</strong>(전류·온도·보정량)을 함께 봐야 한다.</p>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="prac">
+        <h3>4. 개루프 구간에서의 확인 요령</h3>
+        <p class="prac-tip">확인하지 않는 구간이므로, 사람이 확인해 줘야 한다.</p>
+
+        <p>
+          공압 실린더처럼 개루프로 동작하는 부분은 <strong>“끝까지 갔는가”만</strong> 확인한다.
+          그 확인을 담당하는 것이 1.2에서 본 유도형 근접센서나 리미트 스위치다.
+        </p>
+        <ul>
+          <li><strong>도착 확인 센서가 정상인가</strong> — 이 센서가 죽으면 설비는 도착 여부를 모른다</li>
+          <li><strong>동작 시간이 평소와 같은가</strong> — 길어졌다면 공압 압력 저하나 마찰 증가</li>
+          <li><strong>중간에 걸리는 느낌이 없는가</strong> — 개루프는 걸려도 힘을 더 주지 않는다</li>
+          <li><strong>스토퍼·완충기 상태</strong> — 개루프는 끝까지 밀어붙이므로 완충 부품이 먼저 닳는다</li>
+        </ul>
+      </div>
+
+      <!-- 5 -->
+      <div class="prac">
+        <h3>5. 현장 점검 체크리스트</h3>
+        <p class="prac-tip">제어 관점의 점검 항목.</p>
+
+        <h4>증상 확인</h4>
+        <ul class="check">
+          <li>어긋나는 방식이 일정한가 / 들쭉날쭉한가 / 조건부인가를 분류했는가</li>
+          <li>설비 정지 상태에서 센서 값이 안정적인지 확인했는가</li>
+          <li>적재 중량·라인 속도 등 조건과 오차의 관계를 기록했는가</li>
+        </ul>
+
+        <h4>기구 계통</h4>
+        <ul class="check">
+          <li>브래킷·커플링·벨트에 유격이나 미끄러짐이 없는가</li>
+          <li>레일·롤러에 이물이 끼거나 윤활이 부족하지 않은가</li>
+          <li>원점 도그(기준 위치 표식)가 제자리에 있는가</li>
+          <li>스토퍼·완충기가 마모되지 않았는가 (개루프 구간)</li>
+        </ul>
+
+        <h4>가려진 고장</h4>
+        <ul class="check">
+          <li>같은 작업에서 모터·드라이브 온도가 평소보다 높지 않은가</li>
+          <li>동작 소음이 달라지지 않았는가</li>
+          <li>사이클 타임이 미세하게 늘어나지 않았는가</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <span class="t">개념 · 이 장이 남기는 것</span>
+        <p>제어는 목표와 현재를 비교해 차이만큼 움직이는 순환이고(본문 1),
+        결과를 확인하는지 여부가 개루프와 폐루프를 가른다(본문 2).
+        오차는 크기·지속 시간·변화 속도로 다뤄지며(본문 3),
+        폐루프의 진짜 가치는 외란을 스스로 이겨내는 것이다(본문 4).<br>
+        다음 장 3.2에서는 이 폐루프를 가장 정밀하게 구현한 장치 —
+        <strong>서보 모터와 엔코더</strong>를 살펴본다.</p>
+      </div>
+    </section>
+
+    <!-- ============ 참고자료 ============ -->
+    <section class="ref" id="r3-1">
+      <h2>참고자료</h2>
+
+      <h3>1. 용어 정리</h3>
+      <dl class="terms">
+        <dt id="t3-1-1">목표값 (Target · Setpoint)</dt>
+        <dd>제어가 도달하려는 값. 위치·속도·압력 등 제어 대상에 따라 달라진다.</dd>
+        <dt id="t3-1-2">실측값 (Actual · Process value)</dt>
+        <dd>센서가 측정한 현재 값. 이 값의 품질이 제어 품질을 그대로 결정한다.</dd>
+        <dt id="t3-1-3">오차 (Error)</dt>
+        <dd>목표값과 실측값의 차이. 제어기는 이 값을 0으로 만들려 동작한다.</dd>
+        <dt id="t3-1-4">개루프 / 폐루프 (Open loop / Closed loop)</dt>
+        <dd>결과를 다시 측정해 반영하면 폐루프, 명령만 내리고 확인하지 않으면 개루프다.</dd>
+        <dt id="t3-1-5">피드백 (Feedback)</dt>
+        <dd>출력 결과를 다시 입력 쪽으로 되돌려 비교하는 경로. 폐루프를 성립시키는 요소다.</dd>
+        <dt id="t3-1-6">PID 제어</dt>
+        <dd>오차의 크기(비례)·누적(적분)·변화율(미분)을 조합해 조작량을 계산하는 제어 방식.</dd>
+        <dt id="t3-1-7">외란 (Disturbance)</dt>
+        <dd>명령과 무관하게 결과를 밀어내는 외부 요인. 중량 변화, 마찰, 온도, 바람 등.</dd>
+        <dt id="t3-1-8">헌팅 (Hunting)</dt>
+        <dd>목표 근처에서 결과가 안정되지 못하고 계속 진동하는 현상.</dd>
+        <dt id="t3-1-9">원점 · 원점 도그 (Home position · Dog)</dt>
+        <dd>위치 제어의 기준이 되는 지점과 그것을 표시하는 물리적 표식. 이 표식이 밀리면 전체 위치가 어긋난다.</dd>
+      </dl>
+
+      <h3>2. 관련 이미지 — 실물과 도해로 확인하기</h3>
+      <p class="ref-intro">
+        본문에 나온 순서대로 정리했다. 센서·공압은 썬덴코리아 파트너사, 제어기는 미쓰비시전기, 로봇은 야스카와·뉴로메카 기준이다.
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/product.do?act=productList&amp;parent_id=10&amp;cate_id=2" target="_blank" rel="noopener">PLC (MELSEC) — 제어기의 실물과 구성</a>
+          <span class="where">본문 1 — 그림 3.1-1의 “제어기”가 현장에서 어떤 장치인지</span>
+        </li>
+        <li>
+          <span class="src">Mitsubishi</span>
+          <a href="https://kr.mitsubishielectric.com/fa/ko/mobile.do?act=product_list_mobile&amp;parent_id=528&amp;cate_id=2" target="_blank" rel="noopener">MELSEC iQ-R 시리즈 — 모션 제어 CPU</a>
+          <span class="where">본문 3 — 위치·속도 제어를 전담하는 모듈. PID 파라미터가 여기 들어 있다</span>
+        </li>
+        <li>
+          <span class="src">FESTO</span>
+          <a href="https://www.festo.com/cat/ko_kr/products_050100" target="_blank" rel="noopener">근접 센서 — 실린더 도착 확인용</a>
+          <span class="where">본문 2 · 실무 보강 4 — 개루프 구간에서 “끝까지 갔는가”를 확인하는 센서</span>
+        </li>
+        <li>
+          <span class="src">FESTO</span>
+          <a href="https://www.festo.com/cat/ko_kr/products_041000" target="_blank" rel="noopener">압력 · 진공 센서 — 공압 압력 감시</a>
+          <span class="where">표 3.1-3 · 실무 보강 4 — 공압 압력 변동이라는 외란을 감시하는 방법</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/products/detection-sensors/inductive-proximity-sensors/inductive-proximity-sensors/c/g253054" target="_blank" rel="noopener">유도감응형 근접 센서 — 원점 도그 검출</a>
+          <span class="where">실무 보강 1 STEP 1 — 원점 표식을 읽는 센서의 실물과 설치 형태</span>
+        </li>
+        <li>
+          <span class="src">SICK</span>
+          <a href="https://www.sick.com/kr/ko/catalog/products/distance-sensors/laser-distance-sensors/od2000/od2000/c/g547590?tab=overview" target="_blank" rel="noopener">레이저 거리 센서 — 고정밀 위치 피드백</a>
+          <span class="where">본문 1 · 2 — 스태커크레인 주행 위치를 mm 단위로 피드백하는 센서</span>
+        </li>
+        <li>
+          <span class="src">Yaskawa</span>
+          <a href="https://www.motoman.com/en-us/applications/palletizing" target="_blank" rel="noopener">팔레타이징 로봇 — 다축 폐루프 제어 사례</a>
+          <span class="where">본문 2 — 여러 축이 동시에 폐루프로 제어되는 설비의 실제 모습</span>
+        </li>
+      </ol>
+
+      <h3>3. 학술 · 표준 근거 자료 — 심화 학습용</h3>
+      <p class="ref-intro">
+        무료로 볼 수 있는 자료를 우선했다.<br>
+        <span class="src std">표준</span> 국제 규격 · <span class="src paper">논문</span> 공개 학술 자료
+      </p>
+      <ol class="linklist">
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://www.plcopen.org/standards/logic/iec-61131-9/" target="_blank" rel="noopener">IEC 61131 시리즈 개요 (PLCopen)</a>
+          <span class="where">본문 1 · 3 — 프로그래머블 컨트롤러의 국제 표준 체계.
+          제어 로직이 어떤 규격 위에서 작성되는지</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/68534" target="_blank" rel="noopener">IEC 61131-9 : SDCI (IO-Link)</a>
+          <span class="where">본문 1 — 센서 피드백이 제어기까지 전달되는 통신 규격</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://webstore.iec.ch/en/publication/63115" target="_blank" rel="noopener">IEC 61496-1 : 기계 안전 — ESPE</a>
+          <span class="where">본문 2 — 안전 관련 축의 제어는 별도 규격을 따른다.
+          일반 제어 튜닝과 안전 회로를 혼동하지 않아야 하는 근거</span>
+        </li>
+        <li>
+          <span class="src std">표준</span>
+          <a href="https://www.bipm.org/documents/20126/2071204/JCGM_200_2012.pdf" target="_blank" rel="noopener">JCGM 200:2012 국제 계량 용어집 VIM (무료 PDF)</a>
+          <span class="where">본문 1 개념 박스 — 실측값의 정밀도·정확도가 제어 결과에 전이되는 관계</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://www.mdpi.com/1424-8220/22/19/7444" target="_blank" rel="noopener">Design and Analysis of Small Size Eddy Current Displacement Sensor (Sensors, MDPI)</a>
+          <span class="where">본문 1 — 폐루프의 피드백 요소로 쓰이는 변위 센서의 설계 요구 조건</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8470825/" target="_blank" rel="noopener">Research on Coil Impedance of Self-Inductive Displacement Sensor (PMC 공개)</a>
+          <span class="where">본문 4 — 자기 부상 베어링 등 고속 폐루프 제어에서 센서 특성이 미치는 영향</span>
+        </li>
+        <li>
+          <span class="src paper">논문</span>
+          <a href="https://arxiv.org/pdf/1903.11549" target="_blank" rel="noopener">A Survey of Protocols and Standards for Internet of Things (arXiv 공개)</a>
+          <span class="where">본문 1 — 제어 루프의 통신 지연이 제어 품질에 미치는 영향에 대한 배경</span>
+        </li>
+        <li>
+          <span class="src">OMRON</span>
+          <a href="https://kr.misumi-ec.com/pr/vona/mech_20200829/OMRON_sensor02.pdf" target="_blank" rel="noopener">기술편 · 변위 센서 (한국어 PDF · 4p)</a>
+          <span class="where">본문 3.1.3 — 광학식 변위 센서의 PSD 방식과 CCD(CMOS) 방식 비교. 거리 오차가 생기는 지점</span>
+        </li>
+      </ol>
+
+      <h3>4. 이어지는 장과의 연결</h3>
+      <ul style="font-size:13.5px">
+        <li><strong>3.2 서보 모터와 센서의 융합</strong> — 폐루프를 가장 정밀하게 구현한 다중 루프 구조</li>
+        <li><strong>3.3 현장 통신 프로토콜</strong> — 피드백 신호가 지연 없이 오가게 하는 통신</li>
+        <li><strong>3.4 예지 보전</strong> — 본문 4의 “가려진 고장”을 데이터로 찾아내는 방법</li>
+        <li><strong>4.2 에지 컴퓨팅 정책</strong> — 긴급 제어 판단을 현장에서 처리해야 하는 이유</li>
+      </ul>
+    </section>
+  </article>
+</div>
+</div>
+</body>
+</html>
