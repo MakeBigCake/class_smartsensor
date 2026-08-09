@@ -65,7 +65,7 @@ body{
   padding:26px 0 60px;position:sticky;top:0;height:100vh;overflow-y:auto;
 }
 .toc-head{padding:22px;background:var(--navy);border-bottom:2px solid var(--navy);
-  margin-bottom:0;text-align:center;}
+  margin-bottom:0;text-align:left;}
 .toc-head .course{color:#fff;}
 .toc-head .course-desc{font-size:13.5px;font-weight:700;line-height:1.6;
   color:#fff;margin-top:8px;letter-spacing:0;}
