@@ -400,8 +400,9 @@ ul.idx-list .no{flex:0 0 88px;font-size:12.5px;font-weight:700;color:var(--navy)
   letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px;}
 .cover-head h1{font-size:40px;line-height:1.24;margin:0 0 10px;color:#fff;letter-spacing:-.03em;}
 .cover-head .sub{font-size:19px;color:#fff;font-weight:500;margin:0 0 22px;}
-.cover-meta{display:flex;flex-wrap:wrap;gap:10px 30px;font-size:15.5px;color:#fff;
+.cover-meta{display:flex;flex-wrap:wrap;gap:10px 34px;font-size:15.5px;color:#fff;
   border-top:1px solid #2F5F91;padding-top:20px;}
+.cover-meta span{white-space:nowrap;}
 .cover-meta b{color:#fff;font-weight:700;}
 
 /* ---------- 개요 ---------- */
