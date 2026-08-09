@@ -135,6 +135,11 @@ body{
 
 .article{max-width:var(--maxw);margin:0 auto;padding:48px 30px 130px;width:100%;}
 
+/* 상단 고정 막대에 제목이 가리지 않도록, 이동 목표에 여유를 준다 */
+section.sec, section.ref, .lesson-head, .fig-label, .tbl-label,
+.chapter-divider, .lesson-block, .chap[id], dt[id]{scroll-margin-top:76px;}
+html{scroll-behavior:smooth;}
+
 /* ---------- 표제 ---------- */
 .lesson-tag{
   font-size:12.5px;font-weight:700;color:var(--navy);letter-spacing:.02em;
@@ -374,13 +379,17 @@ ul.idx-list .no{flex:0 0 88px;font-size:12.5px;font-weight:700;color:var(--navy)
 .lesson-head h1{margin:0 0 8px;}
 .lesson-head .subtitle{margin:0;padding:0;border-bottom:none;color:var(--ink-2);}
 
+
+/* =========================================================
+   표지 전용 — 표제 면 · 통계 · 차례 카드 · 구성 도해
+   (이전 assets/index.css 를 여기로 합쳤다. 스타일 파일은 하나만 둔다)
+   ========================================================= */
 /* =========================================================
    목차 페이지 전용 스타일 (assets/style.css 위에 얹는다)
    색·타이포는 style.css의 규칙을 그대로 따른다
    ========================================================= */
 
-body.cover{background:var(--bg);}
-.cover-wrap{max-width:1000px;margin:0 auto;padding:56px 32px 120px;}
+.cover-wrap{max-width:none;margin:0;padding:0;}
 
 /* ---------- 표지 ---------- */
 .cover-head{background:var(--navy);color:#fff;padding:38px 34px 34px;margin:0 0 40px;}
@@ -651,7 +660,7 @@ body.cover{background:var(--bg);}
 <div class="main">
   <article class="article">
 <section id="cover" class="nav-block" data-nav="cover" data-part="start">
-
+    <div class="cover-wrap">
 
   <!-- ================= 표지 ================= -->
   <header class="cover-head">
@@ -870,9 +879,7 @@ body.cover{background:var(--bg);}
     <div class="fact"><div class="n">66</div><div class="l">도해 · 그래프</div></div>
     <div class="fact"><div class="n">62</div><div class="l">현장 판단표</div></div>
   </div>
-
-
-
+    </div>
 
 </section>
 <section class="lesson-block nav-block" id="Lpreface" data-nav="preface" data-part="start">

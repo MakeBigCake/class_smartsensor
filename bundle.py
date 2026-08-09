@@ -109,15 +109,13 @@ def article_body(fn):
 
 
 def strip_cover_shell(html):
-    """index.html에서 표지 본문만 뽑아내고, 절 링크를 내부 앵커로 바꾼다."""
-    m = re.search(r'<div class="cover-wrap">(.*)</div>\s*</body>', html, re.S)
-    return to_anchor(m.group(1) if m else "")
+    """표지 본문의 링크를 내부 앵커로 바꾼다."""
+    return to_anchor(html)
 
 
 def main():
     css = read("assets", "style.css")
-    css_idx = read("assets", "index.css")
-    idx = read("index.html")
+    idx = read("content", "cover.html")
 
     # 단일 문서용 추가 스타일
     extra = """
@@ -199,7 +197,6 @@ def main():
 <title>{course} — {course2}</title>
 <style>
 {css}
-{css_idx}
 {extra}
 </style>
 </head>
@@ -227,7 +224,7 @@ def main():
 {spy}
 </body>
 </html>
-""".format(course=COURSE, course2=COURSE_2, meta=META, css=css, css_idx=css_idx,
+""".format(course=COURSE, course2=COURSE_2, meta=META, css=css,
            extra=extra, toc=build_toc(), body="\n".join(body), stamp=stamp, spy=SPY)
 
     open(OUT, "w", encoding="utf-8").write(html)

@@ -234,6 +234,19 @@ def main():
         open(os.path.join(BASE, fn), "w", encoding="utf-8").write(html)
         made.append(fn)
 
+    cov = os.path.join(src_dir, "cover.html")
+    if os.path.exists(cov):
+        html = SHELL.format(
+            num="", title="목차", course=COURSE, course2=COURSE_2, meta=META,
+            author=AUTHOR, written=WRITTEN,
+            toc=build_toc("index.html"), chapter=COURSE,
+            prev='<span class="disabled">◀ 이전</span>',
+            next='<a href="preface.html">다음 ▶</a>',
+            idx="—", total=TOTAL,
+            body=open(cov, encoding="utf-8").read().rstrip())
+        open(os.path.join(BASE, "index.html"), "w", encoding="utf-8").write(html)
+        made.append("index.html")
+
     pre = os.path.join(src_dir, "preface.html")
     if os.path.exists(pre):
         html = SHELL.format(
