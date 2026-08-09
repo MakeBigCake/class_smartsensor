@@ -9,7 +9,7 @@
 import re, os, sys
 BASE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE)
-from build import SHELL, FLAT, COURSE, COURSE_2, META, AUTHOR, WRITTEN, build_toc
+from build import SHELL, FLAT, COURSE, COURSE_2, META, AUTHOR, WRITTEN, build_toc, around
 from refdata import PUB, CAT_ORDER, CAT_DESC, ABBR
 
 REF_POLICY = """    <p>각 장 끝의 참고자료는 두 종류다. <strong>관련 이미지</strong>는 제조사가 공개한 제품 페이지로
@@ -80,8 +80,7 @@ def page(fn, num, title, body):
         SHELL.format(num=num, title=title, course=COURSE, course2=COURSE_2, meta=META,
                      author=AUTHOR, written=WRITTEN,
                      toc=build_toc(fn), chapter="찾아보기",
-                     prev='<a href="4-3.html">◀ 이전</a>',
-                     next='<span class="disabled">다음 ▶</span>',
+                     prev=around(fn)[0], next=around(fn)[1],
                      idx="—", total=len(FLAT), body=body))
     print("생성:", fn)
 

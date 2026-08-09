@@ -128,8 +128,18 @@ body{
 
 .article{max-width:var(--maxw);margin:0 auto;padding:48px 30px 130px;width:100%;}
 
+.part-open{background:var(--navy);color:#fff;padding:44px 34px 40px;margin:0 0 36px;}
+.part-open h1{color:#fff;font-size:34px;line-height:1.3;margin:0 0 10px;}
+.part-open h1 > .part-no{display:inline;font-size:inherit;color:inherit;margin:0 16px 0 0;}
+.part-open p{color:#DCE7F3;font-size:15.5px;margin:0;}
+.part-list{list-style:none;margin:0;padding:0;border-top:2px solid var(--navy);}
+.part-list li{margin:0;border-bottom:1px solid var(--line);}
+.part-list a{display:block;padding:17px 20px;text-decoration:none;color:var(--ink-2);font-size:15.5px;}
+.part-list a:hover{background:var(--navy-tint);color:var(--navy);}
+.part-list a b{color:var(--navy);margin-right:12px;}
+
 /* 상단 고정 막대에 제목이 가리지 않도록, 이동 목표에 여유를 준다 */
-section.sec, section.ref, .lesson-head, .fig-label, .tbl-label,
+section.sec, section.ref, .lesson-head, .part-open, .fig-label, .tbl-label,
 .chapter-divider, .lesson-block, .chap[id], dt[id]{scroll-margin-top:76px;}
 html{scroll-behavior:smooth;}
 

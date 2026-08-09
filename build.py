@@ -47,12 +47,40 @@ TOC = [
     ]),
 ]
 
+# 부 도입 면 : (부 제목, 부제)
+PART_THEME = {
+    "1": ("센서의 기초", "데이터의 생성 — 값은 어디서 태어나는가"),
+    "2": ("스마트센서의 구조", "데이터의 지능화 — 센서가 자기 이야기를 한다"),
+    "3": ("자동화 장비와 스마트센서", "데이터의 활용 — 값이 설비를 움직인다"),
+    "4": ("자동화 공정의 운영", "데이터의 통합 — 공장 전체가 하나로 이어진다"),
+}
+
 # 평탄화 : [(번호, 제목, 파일명, 챕터제목), ...]
 FLAT = []
 for chap, items in TOC:
     for num, title in items:
         FLAT.append((num, title, num.replace(".", "-") + ".html", chap))
 TOTAL = len(FLAT)
+
+# 앞뒤 이동 순서 (부 도입 면 포함)
+ORDER = ["index.html", "preface.html"]
+_seen = set()
+for _n, _t, _f, _c in FLAT:
+    _p = _n.split(".")[0]
+    if _p not in _seen:
+        ORDER.append("part%s.html" % _p); _seen.add(_p)
+    ORDER.append(_f)
+ORDER += ["index-terms.html", "index-figs.html", "index-tables.html",
+          "index-abbr.html", "index-refs.html"]
+
+
+def around(fn):
+    """이 페이지의 이전/다음 링크"""
+    i = ORDER.index(fn) if fn in ORDER else -1
+    p = '<a href="%s">◀ 이전</a>' % ORDER[i - 1] if i > 0 else '<span class="disabled">◀ 이전</span>'
+    n = ('<a href="%s">다음 ▶</a>' % ORDER[i + 1] if 0 <= i < len(ORDER) - 1
+         else '<span class="disabled">다음 ▶</span>')
+    return p, n
 
 
 SECNO_RE = re.compile(r'<div class="sec-no">([^<]+)</div>\s*<h2>')
@@ -129,10 +157,13 @@ def build_toc(current_file):
     if pre:
         out += sub_block("preface", sub_items("preface.html"))
     cur_part = current_file[0] if current_file[:1].isdigit() else None
+    if current_file.startswith("part"):
+        cur_part = current_file[4]
     for chap, items in TOC:
         part = chap.split("부")[0]
-        out.append('  <a class="toc-group%s" href="index.html#part%s">%s</a>'
-                   % (" on" if part == cur_part else "", part, chap))
+        pf = "part%s.html" % part
+        on = " on" if (part == cur_part or current_file == pf) else ""
+        out.append('  <a class="toc-group%s" href="%s">%s</a>' % (on, pf, chap))
         for num, title in items:
             fn = num.replace(".", "-") + ".html"
             cur = fn == current_file
@@ -218,12 +249,7 @@ def main():
             continue
         body = wrap_head(open(src, encoding="utf-8").read().rstrip())
 
-        prev_html = '<span class="disabled">◀ 이전</span>'
-        if i > 0:
-            prev_html = '<a href="%s">◀ 이전</a>' % FLAT[i - 1][2]
-        next_html = '<span class="disabled">다음 ▶</span>'
-        if i < TOTAL - 1:
-            next_html = '<a href="%s">다음 ▶</a>' % FLAT[i + 1][2]
+        prev_html, next_html = around(fn)
 
         html = SHELL.format(
             num=num, title=title, course=COURSE, course2=COURSE_2, meta=META,
@@ -240,12 +266,31 @@ def main():
             num="", title="목차", course=COURSE, course2=COURSE_2, meta=META,
             author=AUTHOR, written=WRITTEN,
             toc=build_toc("index.html"), chapter=COURSE,
-            prev='<span class="disabled">◀ 이전</span>',
-            next='<a href="preface.html">다음 ▶</a>',
+            prev=around("index.html")[0], next=around("index.html")[1],
             idx="—", total=TOTAL,
             body=open(cov, encoding="utf-8").read().rstrip())
         open(os.path.join(BASE, "index.html"), "w", encoding="utf-8").write(html)
         made.append("index.html")
+
+    for c in sorted(PART_THEME):
+        t, th = PART_THEME[c]
+        p, n = around("part%s.html" % c)
+        body = ('    <div class="part-open">\n'
+                '      <h1><span class="part-no">%s부</span>%s</h1>\n'
+                '      <p>%s</p>\n'
+                '    </div>\n' % (c, t, th))
+        body += '    <ul class="part-list">\n'
+        for num, title, fn2, chap2 in FLAT:
+            if num.split(".")[0] == c:
+                body += '      <li><a href="%s"><b>%s장</b> %s</a></li>\n' % (fn2, num, title)
+        body += '    </ul>\n'
+        html = SHELL.format(
+            num="%s부" % c, title=t, course=COURSE, course2=COURSE_2, meta=META,
+            author=AUTHOR, written=WRITTEN,
+            toc=build_toc("part%s.html" % c), chapter=COURSE,
+            prev=p, next=n, idx="—", total=TOTAL, body=body)
+        open(os.path.join(BASE, "part%s.html" % c), "w", encoding="utf-8").write(html)
+        made.append("part%s.html" % c)
 
     pre = os.path.join(src_dir, "preface.html")
     if os.path.exists(pre):
@@ -253,7 +298,7 @@ def main():
             num="머리말", title="값을 고치는 사람과 값을 읽는 사람",
             course=COURSE, course2=COURSE_2, meta=META,
             toc=build_toc("preface.html"), chapter="머리말", author=AUTHOR, written=WRITTEN,
-            prev='<a href="index.html">◀ 표지</a>', next='<a href="1-1.html">다음 ▶</a>',
+            prev=around("preface.html")[0], next=around("preface.html")[1],
             idx="—", total=TOTAL,
             body=wrap_head(open(pre, encoding="utf-8").read().rstrip()))
         open(os.path.join(BASE, "preface.html"), "w", encoding="utf-8").write(html)
